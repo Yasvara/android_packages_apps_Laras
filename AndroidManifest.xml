@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.yasvara.laras">
+
+    <!-- Required by SystemUI to render its lock screen preview for Laras. -->
+    <uses-permission android:name="android.permission.BIND_WALLPAPER" />
+    <uses-permission android:name="android.permission.CUSTOMIZE_SYSTEM_UI" />
+    <uses-permission android:name="android.permission.READ_WALLPAPER_INTERNAL" />
+    <!-- Depth library: sets a saved picture as the wallpaper with its depth (SPEC-0013 §11). -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <!-- Depth build (SPEC-0013 §4): a foreground service, started when SystemUI asks. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="yasvara.permission.WRITE_ATTESTATION" />
+    <!-- The Modules group: Xposed modules and their scope (YasvaraXposed in system_server). -->
+    <uses-permission android:name="yasvara.permission.MANAGE_XPOSED" />
+    <!-- App updates: per-app detach / delay / ask (YasvaraUpdatePolicyService, SPEC-0005). -->
+    <uses-permission android:name="yasvara.permission.MANAGE_UPDATE_POLICY" />
+    <uses-permission android:name="yasvara.permission.MANAGE_SWARA" />
+    <!-- Akar: the native root's control plane (YasvaraRootService, SPEC-0006). Signature level
+         (platform key): other platform apps may hold it, nothing else, and not by pm grant. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_ROOT"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_ROOT" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Connectivity (SPEC-0014): hotspot width, allowed channels, network mode, signal bars,
+         the serving cell card (ServiceState without location). -->
+    <uses-permission android:name="android.permission.OVERRIDE_WIFI_CONFIG" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- The launcher's home screen preview and icon shapes (SPEC-0003 §4.4). -->
+    <uses-permission android:name="com.android.launcher3.permission.GRID_CONTROL" />
+    <uses-permission android:name="lineageos.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission android:name="lineageos.permission.WRITE_SETTINGS" />
+
+    <application
+        android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Laras">
+
+        <activity
+            android:name=".LarasActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|uiMode|assetsPaths"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.OPEN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Settings › App info › Updates (SPEC-0005 §4.9); extra "package". -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.APP_UPDATES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Notification of a refused root request (SPEC-0006); extra "package". -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.AKAR" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Volume Panel "Apps" › Manage (SPEC-0010 §5.1). -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.SOUND_APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Settings › Hotspot › Speed › Wi-Fi region (SPEC-0014). -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.WIFI_REGION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Settings homepage entry, placed first in the personalisation group. -->
+            <intent-filter>
+                <action android:name="com.android.settings.action.EXTRA_SETTINGS" />
+            </intent-filter>
+            <meta-data
+                android:name="com.android.settings.category"
+                android:value="com.android.settings.category.ia.homepage" />
+            <meta-data
+                android:name="com.android.settings.group_key"
+                android:value="top_level_personalize_category" />
+            <meta-data
+                android:name="com.android.settings.keyhint"
+                android:value="top_level_laras" />
+            <meta-data
+                android:name="com.android.settings.order"
+                android:value="-70" />
+            <meta-data
+                android:name="com.android.settings.icon"
+                android:resource="@drawable/ic_laras" />
+            <meta-data
+                android:name="com.android.settings.icon_tintable"
+                android:value="true" />
+            <meta-data
+                android:name="com.android.settings.summary"
+                android:resource="@string/settings_entry_summary" />
+        </activity>
+
+        <!-- App updates (SPEC-0005 §4.6): system_server reports blocked / to-review updates. -->
+        <receiver
+            android:name=".data.updates.UpdateEventReceiver"
+            android:exported="true"
+            android:permission="yasvara.permission.MANAGE_UPDATE_POLICY">
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.UPDATE_EVENT" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".data.updates.UpdateActionReceiver"
+            android:exported="false" />
+        <activity
+            android:name=".data.updates.AllowOnceActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+
+        <!-- Akar (SPEC-0006): system_server reports an app the root daemon refused. -->
+        <receiver
+            android:name=".data.root.RootDeniedReceiver"
+            android:exported="true"
+            android:permission="yasvara.permission.MANAGE_ROOT">
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.ROOT_DENIED" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name=".data.root.RootFreezeTile"
+            android:exported="true"
+            android:icon="@drawable/ic_laras"
+            android:label="@string/root_tile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".depth.DepthStudioActivity"
+            android:configChanges="uiMode|assetsPaths"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Laras" />
+        <!-- Builds depth for new lock wallpapers (SPEC-0013 §4, §9 Q3). -->
+        <service
+            android:name=".depth.DepthBuildService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProcessing" />
+        <!-- SystemUI asks for a picture's depth: only it holds STATUS_BAR_SERVICE. -->
+        <receiver
+            android:name=".depth.DepthBuildService$BuildRequestReceiver"
+            android:exported="true"
+            android:permission="android.permission.STATUS_BAR_SERVICE">
+            <intent-filter>
+                <action android:name="org.yasvara.laras.depth.action.BUILD" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".depth.DepthBuildService$TurnOffReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

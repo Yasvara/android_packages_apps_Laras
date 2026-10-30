@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="pref_clock_face">Clock face</string>
+    <string name="pref_clock_placement">Clock position</string>
+    <string name="pref_clock_placement_summary">At the bottom, the large clock sits just above the lock icon</string>
+    <string name="clock_face_default">System</string>
+    <string name="clock_axis_size">Size</string>
+    <string name="clock_small_title">With notifications</string>
+    <string name="clock_axis_small_align">Position</string>
+    <string name="clock_axis_small_size">Size</string>
+    <string name="clock_axis_color">Colour</string>
+    <string name="clock_axis_tone_auto">Match the wallpaper</string>
+    <string name="clock_axis_tone">Lightness</string>
+    <string name="clock_axis_weight">Weight</string>
+    <string name="clock_axis_width">Width</string>
+    <string name="clock_axis_roundness">Roundness</string>
+    <string name="clock_axis_seconds">Show seconds</string>
+    <string name="clock_axis_aod">Always-on display</string>
+    <string name="clock_axis_align">Alignment</string>
+    <string name="clock_color_primary">Primary</string>
+    <string name="clock_color_secondary">Secondary</string>
+    <string name="clock_color_tertiary">Tertiary</string>
+    <string name="clock_color_neutral">Neutral</string>
+    <string name="clock_color_gradient">Gradient</string>
+    <string name="clock_color_mono">Mono</string>
+    <string name="clock_aod_outline">Outline</string>
+    <string name="clock_aod_thin">Thin</string>
+    <string name="clock_aod_same">Same</string>
+    <string name="clock_apply">Apply</string>
+    <string name="clock_discard">Discard</string>
+    <string name="element_wallpaper">Wallpaper</string>
+    <string name="pref_depth">Depth effect</string>
+    <string name="pref_depth_summary">The wallpaper\'s subject stands in front of the clock</string>
+    <string name="pref_depth_clock">Clock and subject</string>
+    <string name="depth_clock_auto">Auto</string>
+    <string name="depth_clock_front">Clock in front</string>
+    <string name="depth_clock_behind">Subject in front</string>
+    <string name="pref_depth_opacity">Subject opacity</string>
+    <string name="pref_parallax_lock">Motion on lock screen</string>
+    <string name="pref_parallax_summary">The wallpaper moves gently as you tilt the phone</string>
+    <string name="pref_parallax_home">Motion on home screen</string>
+    <string name="pref_parallax_strength">Motion strength</string>
+    <string name="pref_depth_parallax">Subject depth</string>
+    <string name="pref_depth_parallax_summary">How much further the subject moves than the wallpaper</string>
+    <string name="depth_studio">Depth Studio</string>
+    <string name="depth_studio_summary">Select the subject: tap to add, switch to minus to remove</string>
+    <string name="depth_no_wallpaper">No wallpaper to pick a subject from</string>
+    <string name="depth_saved">Depth effect is on</string>
+    <string name="depth_save_failed">Could not save the subject</string>
+    <string name="depth_add">Add</string>
+    <string name="depth_remove">Remove</string>
+    <string name="depth_auto">Select subject</string>
+    <string name="depth_edit">Edit depth</string>
+    <string name="depth_on_lock">On your lock screen</string>
+    <string name="depth_saved_on">Saved %1$s</string>
+    <string name="depth_size">%1$d × %2$d px</string>
+    <plurals name="depth_steps">
+        <item quantity="one">%d step</item>
+        <item quantity="other">%d steps</item>
+    </plurals>
+    <string name="depth_set_lock">Set as lock screen</string>
+    <string name="depth_set_both">Lock and home</string>
+    <string name="depth_set_failed">Could not set the wallpaper</string>
+    <string name="depth_delete">Delete</string>
+    <string name="depth_deleted">Picture deleted</string>
+    <string name="depth_undo">Undo</string>
+    <string name="depth_similar_title">You made depth for this picture</string>
+    <string name="depth_similar_body">On %1$s, from another copy of the same file.</string>
+    <string name="depth_similar_use">Use saved depth</string>
+    <string name="depth_similar_fresh">Start fresh</string>
+    <!-- Depth build (SPEC-0013 §4; design/laras-depth-build). -->
+    <string name="depth_channel">Depth for the lock screen</string>
+    <string name="depth_building_title">Making depth for your lock screen</string>
+    <string name="depth_finding">Finding the subject</string>
+    <string name="depth_stage_character">The character</string>
+    <string name="depth_stage_hair">Hair, up close · %1$d of %2$d</string>
+    <string name="depth_stage_hair_short">Hair, up close</string>
+    <string name="depth_stage_props">Props</string>
+    <string name="depth_progress_count">%1$d of %2$d</string>
+    <string name="depth_eta">about %1$d min</string>
+    <string name="depth_leave_hint">You can close the Studio. It keeps going and lets you know when it is ready.</string>
+    <string name="depth_waiting_title">Depth will be made when the phone is free</string>
+    <string name="depth_waiting_text">It needs about 3 GB of memory for a minute or two, and starts by itself.</string>
+    <string name="depth_stop">Stop</string>
+    <string name="depth_ready_title">Depth is on your lock screen</string>
+    <string name="depth_ready_subject">Found the subject. Take a look?</string>
+    <plurals name="depth_ready_text">
+        <item quantity="one">Found the subject and %1$d prop. Take a look?</item>
+        <item quantity="other">Found the subject and %1$d props. Take a look?</item>
+    </plurals>
+    <string name="depth_review">Review</string>
+    <string name="depth_turn_off">Turn off</string>
+    <string name="depth_props">Also in front of the clock</string>
+    <string name="depth_prop_kept">Prop %1$d, in front of the clock</string>
+    <string name="depth_prop_dropped">Prop %1$d, left out</string>
+    <string name="depth_making">Making it for this wallpaper · %1$d%%</string>
+    <string name="depth_making_tile">This wallpaper, depth being made</string>
+    <string name="depth_build_failed">Could not find the subject. Select it by hand.</string>
+</resources>

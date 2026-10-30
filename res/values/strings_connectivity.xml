@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Connectivity (SPEC-0014) -->
+    <string name="group_connectivity">Connectivity</string>
+    <string name="group_connectivity_summary">Wi-Fi region and mobile data</string>
+    <string name="pref_wifi_band">Prefer faster Wi-Fi bands</string>
+    <string name="pref_wifi_band_summary">How strongly Wi-Fi picks 5 GHz and 6 GHz over 2.4 GHz</string>
+    <string name="wifi_band_stock">Default</string>
+    <string name="wifi_band_prefer">Prefer</string>
+    <string name="wifi_band_strong">Strongly</string>
+    <string name="pref_wifi_location">Detect region from location</string>
+    <string name="pref_wifi_location_summary">Only when there is no SIM or router country. Uses the phone\'s geocoder.</string>
+    <string name="pref_sim_toolkit">SIM toolkit</string>
+    <string name="pref_sim_toolkit_summary">Lets the SIM card show messages, menus and prompts. Off by default: carrier promos stay away. Turning it on takes effect after a restart.</string>
+
+    <string name="wifi_region_title">Wi-Fi region</string>
+    <string name="wifi_region_summary"><xliff:g id="country" example="Indonesia">%1$s</xliff:g> · <xliff:g id="source" example="from SIM">%2$s</xliff:g></string>
+    <string name="wifi_region_not_detected">No country detected</string>
+    <string name="wifi_region_world">No country (world mode)</string>
+    <string name="wifi_source_manual">set by you</string>
+    <string name="wifi_source_override">set over adb</string>
+    <string name="wifi_source_sim">from SIM</string>
+    <string name="wifi_source_routers">from nearby routers</string>
+    <string name="wifi_source_location">from location</string>
+    <string name="wifi_source_last">last known</string>
+    <string name="wifi_source_default">device default</string>
+    <string name="wifi_source_none">not detected</string>
+    <string name="wifi_region_auto">Automatic</string>
+    <string name="wifi_region_auto_summary">SIM, then nearby routers, then the last country seen</string>
+    <string name="wifi_region_manual">Manual</string>
+    <string name="wifi_region_manual_summary">Choose a country below</string>
+    <string name="wifi_region_manual_locked">Turn on Advanced customisation in Lab to choose a country</string>
+    <string name="wifi_region_search">Search countries</string>
+    <string name="wifi_region_hotspot">Hotspot 5 GHz: <xliff:g id="yes_no" example="Yes">%1$s</xliff:g> · 6 GHz: <xliff:g id="yes_no" example="No">%2$s</xliff:g></string>
+    <string name="wifi_region_channels5">5 GHz channels: <xliff:g id="channels" example="36 40 44">%1$s</xliff:g></string>
+    <string name="wifi_region_note">Wi-Fi uses the channels and power limits of the region in use. Radar protection stays on in every mode.</string>
+    <string name="wifi_region_warning_title">Use <xliff:g id="country" example="Japan">%1$s</xliff:g> rules?</string>
+    <string name="wifi_region_warning_body">Wi-Fi and the hotspot will use this country\'s channels until you return to Automatic, even after you travel. Use channels allowed where you are.</string>
+    <string name="wifi_region_warning_confirm">Use this region</string>
+    <string name="option_yes">Yes</string>
+    <string name="option_no">No</string>
+    <string name="option_auto">Auto</string>
+
+    <string name="conn_experiments">Experiments</string>
+    <string name="conn_experiments_locked">Turn on Advanced customisation in Lab to try these.</string>
+    <string name="conn_change_failed">Couldn\'t apply that change</string>
+    <string name="hotspot_width">Hotspot channel width</string>
+    <string name="hotspot_width_summary">Wider is faster for nearby devices that support it. 320 MHz needs 6 GHz.</string>
+    <string name="width_80">80 MHz</string>
+    <string name="width_160">160 MHz</string>
+    <string name="width_320">320 MHz</string>
+    <string name="net_mode">Network mode</string>
+    <string name="net_mode_summary">Which mobile networks the phone may use</string>
+    <string name="net_mode_auto">Auto</string>
+    <string name="net_mode_nr_lte">5G/4G</string>
+    <string name="net_mode_lte">4G only</string>
+    <string name="net_mode_nr_only">5G only</string>
+    <string name="net_mode_no_sim">No active SIM</string>
+    <string name="net_mode_keep_title">Keep this network mode?</string>
+    <string name="net_mode_keep_body">If you lose signal, it goes back on its own in <xliff:g id="seconds" example="15">%1$d</xliff:g> s.</string>
+    <string name="net_mode_keep">Keep</string>
+    <string name="net_mode_revert">Go back</string>
+    <string name="nr_bars">Even 5G signal bars</string>
+    <string name="nr_bars_summary">Draws 5G bars on the same scale as 4G. Changes only the icon, not the signal.</string>
+    <string name="cell_title">Mobile signal</string>
+    <string name="cell_lte_band">Band <xliff:g id="band" example="3">%1$d</xliff:g> · EARFCN <xliff:g id="channel" example="1625">%2$d</xliff:g></string>
+    <string name="cell_nr_freq"><xliff:g id="mhz" example="2350">%1$d</xliff:g> MHz</string>
+    <string name="cell_ca">Carrier aggregation: <xliff:g id="widths" example="20 MHz + 10 MHz">%1$s</xliff:g></string>
+    <string name="cell_single">One carrier: <xliff:g id="width" example="20 MHz">%1$s</xliff:g></string>
+    <string name="cell_metric">RSRP <xliff:g id="rsrp" example="-90">%1$d</xliff:g> dBm · RSRQ <xliff:g id="rsrq" example="-11">%2$s</xliff:g> dB · SINR <xliff:g id="sinr" example="12">%3$s</xliff:g> dB</string>
+    <string name="cell_note">Speed follows SINR and RSRQ more than RSRP: a strong but crowded cell can still be slow.</string>
+</resources>

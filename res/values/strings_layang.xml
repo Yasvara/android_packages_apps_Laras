@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<!-- Multitasking › Layang floating windows (SPEC-0008 §12). -->
+<resources>
+    <string name="group_multitasking">Multitasking</string>
+    <string name="group_multitasking_summary">Floating windows</string>
+
+    <string name="pref_layang_enabled">Floating windows</string>
+    <string name="pref_layang_enabled_summary">Open apps and games in windows that float over everything, from Recents, a long-press on an app or Pentas</string>
+    <string name="pref_layang_chip">Status bar chip</string>
+    <string name="pref_layang_chip_summary">Shows your floating windows; tap it to bring one back or open another app</string>
+    <string name="pref_layang_remember">Remember position and size per app</string>
+    <string name="pref_layang_audio">Let every window play sound</string>
+    <string name="pref_layang_audio_summary">A floating game doesn\'t silence the one behind it</string>
+    <string name="pref_layang_size">Default size</string>
+    <string name="layang_size_s">Small</string>
+    <string name="layang_size_m">Medium</string>
+    <string name="layang_size_l">Large</string>
+    <string name="pref_layang_grip">Resize handle (dp)</string>
+    <string name="pref_layang_aspect">Keep game shape</string>
+    <string name="pref_layang_aspect_summary">Games only grow and shrink, so they never re-layout</string>
+    <string name="pref_layang_mini_fps">Games in a mini window</string>
+    <string name="layang_mini_fps_30">30 fps</string>
+    <string name="layang_mini_fps_uncapped">Full frame rate</string>
+    <string name="pref_layang_auto_park">Park windows when memory runs low</string>
+    <string name="pref_layang_auto_park_summary">The window you used least goes to the status bar chip</string>
+    <string name="pref_layang_ghost">Ghost opacity</string>
+    <string name="pref_layang_ghost_summary">How visible a window stays while touches pass through it</string>
+</resources>

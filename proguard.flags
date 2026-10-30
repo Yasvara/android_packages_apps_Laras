@@ -1,0 +1,8 @@
+# LiteRT reaches its Java classes from native code by name.
+-keep class org.tensorflow.lite.** { *; }
+-keepclasseswithmembernames class * { native <methods>; }
+-dontwarn org.tensorflow.lite.**
+
+# ONNX Runtime too, and its telemetry client stays out (its provider is removed from the AAR).
+-keep class ai.onnxruntime.** { *; }
+-dontwarn ai.onnxruntime.**

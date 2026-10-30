@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="swara_title">Suara aplikasi</string>
+    <string name="swara_entry_summary">Volume, mikrofon, dan speaker per aplikasi</string>
+    <string name="swara_intro">Volume tiap aplikasi bekerja di atas volume sistem. Perubahan tetap sampai Anda mengubahnya lagi, dan panel volume menampilkan setiap aplikasi yang dikecilkan.</string>
+    <string name="swara_search">Cari aplikasi</string>
+    <string name="swara_unavailable">Suara aplikasi tidak tersedia di build ini.</string>
+    <string name="swara_reset_all">Reset semua</string>
+    <string name="swara_reset">Reset aplikasi ini</string>
+    <string name="swara_playing">Memutar</string>
+    <string name="swara_recording">Memakai mikrofon</string>
+    <string name="swara_muted">Dibisukan</string>
+    <string name="swara_mic_muted">Mikrofon dibisukan</string>
+    <string name="swara_volume">Volume <xliff:g id="percent" example="100">%1$d</xliff:g>%%</string>
+    <string name="swara_mute">Bisukan</string>
+    <string name="swara_mic_mute">Bisukan mikrofon</string>
+    <string name="swara_mic_mute_summary">Aplikasi menerima senyap; indikator mikrofon tetap tampil.</string>
+    <string name="swara_mic_gain">Level mikrofon <xliff:g id="percent" example="100">%1$d</xliff:g>%%</string>
+    <string name="swara_share_mic">Bagi mikrofon saat panggilan</string>
+    <string name="swara_share_mic_warning">Kedua aplikasi mendengar mikrofon Anda; aplikasi lain juga bisa mendengar panggilan lewat speaker.</string>
+    <string name="swara_output">Diputar di</string>
+    <string name="swara_output_unavailable">tidak terhubung</string>
+    <string name="swara_change">Ubah</string>
+    <string name="swara_output_system">Sama dengan sistem</string>
+    <string name="swara_output_speaker">Speaker ponsel</string>
+    <string name="swara_output_bt">Bluetooth</string>
+    <string name="swara_output_wired">Headphone kabel</string>
+    <string name="swara_output_usb">Audio USB</string>
+    <string name="swara_reset_on_close">Reset saat aplikasi ditutup</string>
+    <string name="swara_reset_on_close_summary">Volume dan bisu kembali normal saat aplikasi berhenti.</string>
+</resources>

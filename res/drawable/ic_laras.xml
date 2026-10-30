@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M5,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M11,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M17,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M6,15.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0 M12,8.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0 M18,12.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+</vector>

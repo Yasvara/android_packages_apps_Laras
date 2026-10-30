@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="group_connectivity">Konektivitas</string>
+    <string name="group_connectivity_summary">Wilayah Wi-Fi dan data seluler</string>
+    <string name="pref_wifi_band">Utamakan band Wi-Fi tercepat</string>
+    <string name="pref_wifi_band_summary">Seberapa kuat Wi-Fi memilih 5 GHz dan 6 GHz dibanding 2,4 GHz</string>
+    <string name="wifi_band_stock">Bawaan</string>
+    <string name="wifi_band_prefer">Utamakan</string>
+    <string name="wifi_band_strong">Sangat</string>
+    <string name="pref_wifi_location">Deteksi wilayah dari lokasi</string>
+    <string name="pref_wifi_location_summary">Hanya saat tidak ada SIM atau negara dari router. Memakai geocoder ponsel.</string>
+    <string name="pref_sim_toolkit">SIM toolkit</string>
+    <string name="pref_sim_toolkit_summary">Izinkan kartu SIM menampilkan pesan, menu, dan prompt. Mati secara default agar promo operator tidak muncul. Aktif setelah restart.</string>
+
+    <string name="wifi_region_title">Wilayah Wi-Fi</string>
+    <string name="wifi_region_summary"><xliff:g id="country" example="Indonesia">%1$s</xliff:g> · <xliff:g id="source" example="dari SIM">%2$s</xliff:g></string>
+    <string name="wifi_region_not_detected">Negara tidak terdeteksi</string>
+    <string name="wifi_region_world">Tanpa negara (mode dunia)</string>
+    <string name="wifi_source_manual">dipilih Anda</string>
+    <string name="wifi_source_override">diatur lewat adb</string>
+    <string name="wifi_source_sim">dari SIM</string>
+    <string name="wifi_source_routers">dari router sekitar</string>
+    <string name="wifi_source_location">dari lokasi</string>
+    <string name="wifi_source_last">terakhir diketahui</string>
+    <string name="wifi_source_default">bawaan perangkat</string>
+    <string name="wifi_source_none">tidak terdeteksi</string>
+    <string name="wifi_region_auto">Otomatis</string>
+    <string name="wifi_region_auto_summary">SIM, lalu router sekitar, lalu negara terakhir</string>
+    <string name="wifi_region_manual">Manual</string>
+    <string name="wifi_region_manual_summary">Pilih negara di bawah</string>
+    <string name="wifi_region_manual_locked">Aktifkan Kustomisasi lanjutan di Lab untuk memilih negara</string>
+    <string name="wifi_region_search">Cari negara</string>
+    <string name="wifi_region_hotspot">Hotspot 5 GHz: <xliff:g id="yes_no" example="Ya">%1$s</xliff:g> · 6 GHz: <xliff:g id="yes_no" example="Tidak">%2$s</xliff:g></string>
+    <string name="wifi_region_channels5">Channel 5 GHz: <xliff:g id="channels" example="36 40 44">%1$s</xliff:g></string>
+    <string name="wifi_region_note">Wi-Fi memakai channel dan batas daya wilayah yang aktif. Perlindungan radar tetap aktif di semua mode.</string>
+    <string name="wifi_region_warning_title">Pakai aturan <xliff:g id="country" example="Jepang">%1$s</xliff:g>?</string>
+    <string name="wifi_region_warning_body">Wi-Fi dan hotspot akan memakai channel negara ini sampai Anda kembali ke Otomatis, juga saat bepergian. Gunakan channel yang diizinkan di tempat Anda.</string>
+    <string name="wifi_region_warning_confirm">Pakai wilayah ini</string>
+    <string name="option_yes">Ya</string>
+    <string name="option_no">Tidak</string>
+    <string name="option_auto">Otomatis</string>
+
+    <string name="conn_experiments">Eksperimen</string>
+    <string name="conn_experiments_locked">Aktifkan Kustomisasi lanjutan di Lab untuk mencobanya.</string>
+    <string name="conn_change_failed">Perubahan gagal diterapkan</string>
+    <string name="hotspot_width">Lebar channel hotspot</string>
+    <string name="hotspot_width_summary">Lebih lebar lebih cepat untuk perangkat dekat yang mendukung. 320 MHz butuh 6 GHz.</string>
+    <string name="width_80">80 MHz</string>
+    <string name="width_160">160 MHz</string>
+    <string name="width_320">320 MHz</string>
+    <string name="net_mode">Mode jaringan</string>
+    <string name="net_mode_summary">Jaringan seluler yang boleh dipakai ponsel</string>
+    <string name="net_mode_auto">Otomatis</string>
+    <string name="net_mode_nr_lte">5G/4G</string>
+    <string name="net_mode_lte">Hanya 4G</string>
+    <string name="net_mode_nr_only">Hanya 5G</string>
+    <string name="net_mode_no_sim">Tidak ada SIM aktif</string>
+    <string name="net_mode_keep_title">Pertahankan mode jaringan ini?</string>
+    <string name="net_mode_keep_body">Kalau sinyal hilang, mode kembali sendiri dalam <xliff:g id="seconds" example="15">%1$d</xliff:g> detik.</string>
+    <string name="net_mode_keep">Pertahankan</string>
+    <string name="net_mode_revert">Kembalikan</string>
+    <string name="nr_bars">Bar sinyal 5G setara</string>
+    <string name="nr_bars_summary">Bar 5G memakai skala yang sama dengan 4G. Hanya ikon yang berubah, bukan sinyalnya.</string>
+    <string name="cell_title">Sinyal seluler</string>
+    <string name="cell_lte_band">Band <xliff:g id="band" example="3">%1$d</xliff:g> · EARFCN <xliff:g id="channel" example="1625">%2$d</xliff:g></string>
+    <string name="cell_nr_freq"><xliff:g id="mhz" example="2350">%1$d</xliff:g> MHz</string>
+    <string name="cell_ca">Carrier aggregation: <xliff:g id="widths" example="20 MHz + 10 MHz">%1$s</xliff:g></string>
+    <string name="cell_single">Satu carrier: <xliff:g id="width" example="20 MHz">%1$s</xliff:g></string>
+    <string name="cell_metric">RSRP <xliff:g id="rsrp" example="-90">%1$d</xliff:g> dBm · RSRQ <xliff:g id="rsrq" example="-11">%2$s</xliff:g> dB · SINR <xliff:g id="sinr" example="12">%3$s</xliff:g> dB</string>
+    <string name="cell_note">Kecepatan lebih ditentukan SINR dan RSRQ daripada RSRP: sel yang kuat tapi padat tetap bisa lambat.</string>
+</resources>

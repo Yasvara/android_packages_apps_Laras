@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="group_multitasking">Multitasking</string>
+    <string name="group_multitasking_summary">Jendela mengambang</string>
+
+    <string name="pref_layang_enabled">Jendela mengambang</string>
+    <string name="pref_layang_enabled_summary">Buka aplikasi dan game di jendela yang mengambang di atas semuanya, dari Recents, tekan lama ikon, atau Pentas</string>
+    <string name="pref_layang_chip">Chip status bar</string>
+    <string name="pref_layang_chip_summary">Menampilkan jendela mengambang; ketuk untuk memunculkan lagi atau membuka aplikasi lain</string>
+    <string name="pref_layang_remember">Ingat posisi dan ukuran per aplikasi</string>
+    <string name="pref_layang_audio">Semua jendela boleh bersuara</string>
+    <string name="pref_layang_audio_summary">Game yang mengambang tidak membisukan game di belakangnya</string>
+    <string name="pref_layang_size">Ukuran awal</string>
+    <string name="layang_size_s">Kecil</string>
+    <string name="layang_size_m">Sedang</string>
+    <string name="layang_size_l">Besar</string>
+    <string name="pref_layang_grip">Area tarik ubah ukuran (dp)</string>
+    <string name="pref_layang_aspect">Pertahankan bentuk game</string>
+    <string name="pref_layang_aspect_summary">Game hanya membesar dan mengecil, jadi tidak pernah relayout</string>
+    <string name="pref_layang_mini_fps">Game di jendela mini</string>
+    <string name="layang_mini_fps_30">30 fps</string>
+    <string name="layang_mini_fps_uncapped">Frame rate penuh</string>
+    <string name="pref_layang_auto_park">Parkir jendela saat memori menipis</string>
+    <string name="pref_layang_auto_park_summary">Jendela yang paling jarang dipakai masuk ke chip status bar</string>
+    <string name="pref_layang_ghost">Opasitas mode hantu</string>
+    <string name="pref_layang_ghost_summary">Seberapa terlihat jendela saat sentuhan menembusnya</string>
+</resources>

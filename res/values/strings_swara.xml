@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Sound › Apps (SPEC-0010 §5.2) -->
+    <string name="swara_title">App sound</string>
+    <string name="swara_entry_summary">Volume, mic and speaker for each app</string>
+    <string name="swara_intro">Each app\'s volume works on top of the system volume. A change stays until you change it back, and the volume panel shows every app that is turned down.</string>
+    <string name="swara_search">Search apps</string>
+    <string name="swara_unavailable">App sound is not available on this build.</string>
+    <string name="swara_reset_all">Reset all</string>
+    <string name="swara_reset">Reset this app</string>
+    <string name="swara_playing">Playing</string>
+    <string name="swara_recording">Using mic</string>
+    <string name="swara_muted">Muted</string>
+    <string name="swara_mic_muted">Mic muted</string>
+    <string name="swara_volume">Volume <xliff:g id="percent" example="100">%1$d</xliff:g>%%</string>
+    <string name="swara_mute">Mute</string>
+    <string name="swara_mic_mute">Mute mic</string>
+    <string name="swara_mic_mute_summary">The app gets silence; the mic indicator still shows.</string>
+    <string name="swara_mic_gain">Mic level <xliff:g id="percent" example="100">%1$d</xliff:g>%%</string>
+    <string name="swara_share_mic">Share mic during calls</string>
+    <string name="swara_share_mic_warning">Both apps hear your mic; the other app may also hear the call through the speaker.</string>
+    <string name="swara_output">Plays on</string>
+    <string name="swara_output_unavailable">not connected</string>
+    <string name="swara_change">Change</string>
+    <string name="swara_output_system">Same as system</string>
+    <string name="swara_output_speaker">Phone speaker</string>
+    <string name="swara_output_bt">Bluetooth</string>
+    <string name="swara_output_wired">Wired headphones</string>
+    <string name="swara_output_usb">USB audio</string>
+    <string name="swara_reset_on_close">Reset when the app closes</string>
+    <string name="swara_reset_on_close_summary">Volume and mute go back to normal when the app stops.</string>
+</resources>
