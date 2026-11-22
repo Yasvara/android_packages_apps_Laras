@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: The Yasvara Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="hero_overline">Atestasi Keybox</string>
+    <string name="hero_unverified">Belum dicek</string>
+    <string name="hero_keybox_revoked_body">Keybox Anda tercatat dicabut/compromised oleh Google sehingga tidak bisa lolos Strong maupun Device. Ganti dengan keybox yang masih valid.</string>
+    <string name="hero_via_profile">Menyamar sebagai %1$s. Play Services membaca profil perangkat ini alih-alih kunci perangkat keras.</string>
+    <string name="hero_via_keybox">Keybox Anda menjawab atestasi perangkat keras. Jalankan pemeriksaan untuk memastikan tidak dicabut Google.</string>
+    <string name="hero_via_keybox_checked">Diverifikasi dari atestasi &amp; daftar cabut Google · %1$s</string>
+    <string name="hero_via_none">Aktifkan profil perangkat atau keybox untuk melewati Basic.</string>
+    <string name="hero_verify_hint">Cek rantai atestasi dan daftar pencabutan Google.</string>
+    <string name="hero_verify_again_hint">Baru mengganti keybox atau profil? Verifikasi ulang sekarang.</string>
+    <string name="check_run">Jalankan cek</string>
+    <string name="check_run_again">Cek ulang</string>
+    <string name="check_details">Detail pemeriksaan</string>
+    <string name="check_hide">Sembunyikan detail</string>
+    <string name="issue_keybox_revoked">Keybox Anda telah dicabut oleh Google.</string>
+    <string name="issue_keybox_expired">Sertifikat keybox Anda sudah kedaluwarsa.</string>
+    <string name="integrity_keybox_valid">Tidak dicabut</string>
+    <string name="integrity_keybox_revoked">Dicabut Google</string>
+    <string name="integrity_keybox_present">Belum dicek ke daftar pencabutan Google</string>
+    <string name="keybox_evoker_hint">Penyedia pihak ketiga opsional. Mengunduh keybox tidak menjamin Strong Integrity.</string>
+    <string name="keybox_evoker_sync">Sinkronkan dari Evoker</string>
+    <string name="keybox_evoker_confirm_title">Unduh keybox dari Evoker?</string>
+    <string name="keybox_evoker_confirm_body">Ini menghubungi evoker.qzz.io dan mengunduh keybox yang berisi kunci privat. Setelah divalidasi, keybox ini menggantikan keybox yang terpasang. Penyedia dapat melihat alamat IP Anda, dan kredensial bersama dapat dicabut. Strong Integrity tidak dijamin.</string>
+    <string name="keybox_evoker_synced">Keybox Evoker terpasang. Mulai ulang Play Services untuk menerapkan.</string>
+    <string name="keybox_replace_confirm_body">Pilih berkas keybox baru. Keybox saat ini hanya diganti setelah validasi dan pemasangan berhasil.</string>
+    <string name="keybox_sync_cancelled">Sinkronisasi keybox dibatalkan; keybox saat ini tidak berubah.</string>
+    <string name="keybox_sync_failed">Sinkronisasi keybox gagal: %1$s</string>
+    <string name="keybox_operation_failed">Operasi keybox gagal. Periksa statusnya sebelum mencoba lagi.</string>
+    <string name="pif_canary_warning">Print beta dan canary hanya cocok untuk konfigurasi STRONG dengan keybox valid. Keduanya tidak bisa lolos DEVICE sendirian.</string>
+    <string name="pif_device">Perangkat Pixel</string>
+    <string name="pif_device_none">Pilih perangkat Pixel</string>
+    <string name="pif_devices_load">Muat daftar Pixel</string>
+    <string name="pif_devices_refresh">Segarkan daftar</string>
+    <string name="pif_devices_search">Cari model Pixel atau codename</string>
+    <string name="pif_devices_empty">Tidak ada perangkat Pixel yang cocok</string>
+    <string name="pif_filter_all">Semua</string>
+    <string name="pif_filter_older">Lama</string>
+    <string name="pif_library">Profil tersimpan</string>
+    <plurals name="pif_library_count">
+        <item quantity="other">%d profil tersimpan</item>
+    </plurals>
+    <string name="pif_library_empty">Belum ada profil tersimpan</string>
+    <string name="pif_action_manual">Kustom</string>
+    <string name="pif_action_import">Impor file</string>
+    <string name="pif_action_feed">Feed kustom</string>
+    <string name="pif_action_builtin">Bawaan</string>
+    <string name="pif_manual_title">Profil PIF kustom</string>
+    <string name="pif_manual_subtitle">Isi field secara manual atau tempel teks pif.json / pif.prop.</string>
+    <string name="pif_manual_tab_fields">Field</string>
+    <string name="pif_manual_tab_raw">Raw JSON / Prop</string>
+    <string name="pif_manual_copy_active">Salin aktif</string>
+    <string name="pif_manual_autofill">Isi otomatis dari fingerprint</string>
+    <string name="pif_manual_more_fields">Field build lainnya</string>
+    <string name="pif_manual_save">Simpan &amp; terapkan</string>
+    <string name="pif_manual_fp_hint">brand/product/device:release/id/inc:user/release-keys</string>
+    <string name="pif_manual_raw_hint">Tempel teks pif.json atau key=value pif.prop di sini</string>
+    <string name="pif_manual_valid_preview">Siap: %1$s · Patch %2$s</string>
+    <string name="pif_release_badge">Android %1$s</string>
+</resources>

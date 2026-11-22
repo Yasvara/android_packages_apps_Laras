@@ -42,8 +42,10 @@ fun KeyboxProblem.message(): Int = when (this) {
     KeyboxProblem.NO_CERTIFICATE -> R.string.keybox_problem_no_certificate
     KeyboxProblem.BAD_CERTIFICATE -> R.string.keybox_problem_bad_certificate
     KeyboxProblem.CHAIN_TOO_SHORT -> R.string.keybox_problem_chain_short
+    KeyboxProblem.INVALID_KEYBOX -> R.string.keybox_problem_invalid_key
     KeyboxProblem.TOO_LARGE -> R.string.keybox_problem_too_large
     KeyboxProblem.NO_PRIVATE_KEY -> R.string.keybox_problem_no_private_key
+    KeyboxProblem.SERVICE_UNAVAILABLE -> R.string.keybox_problem_service
 }
 
 @StringRes

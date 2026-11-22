@@ -24,6 +24,18 @@ class AppProfilesRepository(private val context: Context, private val store: Sec
             PlayServices.kill(context, listOf(SNAPCHAT))
         }
 
+    var spoofMode: Int
+        get() = store.getInt(IntegrityKeys.SPOOF_MODE, IntegrityKeys.MODE_AUTO)
+        set(value) {
+            store.putInt(IntegrityKeys.SPOOF_MODE, value)
+            val targets = buildList {
+                if (photos) add(PHOTOS)
+                if (snapchat) add(SNAPCHAT)
+                addAll(assignments().keys)
+            }
+            if (targets.isNotEmpty()) PlayServices.kill(context, targets)
+        }
+
     /** Every identity an app can be shown (the engine's table, shared with Pentas). */
     fun profiles(): List<Profile> = YasvaraSpoofProfiles.all(context.contentResolver)
 

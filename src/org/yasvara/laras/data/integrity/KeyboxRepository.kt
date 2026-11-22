@@ -9,8 +9,9 @@ import android.security.yasvara.YasvaraKeyboxProvider
 import android.security.yasvara.YasvaraKeyboxProvider.ParseResult
 import android.util.Log
 import java.security.cert.X509Certificate
+import java.util.Base64
 
-enum class KeyboxProblem { EMPTY, NOT_XML, NO_CERTIFICATE, BAD_CERTIFICATE, CHAIN_TOO_SHORT, TOO_LARGE, NO_PRIVATE_KEY }
+enum class KeyboxProblem { EMPTY, NOT_XML, NO_CERTIFICATE, BAD_CERTIFICATE, CHAIN_TOO_SHORT, INVALID_KEYBOX, TOO_LARGE, NO_PRIVATE_KEY, SERVICE_UNAVAILABLE }
 
 /** What the user needs to know about the installed keybox. */
 class KeyboxInfo(
@@ -33,11 +34,10 @@ sealed interface KeyboxImport {
 /**
  * The user's own keybox.xml.
  *
- * <p>Phase 2 custody: the full file (private key included) is installed into
- * YasvaraAttestationService, which keeps it in {@code /data/system/yasvara/} (0600,
- * system). Settings.Secure holds only the public chain for the info/revocation UI.
- * When the service is unreachable (old builds), the full file stays in Secure as the
- * Phase-1 fallback and the UI flags interim custody.
+ * <p>The full file (private key included) is installed into YasvaraAttestationService, the
+ * single owner of the credential. Settings.Secure holds only the public chain for the
+ * info/revocation UI; import is refused when the service cannot take custody. A value left
+ * in Secure by older builds is moved into the service by [migrate].
  */
 class KeyboxRepository(private val context: Context, private val store: SecureStore) {
     private val feed = RevocationFeed(context)
@@ -88,39 +88,53 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         )
     }
 
+    @Synchronized
     fun import(raw: String): KeyboxImport {
-        if (raw.length > MAX_CHARS) return KeyboxImport.Rejected(KeyboxProblem.TOO_LARGE)
-        val result = YasvaraKeyboxProvider.parse(raw)
+        if (raw.length > KeyboxPayload.MAX_BYTES || raw.toByteArray(Charsets.UTF_8).size > KeyboxPayload.MAX_BYTES) {
+            return KeyboxImport.Rejected(KeyboxProblem.TOO_LARGE)
+        }
+        if (raw.isBlank()) return KeyboxImport.Rejected(KeyboxProblem.EMPTY)
+        val serviceXml = KeyboxPayload.xml(raw) ?: return KeyboxImport.Rejected(KeyboxProblem.NOT_XML)
+        val result = YasvaraKeyboxProvider.parse(serviceXml)
         if (!result.isValid) return KeyboxImport.Rejected(problemOf(result.error))
         if (result.keyboxes.none { it.hasPrivateKey() }) {
             return KeyboxImport.Rejected(KeyboxProblem.NO_PRIVATE_KEY)
         }
-        val clean = raw.trim()
-        if (AttestationService.canWrite(context)) {
-            // Preferred: private key into the service, public chain into Secure.
-            try {
-                AttestationService.get()?.setKeybox(clean)
-                store.putString(IntegrityKeys.TS_KEYBOX, YasvaraKeyboxProvider.stripPrivateKeys(clean))
-                store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "")
-                return KeyboxImport.Imported(info()!!)
-            } catch (e: Exception) {
-                // Fall through to the Secure fallback below.
-                Log.w(TAG, "Attestation service refused the keybox; keeping it in Secure", e)
-            }
+        // Construct the public view from certificates only: arbitrary XML comments,
+        // attributes or extra elements from a remote source must never reach Settings.
+        val xml = publicChainXml(result)
+        val first = result.keyboxes.first()
+        val leaf = first.leaf()
+        val info = KeyboxInfo(first.algorithm, leaf.serialNumber.toString(16),
+            leaf.issuerX500Principal.name, leaf.notAfter.time, first.chain.size, first.hasPrivateKey())
+        val service = AttestationService.get()
+        if (service == null || !AttestationService.canWrite(context)) {
+            return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)
         }
-        store.putString(IntegrityKeys.TS_KEYBOX, clean)
+        try {
+            service.setKeybox(serviceXml)
+        } catch (e: Exception) {
+            Log.w(TAG, "Attestation service refused the keybox")
+            return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)
+        }
+        store.putString(IntegrityKeys.TS_KEYBOX, xml)
         store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "")
-        return KeyboxImport.Imported(info()!!)
+        return KeyboxImport.Imported(info)
     }
 
-    fun delete() {
+    /** Removes the keybox from the service first; the local view only follows a confirmed clear. */
+    @Synchronized
+    fun delete(): Boolean {
         try {
-            if (AttestationService.canWrite(context)) AttestationService.get()?.clearKeybox()
+            if (!AttestationService.canWrite(context)) return false
+            AttestationService.get()?.clearKeybox() ?: return false
         } catch (e: Exception) {
             Log.w(TAG, "Could not clear the keybox in the attestation service", e)
+            return false
         }
         store.putString(IntegrityKeys.TS_KEYBOX, "")
         store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "")
+        return true
     }
 
     /**
@@ -129,13 +143,11 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
      * nothing. Returns true when the user must re-import (a privkey-less value with no
      * service to complete it). Idempotent.
      */
+    @Synchronized
     fun migrate(): Boolean {
         val raw = store.getString(IntegrityKeys.TS_KEYBOX)
         if (raw.isEmpty()) return false
-        val xml = if (raw.trimStart().startsWith("<")) raw
-        else try {
-            String(android.util.Base64.decode(raw.trim(), android.util.Base64.DEFAULT))
-        } catch (_: Exception) { return false }
+        val xml = KeyboxPayload.xml(raw) ?: return true
         val result = YasvaraKeyboxProvider.parse(xml)
         if (!result.isValid) {
             store.putString(IntegrityKeys.TS_KEYBOX, "")
@@ -145,17 +157,21 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         val full = result.keyboxes.any { it.hasPrivateKey() }
         if (full && AttestationService.canWrite(context)) {
             try {
-                AttestationService.get()?.setKeybox(xml.trim())
-                store.putString(
-                    IntegrityKeys.TS_KEYBOX, YasvaraKeyboxProvider.stripPrivateKeys(xml.trim()))
+                val service = AttestationService.get() ?: return false
+                val publicXml = publicChainXml(result)
+                service.setKeybox(xml)
+                store.putString(IntegrityKeys.TS_KEYBOX, publicXml)
                 return false
             } catch (e: Exception) {
-                Log.w(TAG, "Could not move the keybox into the attestation service", e)
+                Log.w(TAG, "Could not move the keybox into the attestation service")
                 return false
             }
         }
         if (!full && AttestationService.info() == null) return true
-        if (xml.trim() != raw) store.putString(IntegrityKeys.TS_KEYBOX, xml.trim())
+        if (!full) {
+            val publicXml = publicChainXml(result)
+            if (raw != publicXml) store.putString(IntegrityKeys.TS_KEYBOX, publicXml)
+        }
         return false
     }
 
@@ -170,16 +186,35 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         }
     }
 
-    /** Checks the whole chain against Google's list and remembers a definitive answer. */
-    suspend fun checkRevocation(): Revocation {
-        val result = feed.check(chain())
+    /** Checks every installed chain (ECDSA + RSA) against Google's revocation list. */
+    suspend fun checkRevocation(force: Boolean = false): Revocation {
+        val result = feed.check(chains().flatten(), force = force)
+        recordRevocation(result)
+        return result
+    }
+
+    /** Persists a completed revocation result so the Hero, list row, and sheet stay in sync. */
+    fun recordRevocation(result: Revocation) {
         when (result) {
             is Revocation.Valid -> store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "1|${result.checkedAt}")
             is Revocation.Revoked -> store.putString(
                 IntegrityKeys.TS_LAST_REVOKE_STATUS, "2|${result.checkedAt}|${result.reason}")
             is Revocation.Unknown -> Unit
         }
-        return result
+    }
+
+    private fun publicChainXml(result: ParseResult): String = buildString {
+        append("<AndroidAttestation>")
+        for (key in result.keyboxes) {
+            append("<Key algorithm=\"").append(key.algorithm).append("\"><CertificateChain>")
+            for (cert in key.chain) {
+                append("<Certificate format=\"pem\">-----BEGIN CERTIFICATE-----\n")
+                append(Base64.getEncoder().encodeToString(cert.encoded))
+                append("\n-----END CERTIFICATE-----</Certificate>")
+            }
+            append("</CertificateChain></Key>")
+        }
+        append("</AndroidAttestation>")
     }
 
     private fun problemOf(error: Int) = when (error) {
@@ -187,12 +222,10 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         YasvaraKeyboxProvider.ERROR_NOT_XML -> KeyboxProblem.NOT_XML
         YasvaraKeyboxProvider.ERROR_BAD_CERTIFICATE -> KeyboxProblem.BAD_CERTIFICATE
         YasvaraKeyboxProvider.ERROR_CHAIN_TOO_SHORT -> KeyboxProblem.CHAIN_TOO_SHORT
+        YasvaraKeyboxProvider.ERROR_INVALID_KEYBOX -> KeyboxProblem.INVALID_KEYBOX
         else -> KeyboxProblem.NO_CERTIFICATE
     }
 
-    private companion object {
-        const val MAX_CHARS = 200_000
-    }
 }
 
 private const val TAG = "KeyboxRepository"

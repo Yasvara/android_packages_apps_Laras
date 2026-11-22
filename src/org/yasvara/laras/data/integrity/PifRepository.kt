@@ -60,9 +60,13 @@ class PifRepository(private val context: Context, private val store: SecureStore
 
     /** The profile in effect: the stored one, else the ROM's built-in fallback. */
     fun current(): StoredPif? {
-        PifProfile.parse(store.getString(IntegrityKeys.PIF_CONFIG))?.let {
+        val raw = store.getString(IntegrityKeys.PIF_CONFIG)
+        PifProfile.parse(raw)?.let { profile ->
+            if (profile.differsSemanticallyFrom(raw)) {
+                store.putString(IntegrityKeys.PIF_CONFIG, profile.toJson())
+            }
             val source = PifSource.of(store.getString(IntegrityKeys.PIF_SOURCE)) ?: PifSource.IMPORTED
-            return StoredPif(it, source, store.getLong(IntegrityKeys.PIF_LAST_FETCH))
+            return StoredPif(profile, source, store.getLong(IntegrityKeys.PIF_LAST_FETCH))
         }
         return builtIn()?.let { StoredPif(it, PifSource.BUILT_IN, 0L) }
     }
@@ -73,11 +77,27 @@ class PifRepository(private val context: Context, private val store: SecureStore
         if (raw.isEmpty()) return emptyList()
         return try {
             val root = org.json.JSONObject(raw)
-            buildList {
+            var healed = false
+            val profiles = buildList {
                 for (key in root.keys()) {
-                    PifProfile.parse(root.optString(key))?.let { add(it) }
+                    val entryRaw = root.optString(key)
+                    val profile = PifProfile.parse(entryRaw) ?: continue
+                    if (key != profile.fingerprint || profile.differsSemanticallyFrom(entryRaw)) {
+                        healed = true
+                    }
+                    add(profile)
                 }
             }.sortedByDescending { it.securityPatch }
+            if (healed) {
+                val updated = org.json.JSONObject()
+                for (profile in profiles) {
+                    if (profile.fingerprint.isNotEmpty()) {
+                        updated.put(profile.fingerprint, profile.toJson())
+                    }
+                }
+                store.putString(IntegrityKeys.PIF_LIBRARY, updated.toString())
+            }
+            profiles
         } catch (_: Exception) { emptyList() }
     }
 
@@ -116,6 +136,9 @@ class PifRepository(private val context: Context, private val store: SecureStore
     suspend fun refreshGoogleDevices(force: Boolean = false): List<GoogleDevice> =
         GoogleFeed.devices(context, store, force)
 
+    /** Cached Google Pixel list for instant UI display without network I/O. */
+    fun cachedGoogleDevices(): List<GoogleDevice> = GoogleFeed.cachedDevicesSnapshot(store)
+
     private fun activateFetched(profiles: List<PifProfile>, source: PifSource): PifUpdate {
         mergeLibrary(profiles)
         val before = current()?.takeIf { it.source != PifSource.BUILT_IN }?.profile
@@ -129,6 +152,28 @@ class PifRepository(private val context: Context, private val store: SecureStore
         mergeLibrary(listOf(profile))
         save(profile, PifSource.IMPORTED)
         return current()
+    }
+
+    /** Saves a manually authored profile, adds it to the library and activates it. */
+    fun saveManual(fields: Map<String, String>): StoredPif? {
+        val profile = PifProfile.fromFields(fields) ?: return null
+        mergeLibrary(listOf(profile))
+        save(profile, PifSource.IMPORTED)
+        return current()
+    }
+
+    /** Removes a saved profile from the on-device library by fingerprint. */
+    fun removeFromLibrary(fingerprint: String) {
+        try {
+            val raw = store.getString(IntegrityKeys.PIF_LIBRARY)
+            if (raw.isEmpty()) return
+            val root = org.json.JSONObject(raw)
+            if (root.remove(fingerprint) != null) {
+                store.putString(IntegrityKeys.PIF_LIBRARY, root.toString())
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not remove profile from library", e)
+        }
     }
 
     /** Activates a library profile by fingerprint. Returns null when unknown. */
@@ -149,8 +194,6 @@ class PifRepository(private val context: Context, private val store: SecureStore
         store.putString(IntegrityKeys.PIF_CONFIG, profile.toJson())
         store.putString(IntegrityKeys.PIF_SOURCE, source.id)
         store.putLong(IntegrityKeys.PIF_LAST_FETCH, System.currentTimeMillis())
-        profile.securityPatch.takeIf { it.isNotEmpty() }
-            ?.let { store.putString(IntegrityKeys.TS_PATCH, it) }
     }
 
     /** Adds profiles to the library, keyed by fingerprint (dedupe); trims to 24 newest. */

@@ -97,11 +97,11 @@ class TargetAppsViewModel(app: Application) : AndroidViewModel(app) {
         val next = _state.value.patchOverrides.toMutableMap()
         if (date.isBlank()) next.remove(pkg) else next[pkg] = date.trim()
         _state.update { it.copy(patchOverrides = next) }
-        PlayServices.markRestartNeeded()
         viewModelScope.launch(Dispatchers.IO) {
             val o = JSONObject()
             for ((k, v) in next) o.put(k, v)
             store.putString(IntegrityKeys.TS_PATCH_OVERRIDE, o.toString())
+            PlayServices.markRestartNeeded(autoHandledByService = true)
         }
     }
 
@@ -128,8 +128,10 @@ class TargetAppsViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun commit(selected: Set<String>) {
         _state.update { it.copy(selected = selected) }
-        PlayServices.markRestartNeeded()
-        viewModelScope.launch(Dispatchers.IO) { repository.save(selected) }
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.save(selected)
+            PlayServices.markRestartNeeded(autoHandledByService = true)
+        }
     }
 
     private fun load() {

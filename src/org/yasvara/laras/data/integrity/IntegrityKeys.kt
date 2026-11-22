@@ -27,7 +27,6 @@ object IntegrityKeys {
     const val TS_ENABLED = "yasvara_trickystore_enabled"
     const val TS_KEYBOX = "yasvara_trickystore_keybox"
     const val TS_TARGETS = "yasvara_trickystore_targets"
-    const val TS_PATCH = "yasvara_trickystore_patch"
     const val TS_LAST_REVOKE_STATUS = "yasvara_trickystore_last_revocation_status"
     /** Last ladder rung per package, written by the engine: {pkg: {rung, at, reason}}. */
     const val TS_RUNG = "yasvara_trickystore_rung"

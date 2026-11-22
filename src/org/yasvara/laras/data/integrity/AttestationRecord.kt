@@ -14,9 +14,12 @@ class AttestationRecord(
     val verifiedBootState: Int?,
     /** YYYYMM, or YYYYMMDD on newer KeyMint; null when the TEE reported none. */
     val osPatchLevel: Int?,
+    val vendorPatchLevel: Int? = null,
+    val bootPatchLevel: Int? = null,
+    val keyMintVersion: Int = 0,
 ) {
-    val hardwareBacked get() = attestationSecurityLevel >= SECURITY_TEE
-    val strongBox get() = attestationSecurityLevel >= SECURITY_STRONGBOX
+    val hardwareBacked get() = attestationSecurityLevel == SECURITY_TEE || strongBox
+    val strongBox get() = attestationSecurityLevel == SECURITY_STRONGBOX
     val bootVerified get() = verifiedBootState == BOOT_VERIFIED
 
     companion object {
@@ -27,6 +30,8 @@ class AttestationRecord(
         private const val OID = "1.3.6.1.4.1.11129.2.1.17"
         private const val TAG_OS_PATCH_LEVEL = 706
         private const val TAG_ROOT_OF_TRUST = 704
+        private const val TAG_VENDOR_PATCH_LEVEL = 718
+        private const val TAG_BOOT_PATCH_LEVEL = 719
 
         /** Null when [cert] carries no (or an unreadable) attestation extension. */
         fun of(cert: X509Certificate): AttestationRecord? {
@@ -42,22 +47,26 @@ class AttestationRecord(
             val seq = top.children(root)
             seq.next() // attestationVersion
             val level = seq.int(seq.next())
-            seq.next() // keyMintVersion
+            val keyMintVersion = seq.int(seq.next())
             seq.next() // keyMintSecurityLevel
             val challenge = seq.bytes(seq.next())
             seq.next() // uniqueId
             var locked: Boolean? = null
             var bootState: Int? = null
             var patch: Int? = null
-            // softwareEnforced, then hardwareEnforced; the TEE's answer is read last and wins.
-            repeat(2) {
-                val entries = seq.children(seq.next())
+            var vendorPatch: Int? = null
+            var bootPatch: Int? = null
+            seq.next() // softwareEnforced cannot substantiate hardware boot/patch claims.
+            val entries = seq.children(seq.next())
+            run {
                 while (entries.hasMore()) {
                     val entry = entries.next()
                     if (entry.tagClass != Der.CONTEXT) continue
                     val value = entries.children(entry).next()
                     when (entry.tag) {
                         TAG_OS_PATCH_LEVEL -> patch = entries.int(value)
+                        TAG_VENDOR_PATCH_LEVEL -> vendorPatch = entries.int(value)
+                        TAG_BOOT_PATCH_LEVEL -> bootPatch = entries.int(value)
                         TAG_ROOT_OF_TRUST -> {
                             val rot = entries.children(value)
                             rot.next() // verifiedBootKey
@@ -67,7 +76,8 @@ class AttestationRecord(
                     }
                 }
             }
-            return AttestationRecord(level, challenge, locked, bootState, patch)
+            return AttestationRecord(level, challenge, locked, bootState, patch,
+                vendorPatch, bootPatch, keyMintVersion)
         }
     }
 }

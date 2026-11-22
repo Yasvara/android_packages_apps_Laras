@@ -7,6 +7,8 @@ package org.yasvara.laras.data.integrity
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.security.yasvara.YasvaraSpoofEngine
+import android.security.yasvara.YasvaraTrickyStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -57,12 +59,16 @@ class TargetsRepository(private val context: Context, private val store: SecureS
         installed.map { it.packageName }.filter { it in KNOWN || it in REQUIRED }.toSet()
 
     companion object {
-        private const val SELF = "org.yasvara.laras"
-        const val GMS = "com.google.android.gms"
+        private val SELF = YasvaraTrickyStore.SELF_TEST_PACKAGE
+        val GMS = YasvaraSpoofEngine.PKG_GMS
 
         /** Locked on: Play Services (DroidGuard). Also the ones the engine seeds. */
         val REQUIRED = setOf(GMS)
-        val DEFAULTS = setOf(GMS, "com.android.vending", "com.google.android.apps.walletnfcrel")
+        val DEFAULTS: Set<String> = YasvaraTrickyStore.defaultTargets()
+            .lineSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
 
         /** Wallets, banks and payment apps that check attestation. */
         val KNOWN = DEFAULTS + setOf(

@@ -21,18 +21,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.GppGood
 import androidx.compose.material.icons.rounded.GppMaybe
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,14 +53,17 @@ import androidx.compose.ui.unit.dp
 import org.yasvara.laras.R
 import org.yasvara.laras.data.integrity.CheckState
 import org.yasvara.laras.data.integrity.IntegrityReport
+import org.yasvara.laras.data.integrity.Revocation
 import org.yasvara.laras.data.integrity.Tier
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.Tone
 
 /**
- * Answers one question, "what level will my apps get?", says what carries that level, and
- * offers the single next step. Everything else lives in the rows below it.
+ * Material 3 Expressive integrity hero focused on hardware keybox attestation and live
+ * Google revocation checking. STRONG is only shown when a fresh attestation chain passes
+ * all checks and is confirmed not revoked or compromised.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun IntegrityHero(
     state: IntegrityUiState,
@@ -81,16 +90,26 @@ internal fun IntegrityHero(
     var details by rememberSaveable { mutableStateOf(false) }
 
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(32.dp), color = container, contentColor = content) {
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Badge(
-                    when {
-                        state.health == Health.ATTENTION -> Icons.Rounded.GppMaybe
-                        expected == null || expected == Tier.NONE || expected == Tier.BASIC -> Icons.Rounded.Shield
-                        else -> Icons.Rounded.GppGood
-                    },
-                )
-                Column(Modifier.weight(1f)) {
+                Surface(
+                    Modifier.size(56.dp),
+                    shape = MaterialShapes.Gem.toShape(),
+                    color = colors.surface.copy(alpha = 0.65f),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            when {
+                                state.health == Health.ATTENTION -> Icons.Rounded.GppMaybe
+                                expected == Tier.STRONG || expected == Tier.DEVICE -> Icons.Rounded.GppGood
+                                else -> Icons.Rounded.Shield
+                            },
+                            null,
+                            Modifier.size(28.dp),
+                        )
+                    }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(stringResource(R.string.hero_overline), style = MaterialTheme.typography.labelLarge)
                     Text(
                         expected?.let { stringResource(it.label()) } ?: stringResource(R.string.hero_unverified),
@@ -101,33 +120,101 @@ internal fun IntegrityHero(
 
             TierSteps(expected)
 
+            if (state.keybox.enabled && state.keybox.info != null) {
+                KeyboxRevocationPill(state.keybox.revocation)
+            }
+
             Text(pathLine(state), style = MaterialTheme.typography.bodyMedium)
 
             NextStep(state, onFix, onRestart, onRunCheck)
 
-            if (state.path == IntegrityPath.KEYBOX && report != null) {
-                Column {
+            if (report != null && state.keybox.enabled && state.keybox.info != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton({ details = !details }) {
                         Text(stringResource(if (details) R.string.check_hide else R.string.check_details))
+                        Icon(
+                            if (details) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                            null,
+                            Modifier.padding(start = 4.dp).size(18.dp),
+                        )
                     }
-                    AnimatedVisibility(details) { Panel { CheckList(report) } }
+                    AnimatedVisibility(details) {
+                        Panel { CheckList(report) }
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun KeyboxRevocationPill(revocation: Revocation) {
+    val colors = MaterialTheme.colorScheme
+    val (bg, fg, icon, text) = when (revocation) {
+        is Revocation.Valid -> Quad(
+            colors.surface.copy(alpha = 0.72f),
+            colors.primary,
+            Icons.Rounded.VerifiedUser,
+            stringResource(R.string.integrity_keybox_valid) + " · " +
+                stringResource(
+                    R.string.keybox_checked,
+                    DateUtils.getRelativeTimeSpanString(
+                        revocation.checkedAt,
+                        System.currentTimeMillis(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                    ).toString(),
+                ),
+        )
+        is Revocation.Revoked -> Quad(
+            colors.error,
+            colors.onError,
+            Icons.Rounded.Error,
+            listOf(
+                stringResource(R.string.integrity_keybox_revoked),
+                revocation.reason.ifEmpty { null },
+            ).filterNotNull().joinToString(" · "),
+        )
+        is Revocation.Unknown -> Quad(
+            colors.surface.copy(alpha = 0.6f),
+            colors.onSurfaceVariant,
+            Icons.Rounded.Info,
+            stringResource(R.string.integrity_keybox_present),
+        )
+    }
+    Surface(shape = CircleShape, color = bg, contentColor = fg) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(icon, null, Modifier.size(16.dp))
+            Text(text, style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+
 /** Says what the level rests on, in one line. */
 @Composable
-private fun pathLine(state: IntegrityUiState): String = when (state.path) {
-    IntegrityPath.KEYBOX -> state.check.report?.let {
-        stringResource(R.string.hero_via_keybox_checked,
-            DateUtils.getRelativeTimeSpanString(it.at, System.currentTimeMillis(),
-                DateUtils.MINUTE_IN_MILLIS).toString())
+private fun pathLine(state: IntegrityUiState): String = when {
+    state.issue == Issue.KEYBOX_REVOKED -> stringResource(R.string.hero_keybox_revoked_body)
+    state.issue == Issue.KEYBOX_EXPIRED -> stringResource(R.string.issue_keybox_expired)
+    state.path == IntegrityPath.KEYBOX -> state.check.report?.let {
+        stringResource(
+            R.string.hero_via_keybox_checked,
+            DateUtils.getRelativeTimeSpanString(
+                it.at,
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+            ).toString(),
+        )
     } ?: stringResource(R.string.hero_via_keybox)
-    IntegrityPath.PROFILE -> stringResource(R.string.hero_via_profile,
-        state.pif.stored?.profile?.model.orEmpty())
-    IntegrityPath.NONE -> stringResource(R.string.hero_via_none)
+    state.path == IntegrityPath.PROFILE -> stringResource(
+        R.string.hero_via_profile,
+        state.pif.stored?.profile?.model.orEmpty(),
+    )
+    else -> stringResource(R.string.hero_via_none)
 }
 
 /** At most one call to action: the issue first, then a pending restart, then verifying. */
@@ -141,12 +228,17 @@ private fun NextStep(
     val issue = state.issue
     when {
         issue != null -> Step(stringResource(issue.message()), stringResource(issue.action())) { onFix(issue) }
-        state.restartPending -> Step(stringResource(R.string.restart_pending), stringResource(R.string.restart_apply),
-            Icons.Rounded.RestartAlt, onClick = onRestart)
+        state.restartPending -> Step(
+            stringResource(R.string.restart_pending),
+            stringResource(R.string.restart_apply),
+            Icons.Rounded.RestartAlt,
+            onClick = onRestart,
+        )
         state.path == IntegrityPath.KEYBOX -> Step(
             stringResource(if (state.check.report == null) R.string.hero_verify_hint else R.string.hero_verify_again_hint),
             stringResource(if (state.check.report == null) R.string.check_run else R.string.check_run_again),
-            busy = state.check.running, onClick = onRunCheck,
+            busy = state.check.running,
+            onClick = onRunCheck,
         )
     }
 }
@@ -159,12 +251,18 @@ private fun Step(
     busy: Boolean = false,
     onClick: () -> Unit,
 ) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)) {
-        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Surface(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
+    ) {
+        Row(
+            Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            FilledTonalButton(onClick, enabled = !busy) {
+            FilledTonalButton(onClick, shape = CircleShape, enabled = !busy) {
                 if (busy) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                 } else {
@@ -173,13 +271,6 @@ private fun Step(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Badge(icon: ImageVector) {
-    Surface(Modifier.size(56.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)) {
-        Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(28.dp)) }
     }
 }
 
@@ -210,21 +301,28 @@ private fun TierSteps(tier: Tier?) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         steps.forEachIndexed { i, step ->
             val on = step.ordinal <= reached
-            val fill by animateColorAsState(if (on) colors.primary else colors.surface.copy(alpha = 0.6f), label = "step")
+            val fill by animateColorAsState(
+                if (on) colors.primary else colors.surface.copy(alpha = 0.6f),
+                label = "step",
+            )
             Surface(
-                Modifier.weight(1f).height(40.dp),
+                Modifier.weight(1f).height(42.dp),
                 shape = RoundedCornerShape(
-                    topStart = if (i == 0) 20.dp else 6.dp, bottomStart = if (i == 0) 20.dp else 6.dp,
-                    topEnd = if (i == steps.lastIndex) 20.dp else 6.dp,
-                    bottomEnd = if (i == steps.lastIndex) 20.dp else 6.dp,
+                    topStart = if (i == 0) 21.dp else 6.dp,
+                    bottomStart = if (i == 0) 21.dp else 6.dp,
+                    topEnd = if (i == steps.lastIndex) 21.dp else 6.dp,
+                    bottomEnd = if (i == steps.lastIndex) 21.dp else 6.dp,
                 ),
                 color = fill,
                 contentColor = if (on) colors.onPrimary else colors.onSurfaceVariant,
             ) {
                 Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     if (on) Icon(Icons.Rounded.Check, null, Modifier.size(16.dp))
-                    Text(stringResource(step.label()), Modifier.padding(start = if (on) 4.dp else 0.dp),
-                        style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        stringResource(step.label()),
+                        Modifier.padding(start = if (on) 4.dp else 0.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
             }
         }
@@ -241,19 +339,30 @@ private fun CheckList(report: IntegrityReport) {
                 CheckState.FAIL -> Icons.Rounded.Error to Tone.BAD
                 CheckState.UNKNOWN -> Icons.Rounded.Info to Tone.NEUTRAL
             }
-            StatusLine(icon, tone, stringResource(result.check.title()), detail = context.detail(result)
-                ?: if (result.state == CheckState.UNKNOWN) stringResource(R.string.check_unknown) else null)
+            StatusLine(
+                icon,
+                tone,
+                stringResource(result.check.title()),
+                detail = context.detail(result)
+                    ?: if (result.state == CheckState.UNKNOWN) stringResource(R.string.check_unknown) else null,
+            )
         }
-        Text(stringResource(R.string.check_estimate_note), style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            stringResource(R.string.check_estimate_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
 /** A neutral inset that keeps status colours readable on the tinted hero. */
 @Composable
 private fun Panel(content: @Composable () -> Unit) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceBright,
+    ) {
         Column(Modifier.padding(16.dp)) { content() }
     }
 }

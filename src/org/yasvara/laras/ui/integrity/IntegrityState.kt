@@ -6,7 +6,6 @@ package org.yasvara.laras.ui.integrity
 
 import org.yasvara.laras.data.integrity.ChainOrigin
 import org.yasvara.laras.data.integrity.IntegrityReport
-import org.yasvara.laras.data.integrity.IntegrityKeys
 import org.yasvara.laras.data.integrity.GoogleDevice
 import org.yasvara.laras.data.integrity.KeyboxInfo
 import org.yasvara.laras.data.integrity.PifChannel
@@ -21,7 +20,6 @@ data class Notice(val text: String, val error: Boolean = false)
 data class PifUi(
     val stored: StoredPif? = null,
     val enabled: Boolean = true,
-    val mode: Int = IntegrityKeys.MODE_AUTO,
     val customUrl: String = "",
     val updating: Boolean = false,
     val notice: Notice? = null,
@@ -38,6 +36,9 @@ data class KeyboxUi(
     val revocation: Revocation = Revocation.Unknown(),
     val enabled: Boolean = true,
     val checking: Boolean = false,
+    val busy: Boolean = false,
+    /** True only during the cancellable download, not during service publication. */
+    val syncing: Boolean = false,
     val notice: Notice? = null,
     /** True while the private key still sits in Settings (service unreachable). */
     val interim: Boolean = false,
@@ -81,21 +82,30 @@ data class IntegrityUiState(
         }
 
     /**
-     * The level target apps should reach. With a keybox it is what the last check measured,
-     * since only the check sees the chain Google grades; the profile path is judged from the
-     * build fields alone, which the check cannot see, so it is the level that path gives.
+     * Integrity tier based strictly on live keybox attestation + Google's revocation list:
+     * a revoked or expired keybox drops to BASIC/NONE, and STRONG is shown only after
+     * a real attestation check confirms the chain is valid and not revoked/compromised.
      */
     val expected: Tier?
-        get() = when (path) {
-            IntegrityPath.KEYBOX -> check.report?.takeIf { it.origin == ChainOrigin.KEYBOX }?.tier
-            IntegrityPath.PROFILE -> if (issue == Issue.STALE_PROFILE) Tier.BASIC else Tier.DEVICE
-            IntegrityPath.NONE -> Tier.BASIC
+        get() = when {
+            issue == Issue.KEYBOX_REVOKED || issue == Issue.KEYBOX_EXPIRED ->
+                if (check.report?.tier == Tier.NONE) Tier.NONE else Tier.BASIC
+            path == IntegrityPath.KEYBOX -> check.report
+                ?.takeIf { it.origin == ChainOrigin.KEYBOX }
+                ?.let { r ->
+                    if (r.tier == Tier.STRONG && keybox.revocation !is Revocation.Valid) Tier.DEVICE
+                    else r.tier
+                }
+            path == IntegrityPath.PROFILE -> if (issue == Issue.STALE_PROFILE) Tier.BASIC else Tier.DEVICE
+            else -> Tier.BASIC
         }
 
     val health: Health
         get() = when {
             !pif.enabled && !keybox.enabled -> Health.OFF
             issue != null -> Health.ATTENTION
+            path == IntegrityPath.KEYBOX &&
+                (check.report?.tier == Tier.NONE || check.report?.tier == Tier.BASIC) -> Health.ATTENTION
             else -> Health.READY
         }
 

@@ -17,7 +17,7 @@ import java.security.spec.ECGenParameterSpec
 import java.time.LocalDate
 import java.time.YearMonth
 
-/** What Play Integrity would grade the device as, from weakest to strongest. */
+/** Local estimates, not a server verdict or proof of genuine hardware trust. */
 enum class Tier { NONE, BASIC, DEVICE, STRONG }
 
 enum class Check {
@@ -49,13 +49,14 @@ class IntegrityReport(
     val origin: ChainOrigin,
     val strongBox: Boolean,
     val at: Long,
+    val revocation: Revocation = Revocation.Unknown(),
 ) {
     operator fun get(check: Check) = checks.first { it.check == check }
 }
 
 /**
- * Estimates the Play Integrity tier locally from a fresh hardware key attestation, the same
- * evidence Google's servers grade. It runs in Laras' own process, which the engine treats as a
+ * Estimates an integrity tier locally from a fresh key attestation. It cannot prove that
+ * attestation claims are genuine hardware state. It runs in Laras' own process, treated as a
  * target app, so it sees exactly the chain target apps see (device chain or keybox chain).
  *
  * This is an estimate: Google's verdict also weighs signals a device cannot see.
@@ -67,7 +68,7 @@ class IntegrityChecker(
     private val roots = AttestationRoots(context)
     private val feed = RevocationFeed(context)
 
-    suspend fun run(): IntegrityReport = withContext(Dispatchers.IO) {
+    suspend fun run(forceRevocation: Boolean = true): IntegrityReport = withContext(Dispatchers.IO) {
         roots.refreshIfStale()
         val challenge = ByteArray(32).also { SecureRandom().nextBytes(it) }
         val probe = try {
@@ -76,8 +77,18 @@ class IntegrityChecker(
             return@withContext failed(CheckResult(Check.CHAIN, CheckState.FAIL, e.javaClass.simpleName))
         }
         val (chain, probePublicKey) = probe
+        if (chain.isEmpty()) return@withContext failed(CheckResult(Check.CHAIN, CheckState.FAIL, "short"))
         val record = AttestationRecord.of(chain.first())
         val origin = if (isKeyboxChain(chain)) ChainOrigin.KEYBOX else ChainOrigin.DEVICE
+        val certsToCheck = if (origin == ChainOrigin.KEYBOX) {
+            (chain + keybox.chains().flatten()).distinctBy { it.serialNumber }
+        } else {
+            chain
+        }
+        val revStatus = feed.check(certsToCheck, force = forceRevocation)
+        if (origin == ChainOrigin.KEYBOX && revStatus !is Revocation.Unknown) {
+            keybox.recordRevocation(revStatus)
+        }
 
         val checks = listOf(
             chainCheck(chain, record),
@@ -85,7 +96,7 @@ class IntegrityChecker(
             hardwareCheck(record),
             bootCheck(record),
             patchCheck(record),
-            revocationCheck(chain),
+            revocationResult(revStatus),
             bindingCheck(record, challenge, chain.first(), probePublicKey),
         )
         IntegrityReport(
@@ -94,6 +105,7 @@ class IntegrityChecker(
             origin = origin,
             strongBox = record?.strongBox == true,
             at = System.currentTimeMillis(),
+            revocation = revStatus,
         )
     }
 
@@ -178,18 +190,8 @@ class IntegrityChecker(
         return CheckResult(Check.BOOT, if (locked && verified) CheckState.PASS else CheckState.FAIL, detail)
     }
 
-    private fun patchCheck(record: AttestationRecord?): CheckResult {
-        val level = record?.osPatchLevel ?: return CheckResult(Check.PATCH, CheckState.UNKNOWN)
-        val ym = if (level >= 10_000_000) level / 100 else level // YYYYMMDD -> YYYYMM
-        val patch = try { YearMonth.of(ym / 100, ym % 100) } catch (_: Exception) {
-            return CheckResult(Check.PATCH, CheckState.UNKNOWN)
-        }
-        val months = java.time.temporal.ChronoUnit.MONTHS.between(patch, YearMonth.from(LocalDate.now()))
-        val text = "%04d-%02d".format(patch.year, patch.monthValue)
-        return CheckResult(Check.PATCH, if (months <= MAX_PATCH_AGE_MONTHS) CheckState.PASS else CheckState.FAIL, text)
-    }
 
-    private suspend fun revocationCheck(chain: List<X509Certificate>) = when (val r = feed.check(chain)) {
+    private fun revocationResult(r: Revocation) = when (r) {
         is Revocation.Valid -> CheckResult(Check.REVOCATION, CheckState.PASS)
         is Revocation.Revoked -> CheckResult(Check.REVOCATION, CheckState.FAIL, r.reason)
         is Revocation.Unknown -> CheckResult(Check.REVOCATION, CheckState.UNKNOWN, r.failure?.kind?.name)
@@ -203,17 +205,47 @@ class IntegrityChecker(
         return CheckResult(Check.KEY_BINDING, if (bound) CheckState.PASS else CheckState.FAIL)
     }
 
-    private fun tierOf(checks: List<CheckResult>): Tier {
-        fun ok(c: Check) = checks.first { it.check == c }.state == CheckState.PASS
-        fun notFailed(c: Check) = checks.first { it.check == c }.state != CheckState.FAIL
-        if (!ok(Check.CHAIN)) return Tier.NONE
-        if (!ok(Check.GOOGLE_ROOT) || !ok(Check.HARDWARE) || !notFailed(Check.REVOCATION)) return Tier.BASIC
-        if (!ok(Check.BOOT) || !ok(Check.PATCH)) return Tier.DEVICE
-        return Tier.STRONG
-    }
+    internal companion object {
+        private const val ALIAS = "laras_integrity_probe"
+        private const val MAX_PATCH_AGE_MONTHS = 12L
 
-    private companion object {
-        const val ALIAS = "laras_integrity_probe"
-        const val MAX_PATCH_AGE_MONTHS = 12
+        fun tierOf(checks: List<CheckResult>): Tier {
+            fun state(c: Check) = checks.firstOrNull { it.check == c }?.state
+            fun ok(c: Check) = state(c) == CheckState.PASS
+            if (!ok(Check.CHAIN) || !ok(Check.KEY_BINDING)) return Tier.NONE
+            if (!ok(Check.GOOGLE_ROOT) || !ok(Check.HARDWARE) || state(Check.REVOCATION) == CheckState.FAIL) {
+                return Tier.BASIC
+            }
+            if (!ok(Check.BOOT) || !ok(Check.PATCH) || !ok(Check.REVOCATION)) return Tier.DEVICE
+            return Tier.STRONG
+        }
+
+        fun patchCheck(record: AttestationRecord?, today: LocalDate = LocalDate.now()): CheckResult {
+            val levels = listOf(record?.osPatchLevel, record?.vendorPatchLevel, record?.bootPatchLevel)
+            // Vendor/boot fields were added in Keymaster 4; all KeyMint (100+) versions
+            // support them. Legacy hardware is assessed using the fields it can supply.
+            val partitionsRequired = (record?.keyMintVersion ?: 0) >= 4
+            val missing = levels[0] == null || (partitionsRequired && levels.any { it == null })
+            var stale = false
+            val dates = mutableListOf<LocalDate>()
+            for ((index, level) in levels.withIndex()) {
+                if (level == null) continue
+                val date = try {
+                    when {
+                        index == 0 && level in 200001..999912 -> YearMonth.of(level / 100, level % 100).atDay(1)
+                        level in 20000101..99991231 -> LocalDate.of(level / 10000, level / 100 % 100, level % 100)
+                        else -> null
+                    }
+                } catch (_: Exception) { null }
+                if (date == null) return CheckResult(Check.PATCH, CheckState.FAIL, "invalid-patch")
+                if (date.isAfter(today)) return CheckResult(Check.PATCH, CheckState.FAIL, "future-patch")
+                dates += date
+                val age = java.time.temporal.ChronoUnit.MONTHS.between(YearMonth.from(date), YearMonth.from(today))
+                if (age > MAX_PATCH_AGE_MONTHS) stale = true
+            }
+            if (stale) return CheckResult(Check.PATCH, CheckState.FAIL, dates.minOrNull()?.toString())
+            if (missing) return CheckResult(Check.PATCH, CheckState.UNKNOWN, "missing-patch")
+            return CheckResult(Check.PATCH, CheckState.PASS, dates.minOrNull()?.toString())
+        }
     }
 }

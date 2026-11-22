@@ -5,6 +5,7 @@
 package org.yasvara.laras.data.integrity
 
 import android.content.Context
+import android.security.yasvara.YasvaraSpoofEngine
 import org.json.JSONObject
 
 /** One Pixel device as listed on Google's factory images page. */
@@ -29,6 +30,7 @@ object GoogleFeed {
 
     private val VERSION_LINK = Regex("""href="(/about/versions/\d+)"""")
     private val DOWNLOAD_LINK = Regex("""href="([^"]+download[^"]*)"""")
+    private val QPR_NUMBER = Regex("""qpr(\d+)""")
     private val DEVICE_ROW = Regex("""<tr[^>]*id="([^"]+)"[^>]*>[\s\S]*?<td[^>]*>([^<]+)</td>""")
     private val API_KEY = Regex("""AIza[a-zA-Z0-9_\-]+""")
     private val PATCH_DATE = Regex("""\.(\d{2})(\d{2})\d{2}\.""")
@@ -54,13 +56,17 @@ object GoogleFeed {
         if (latestUrl.isEmpty()) throw FetchException(FetchFailure(FailureKind.OTHER, "no version page"))
         val versionHtml = Http.get(context, latestUrl)
         var downloadUrl = ""
+        var bestScore = Int.MIN_VALUE
         for (match in DOWNLOAD_LINK.findAll(versionHtml)) {
             val url = match.groupValues[1]
-            if ("qpr" in url) {
+            val qpr = QPR_NUMBER.find(url)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val isOta = "download-ota" in url
+            // Prefer the highest QPR factory image page (e.g. qpr2/download includes Pixel 11).
+            val score = qpr * 10 + if (isOta) 0 else 5
+            if (score > bestScore) {
+                bestScore = score
                 downloadUrl = url
-                break
             }
-            if (downloadUrl.isEmpty()) downloadUrl = url
         }
         if (!downloadUrl.startsWith("http")) downloadUrl = "https://developer.android.com$downloadUrl"
         val factoryHtml = Http.get(context, downloadUrl)
@@ -87,21 +93,24 @@ object GoogleFeed {
         JSONObject(store.getString(IntegrityKeys.PIF_GOOGLE_DEVICES)).optString("major")
     } catch (_: Exception) { "" }
 
+    /** Cached Pixel device list without network I/O (empty when never scraped). */
+    fun cachedDevicesSnapshot(store: SecureStore): List<GoogleDevice> = try {
+        val devices = JSONObject(store.getString(IntegrityKeys.PIF_GOOGLE_DEVICES))
+            .optJSONArray("devices") ?: return emptyList()
+        buildList {
+            for (i in 0 until devices.length()) {
+                val o = devices.optJSONObject(i) ?: continue
+                val id = o.optString("id")
+                val model = o.optString("model")
+                if (id.isNotEmpty() && model.isNotEmpty()) add(GoogleDevice(id, model))
+            }
+        }
+    } catch (_: Exception) { emptyList() }
+
     private fun cachedDevices(store: SecureStore): List<GoogleDevice>? {
         val at = store.getLong(IntegrityKeys.PIF_GOOGLE_DEVICES_AT)
         if (at <= 0L || System.currentTimeMillis() - at > DEVICE_CACHE_TTL_MS) return null
-        return try {
-            val devices = JSONObject(store.getString(IntegrityKeys.PIF_GOOGLE_DEVICES))
-                .optJSONArray("devices") ?: return null
-            buildList {
-                for (i in 0 until devices.length()) {
-                    val o = devices.optJSONObject(i) ?: continue
-                    val id = o.optString("id")
-                    val model = o.optString("model")
-                    if (id.isNotEmpty() && model.isNotEmpty()) add(GoogleDevice(id, model))
-                }
-            }.ifEmpty { null }
-        } catch (_: Exception) { null }
+        return cachedDevicesSnapshot(store).ifEmpty { null }
     }
 
     /**
@@ -172,17 +181,22 @@ object GoogleFeed {
         val incremental = build.optString("buildId").trim()
         if (releaseId.isEmpty() || incremental.isEmpty()) return null
         val product = if (beta) "${device.id}_beta" else device.id
+        val fpRelease = when (channel) {
+            PifChannel.STABLE, PifChannel.BETA ->
+                PifProfile.inferReleaseFromBuildId(releaseId)
+                    ?: major.ifEmpty { defaultPlatformRelease() }
+            PifChannel.CANARY -> "CANARY"
+        }
         val release = when (channel) {
-            PifChannel.STABLE -> major.ifEmpty { "16" }
-            else -> "CANARY"
+            PifChannel.STABLE, PifChannel.BETA -> fpRelease
+            PifChannel.CANARY -> inferReleaseForCodename(fpRelease, releaseId, major)
         }
         val fingerprint =
-            "google/$product/${device.id}:$release/$releaseId/$incremental:user/release-keys"
+            "google/$product/${device.id}:$fpRelease/$releaseId/$incremental:user/release-keys"
         val patch = PATCH_DATE.find(releaseId)?.let { "20${it.groupValues[1]}-${it.groupValues[2]}-05" }
             ?: releaseId.substringBefore('.').takeIf { it.length == 4 }?.let { "$it-05" }
             ?: return null
         val json = JSONObject()
-            .put("CHANNEL", channel.id.replaceFirstChar { it.uppercase() })
             .put("MANUFACTURER", "Google")
             .put("MODEL", device.model)
             .put("FINGERPRINT", fingerprint)
@@ -195,8 +209,61 @@ object GoogleFeed {
             .put("TYPE", "user")
             .put("TAGS", "release-keys")
             .put("SECURITY_PATCH", patch)
-            .put("DEVICE_INITIAL_SDK_INT", "32")
+            .put("DEVICE_INITIAL_SDK_INT", initialSdkFor(device.id, major))
             .toString()
         return PifProfile.parse(json)
+    }
+
+    /**
+     * Resolves the numeric Android major release for a codename fingerprint release segment
+     * (e.g. "CANARY", "Baklava"). Delegates to [YasvaraSpoofEngine.inferReleaseFromFingerprintOrPlatform]
+     * as the single source of truth, taking the larger with the scraped [major] when provided.
+     */
+    fun inferReleaseForCodename(
+        codename: String,
+        buildId: String = "",
+        major: String = "",
+        platformRelease: String = defaultPlatformRelease(),
+    ): String {
+        val inferred = try {
+            YasvaraSpoofEngine.inferReleaseFromFingerprintOrPlatform(codename, buildId, platformRelease)
+        } catch (_: Throwable) { null }
+        val fromEngine = inferred?.substringBefore('.')?.toIntOrNull() ?: 0
+        val fromMajor = major.trim().substringBefore('.').toIntOrNull() ?: 0
+        val best = if (codename.trim().equals("canary", ignoreCase = true) || fromEngine == 0) {
+            maxOf(fromEngine, fromMajor)
+        } else {
+            fromEngine
+        }
+        return if (best > 0) best.toString() else "17"
+    }
+
+    internal fun defaultPlatformRelease(): String {
+        val sysProp = try {
+            android.os.SystemProperties.get("ro.build.version.release", "").trim()
+        } catch (_: Throwable) { "" }
+        if (sysProp.isNotEmpty() && sysProp[0].isDigit()) return sysProp
+        val buildRel = try {
+            android.os.Build.VERSION.RELEASE?.trim().orEmpty()
+        } catch (_: Throwable) { "" }
+        if (buildRel.isNotEmpty() && buildRel[0].isDigit()) return buildRel
+        return "17"
+    }
+
+    /** Launch SDK level per Pixel codename (independent of the currently running Android OS). */
+    private fun initialSdkFor(id: String, major: String): String = when (id) {
+        "sailfish", "marlin" -> "25"
+        "walleye", "taimen" -> "26"
+        "blueline", "crosshatch", "sargo", "bonito" -> "28"
+        "flame", "coral", "sunfish" -> "29"
+        "bramble", "redfin", "barbet" -> "30"
+        "oriole", "raven" -> "31"
+        "bluejay" -> "32"
+        "panther", "cheetah", "lynx", "felix", "tangorpro" -> "33"
+        "shiba", "husky", "akita", "tokay", "caiman", "komodo", "comet" -> "34"
+        "tegu" -> "35"
+        "frankel", "blazer", "mustang", "rango", "stallion" -> "36"
+        "cubs", "grizzly", "kodiak", "yogi" -> "37"
+        else -> major.toIntOrNull()?.let { if (it >= 15) (it + 20).toString() else null } ?: "35"
     }
 }

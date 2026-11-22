@@ -23,10 +23,10 @@ class RevocationFeed(private val context: Context) {
     @Volatile private var cached: Pair<Long, JSONObject>? = null
 
     /** Checks every certificate of [chain]; one revoked certificate revokes the chain. */
-    suspend fun check(chain: List<X509Certificate>): Revocation {
+    suspend fun check(chain: List<X509Certificate>, force: Boolean = false): Revocation {
         if (chain.isEmpty()) return Revocation.Unknown()
         val entries = try {
-            entries()
+            entries(force)
         } catch (e: FetchException) {
             return Revocation.Unknown(e.failure)
         }
@@ -38,8 +38,10 @@ class RevocationFeed(private val context: Context) {
         return Revocation.Valid(now)
     }
 
-    private suspend fun entries(): JSONObject {
-        cached?.takeIf { System.currentTimeMillis() - it.first < CACHE_MS }?.let { return it.second }
+    private suspend fun entries(force: Boolean = false): JSONObject {
+        if (!force) {
+            cached?.takeIf { System.currentTimeMillis() - it.first < CACHE_MS }?.let { return it.second }
+        }
         val body = Http.get(context, STATUS_URL, MAX_BYTES)
         val entries = try {
             JSONObject(body).getJSONObject("entries")
@@ -52,14 +54,25 @@ class RevocationFeed(private val context: Context) {
 
     /** Google keys serials as lowercase hex without leading zeros, older ones as decimal. */
     private fun lookup(entries: JSONObject, serial: BigInteger): String? {
-        val entry = entries.optJSONObject(serial.toString(16)) ?: entries.optJSONObject(serial.toString())
-        return entry?.optString("reason")?.ifEmpty { entry.optString("status") }
-            ?.ifEmpty { "REVOKED" }
+        val hex = serial.toString(16).lowercase()
+        val unsignedHex = BigInteger(1, serial.toByteArray()).toString(16).lowercase()
+        val entry = entries.optJSONObject(hex)
+            ?: entries.optJSONObject(unsignedHex)
+            ?: entries.optJSONObject(serial.toString())
+            ?: return null
+        val status = entry.optString("status").trim()
+        val reason = entry.optString("reason").trim()
+        return when {
+            status.isNotEmpty() && reason.isNotEmpty() -> "$status · $reason"
+            reason.isNotEmpty() -> reason
+            status.isNotEmpty() -> status
+            else -> "REVOKED"
+        }
     }
 
     companion object {
         const val STATUS_URL = "https://android.googleapis.com/attestation/status"
-        private const val MAX_BYTES = 1 shl 20
+        private const val MAX_BYTES = 4 shl 20
         private const val CACHE_MS = 10 * 60 * 1000L
     }
 }
