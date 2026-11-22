@@ -5,13 +5,17 @@
 package org.yasvara.laras.data.root
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.os.Process
 import android.os.ServiceManager
+import android.os.UserHandle
 import android.util.Log
 import com.android.server.yasvara.root.IYasvaraRoot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.yasvara.laras.R
 
 /** What an enrolled app may ask for. Mirrors the tiers of yasvara_rootd. */
 enum class RootTier(val value: Int) {
@@ -61,6 +65,21 @@ data class AuditEvent(
 
 data class DeniedAttempt(val uid: Int, val packageName: String, val lastMs: Long, val count: Int, val reason: String)
 
+data class InstalledApp(
+    val packageName: String,
+    val label: String,
+    val uid: Int,
+    val isSystem: Boolean,
+    val sharedPackages: List<String>,
+)
+
+data class GrantPreset(
+    val tier: RootTier,
+    val scope: RootScope,
+    val durationMs: Long,
+    val flags: Int = 0,
+)
+
 data class RootState(
     val enabled: Boolean,
     val frozen: Boolean,
@@ -69,7 +88,7 @@ data class RootState(
 )
 
 /**
- * The control plane of the native root (SPEC-0006): talks to YasvaraRootService in
+ * The control plane of the native root: talks to YasvaraRootService in
  * system_server, which owns the grants the daemon obeys. Every call is blocking binder IO; call
  * from Dispatchers.IO. Changes only succeed with the device unlocked and are gated by the device
  * credential in the UI before they get here.
@@ -217,9 +236,116 @@ class RootRepository(private val context: Context) {
             .sortedBy { it.second.lowercase() }
     }
 
+    /**
+     * All enrollable application UIDs on this user, grouped by UID so shared-UID families
+     * (such as Termux and its plugins) appear once with every package listed.
+     */
+    suspend fun allApps(): List<InstalledApp> = withContext(Dispatchers.IO) {
+        val launchable = pm.queryIntentActivities(
+            android.content.Intent(android.content.Intent.ACTION_MAIN)
+                .addCategory(android.content.Intent.CATEGORY_LAUNCHER),
+            0,
+        ).mapTo(HashSet()) { it.activityInfo.packageName }
+
+        val sysMask = ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP
+        pm.getInstalledApplications(0)
+            .asSequence()
+            .filter { it.packageName != context.packageName }
+            .filter { UserHandle.getAppId(it.uid) >= Process.FIRST_APPLICATION_UID }
+            .groupBy { it.uid }
+            .values
+            .map { group ->
+                val sorted = group.sortedWith(
+                    compareByDescending<ApplicationInfo> { it.packageName in launchable }
+                        .thenBy { it.packageName },
+                )
+                val primary = sorted.first()
+                InstalledApp(
+                    packageName = primary.packageName,
+                    label = primary.loadLabel(pm).toString(),
+                    uid = primary.uid,
+                    isSystem = group.all { (it.flags and sysMask) != 0 },
+                    sharedPackages = group.map { it.packageName }.distinct().sorted(),
+                )
+            }
+            .sortedBy { it.label.lowercase() }
+    }
+
+    suspend fun resolveApp(packageName: String): InstalledApp? = withContext(Dispatchers.IO) {
+        if (packageName == SHELL_PACKAGE) {
+            return@withContext InstalledApp(
+                packageName = SHELL_PACKAGE,
+                label = context.getString(R.string.akar_adb_title),
+                uid = UID_SHELL,
+                isSystem = true,
+                sharedPackages = listOf(SHELL_PACKAGE),
+            )
+        }
+        try {
+            val ai = pm.getApplicationInfo(packageName, 0)
+            val sharing = pm.getPackagesForUid(ai.uid)?.distinct()?.sorted().orEmpty()
+                .ifEmpty { listOf(packageName) }
+            val sysMask = ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP
+            InstalledApp(
+                packageName = packageName,
+                label = ai.loadLabel(pm).toString(),
+                uid = ai.uid,
+                isSystem = (ai.flags and sysMask) != 0,
+                sharedPackages = sharing,
+            )
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
+    }
+
+    private val prefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
+    fun adbPreset(): GrantPreset {
+        val tier = RootTier.of(prefs.getInt(KEY_ADB_TIER, RootTier.ROOT.value))
+        val scope = RootScope.entries.firstOrNull {
+            it.value == prefs.getInt(KEY_ADB_SCOPE, RootScope.TIMED.value)
+        } ?: RootScope.TIMED
+        val duration = prefs.getLong(KEY_ADB_DURATION, DEFAULT_ADB_DURATION_MS)
+            .takeIf { it > 0 } ?: DEFAULT_ADB_DURATION_MS
+        return GrantPreset(tier, scope, duration)
+    }
+
+    fun saveAdbPreset(tier: RootTier, scope: RootScope, durationMs: Long) {
+        prefs.edit()
+            .putInt(KEY_ADB_TIER, tier.value)
+            .putInt(KEY_ADB_SCOPE, scope.value)
+            .putLong(KEY_ADB_DURATION, if (scope == RootScope.TIMED && durationMs > 0) durationMs else DEFAULT_ADB_DURATION_MS)
+            .apply()
+    }
+
+    fun savedProfile(pkg: String): GrantPreset? {
+        val raw = prefs.getString(KEY_PROFILE_PREFIX + pkg, null) ?: return null
+        val p = raw.split('|')
+        if (p.size < 4) return null
+        val tier = p[0].toIntOrNull()?.let(RootTier::of) ?: return null
+        val scope = p[1].toIntOrNull()?.let { v -> RootScope.entries.firstOrNull { it.value == v } } ?: return null
+        val duration = p[2].toLongOrNull() ?: 0L
+        val flags = p[3].toIntOrNull() ?: 0
+        return GrantPreset(tier, scope, duration, flags)
+    }
+
+    fun saveProfile(pkg: String, tier: RootTier, scope: RootScope, durationMs: Long, flags: Int) {
+        prefs.edit()
+            .putString(KEY_PROFILE_PREFIX + pkg, "${tier.value}|${scope.value}|$durationMs|$flags")
+            .apply()
+    }
+
     companion object {
-        const val SERVICE = "yasvara_root"
+        const val SERVICE = "yasvara_session"
         const val TERMUX = "com.termux"
+        const val SHELL_PACKAGE = "shell"
+        const val UID_SHELL = 2000
+        const val DEFAULT_ADB_DURATION_MS = 3_600_000L
+        private const val PREFS_NAME = "akar_ui"
+        private const val KEY_ADB_TIER = "adb_tier"
+        private const val KEY_ADB_SCOPE = "adb_scope"
+        private const val KEY_ADB_DURATION = "adb_duration_ms"
+        private const val KEY_PROFILE_PREFIX = "profile:"
         private const val TAG = "LarasRoot"
     }
 }

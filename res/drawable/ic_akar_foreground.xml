@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.1"
+        android:scaleY="2.1"
+        android:translateX="28.8"
+        android:translateY="28.8">
+        <path
+            android:pathData="M12,3 L12,21"
+            android:strokeWidth="2.1"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M12,9 C12,11.5 9.8,13.5 7,15.5 C5.4,16.7 4.4,18.2 4,20"
+            android:strokeWidth="1.9"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M12,9 C12,11.5 14.2,13.5 17,15.5 C18.6,16.7 19.6,18.2 20,20"
+            android:strokeWidth="1.9"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M9.5,14 C8.2,15.6 7.5,17.8 8,20.5"
+            android:strokeWidth="1.4"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M14.5,14 C15.8,15.6 16.5,17.8 16,20.5"
+            android:strokeWidth="1.4"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M8.5,10.5 C7,10.8 5.6,11.5 4.5,12.8"
+            android:strokeWidth="1.2"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M15.5,10.5 C17,10.8 18.4,11.5 19.5,12.8"
+            android:strokeWidth="1.2"
+            android:strokeColor="@android:color/system_accent1_700"
+            android:strokeLineCap="round" />
+    </group>
+</vector>

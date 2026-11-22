@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import org.yasvara.laras.R
 
 /**
- * A quiet notice when an app that is not enrolled tried to use root (SPEC-0006 §6.1).
+ * A quiet notice when an app that is not enrolled tried to use root.
  * It has no "Allow" button on purpose: enrolling happens in Akar, behind the device
  * credential, so a notification can never be the place root is handed out. The service
  * rate-limits (one per app per ten minutes, from the daemon's own limit).
