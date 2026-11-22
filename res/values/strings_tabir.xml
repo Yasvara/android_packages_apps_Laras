@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="tabir_tab_rules">Rules</string>
+    <string name="tabir_tab_templates">Templates</string>
+    <string name="tabir_tab_simulate">View as</string>
+
+    <string name="tabir_surfaces_title">Surface concealment</string>
+    <string name="tabir_surfaces_subtitle">Native framework &amp; SettingsProvider shields applied with zero app hooks</string>
+    <string name="tabir_hide_xposed_summary">%1$d Xposed module(s) detected</string>
+    <string name="tabir_hide_rom">Hide Custom ROM packages</string>
+    <string name="tabir_hide_rom_summary">Conceals custom ROM &amp; Yasvara packages (%1$d installed), keeping core android intact</string>
+    <string name="tabir_hide_root">Hide root &amp; hook tooling</string>
+    <string name="tabir_hide_root_summary">Automatically includes known root/hook managers (%1$d installed)</string>
+
+    <string name="tabir_dev_title">Developer Options &amp; ADB state</string>
+    <string name="tabir_dev_summary">Spoofs adb_enabled, adb_wifi_enabled, development_settings_enabled &amp; sticky USB state</string>
+    <string name="tabir_dev_off">Off</string>
+    <string name="tabir_dev_observers">Observers only</string>
+    <string name="tabir_dev_all">All user apps</string>
+
+    <string name="tabir_global_title">Global scope</string>
+    <string name="tabir_per_app_title">Per-app overrides (HMA)</string>
+    <string name="tabir_per_app_add">Configure app</string>
+    <string name="tabir_per_app_empty">No per-app overrides yet. Tap Configure app to set Blacklist or Whitelist + Templates per observer.</string>
+
+    <string name="tabir_mode_global">Global</string>
+    <string name="tabir_mode_blacklist">Blacklist</string>
+    <string name="tabir_mode_whitelist">Whitelist</string>
+    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d template(s), %2$d custom app(s)</string>
+    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d template(s), %2$d allowed app(s)</string>
+
+    <string name="tabir_templates_new">New template</string>
+    <string name="tabir_templates_empty">No templates saved yet.</string>
+    <string name="tabir_template_name">Template name</string>
+    <string name="tabir_template_summary_blacklist">Blacklist • Hides %1$d package(s)</string>
+    <string name="tabir_template_summary_whitelist">Whitelist • Allows %1$d package(s) + system apps</string>
+    <string name="tabir_assign_templates">Assigned templates</string>
+    <string name="tabir_custom_blacklist_apps">Extra hidden apps</string>
+    <string name="tabir_custom_whitelist_apps">Allowed visible apps</string>
+    <string name="tabir_save">Save</string>
+    <string name="tabir_delete">Delete</string>
+    <string name="tabir_cancel">Cancel</string>
+
+    <string name="tabir_action_force_stop">Force-stop hidden apps</string>
+    <string name="tabir_action_export">Export JSON backup</string>
+    <string name="tabir_action_import">Import JSON backup</string>
+    <string name="tabir_stopped_toast">Force-stopped %1$d hidden package(s)</string>
+    <string name="tabir_export_done">Tabir configuration exported</string>
+    <string name="tabir_import_ok">Tabir configuration imported</string>
+    <string name="tabir_import_fail">Invalid Tabir JSON file</string>
+
+    <string name="tabir_sim_dev_hidden">Developer Options &amp; ADB concealed (returns 0)</string>
+    <string name="tabir_sim_dev_visible">Developer Options &amp; ADB visible to this app</string>
+    <string name="tabir_sim_counts">%1$d hidden • %2$d visible</string>
+    <string name="tabir_sim_empty">Pick an installed app above to preview every package and setting it can observe.</string>
+</resources>
+

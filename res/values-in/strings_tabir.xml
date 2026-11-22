@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="visibility_title">Tabir</string>
+    <string name="visibility_entry_summary">Sembunyikan aplikasi, jejak custom ROM, dan status pengembang dari aplikasi lain</string>
+    <string name="visibility_scope_selected">Aplikasi terpilih</string>
+    <string name="visibility_scope_all">Semua aplikasi pengguna</string>
+    <string name="visibility_hide_xposed">Sembunyikan modul Xposed</string>
+    <string name="visibility_hidden">Aplikasi disembunyikan</string>
+    <string name="visibility_observers">Disembunyikan dari</string>
+    <string name="visibility_exceptions">Tetap dapat melihat</string>
+    <string name="visibility_add">Tambah</string>
+    <string name="visibility_remove">Hapus</string>
+    <string name="visibility_view_as">Lihat sebagai</string>
+    <string name="visibility_view_as_pick">Pilih aplikasi</string>
+    <string name="visibility_state_hidden">Tersembunyi</string>
+    <string name="visibility_state_visible">Terlihat</string>
+    <string name="visibility_suggestion_title">Sembunyikan alat root dari aplikasi detektor</string>
+    <string name="visibility_suggestion_apply">Terapkan</string>
+    <string name="visibility_unavailable">Layanan Tabir tidak berjalan</string>
+    <string name="visibility_search">Cari aplikasi</string>
+
+    <string name="tabir_tab_rules">Aturan</string>
+    <string name="tabir_tab_templates">Templat</string>
+    <string name="tabir_tab_simulate">Simulasi</string>
+
+    <string name="tabir_surfaces_title">Perisai permukaan</string>
+    <string name="tabir_surfaces_subtitle">Perlindungan native di framework &amp; SettingsProvider tanpa hook aplikasi</string>
+    <string name="tabir_hide_xposed_summary">%1$d modul Xposed terdeteksi</string>
+    <string name="tabir_hide_rom">Sembunyikan paket Custom ROM</string>
+    <string name="tabir_hide_rom_summary">Menyembunyikan paket custom ROM &amp; Yasvara (%1$d terpasang), menjaga android inti tetap utuh</string>
+    <string name="tabir_hide_root">Sembunyikan alat root &amp; hook</string>
+    <string name="tabir_hide_root_summary">Otomatis menyertakan manajer root/hook populer (%1$d terpasang)</string>
+
+    <string name="tabir_dev_title">Opsi Pengembang &amp; status ADB</string>
+    <string name="tabir_dev_summary">Menyamarkan adb_enabled, adb_wifi_enabled, development_settings_enabled &amp; broadcast USB</string>
+    <string name="tabir_dev_off">Nonaktif</string>
+    <string name="tabir_dev_observers">Hanya pengamat</string>
+    <string name="tabir_dev_all">Semua aplikasi pengguna</string>
+
+    <string name="tabir_global_title">Cakupan global</string>
+    <string name="tabir_per_app_title">Aturan per-aplikasi (HMA)</string>
+    <string name="tabir_per_app_add">Atur aplikasi</string>
+    <string name="tabir_per_app_empty">Belum ada aturan khusus aplikasi. Ketuk Atur aplikasi untuk memilih Blacklist atau Whitelist + Templat.</string>
+
+    <string name="tabir_mode_global">Global</string>
+    <string name="tabir_mode_blacklist">Blacklist</string>
+    <string name="tabir_mode_whitelist">Whitelist</string>
+    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d templat, %2$d aplikasi tambahan</string>
+    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d templat, %2$d aplikasi diizinkan</string>
+
+    <string name="tabir_templates_new">Templat baru</string>
+    <string name="tabir_templates_empty">Belum ada templat tersimpan.</string>
+    <string name="tabir_template_name">Nama templat</string>
+    <string name="tabir_template_summary_blacklist">Blacklist • Menyembunyikan %1$d paket</string>
+    <string name="tabir_template_summary_whitelist">Whitelist • Mengizinkan %1$d paket + aplikasi sistem</string>
+    <string name="tabir_assign_templates">Templat aktif</string>
+    <string name="tabir_custom_blacklist_apps">Aplikasi tersembunyi tambahan</string>
+    <string name="tabir_custom_whitelist_apps">Aplikasi yang diizinkan terlihat</string>
+    <string name="tabir_save">Simpan</string>
+    <string name="tabir_delete">Hapus</string>
+    <string name="tabir_cancel">Batal</string>
+
+    <string name="tabir_action_force_stop">Hentikan paksa aplikasi tersembunyi</string>
+    <string name="tabir_action_export">Ekspor cadangan JSON</string>
+    <string name="tabir_action_import">Impor cadangan JSON</string>
+    <string name="tabir_stopped_toast">Menghentikan paksa %1$d paket tersembunyi</string>
+    <string name="tabir_export_done">Konfigurasi Tabir berhasil diekspor</string>
+    <string name="tabir_import_ok">Konfigurasi Tabir berhasil diimpor</string>
+    <string name="tabir_import_fail">Berkas JSON Tabir tidak valid</string>
+
+    <string name="tabir_sim_dev_hidden">Opsi Pengembang &amp; ADB tersamar (bernilai 0)</string>
+    <string name="tabir_sim_dev_visible">Opsi Pengembang &amp; ADB terlihat oleh aplikasi ini</string>
+    <string name="tabir_sim_counts">%1$d tersembunyi • %2$d terlihat</string>
+    <string name="tabir_sim_empty">Pilih aplikasi di atas untuk melihat simulasi paket dan pengaturan yang dapat diamatinya.</string>
+</resources>
+
