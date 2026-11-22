@@ -218,7 +218,7 @@ class ColorViewModel(app: Application) : AndroidViewModel(app) {
         // With no spec yet, start from what the stock setup shows; nothing is written until Apply.
         val spec = YasColorSpec.parse(raw)
             ?: YasAospMirror.migrate(settings.readRaw(Namespace.SECURE, ThemeKey.OVERLAYS.key))
-        val black = settings.readRaw(Namespace.LINEAGE_SECURE, ThemeKey.PURE_BLACK.key) == "1"
+        val black = settings.readRaw(Namespace.SECURE, ThemeKey.PURE_BLACK.key) == "1"
         return Draft(spec, black)
     }
 

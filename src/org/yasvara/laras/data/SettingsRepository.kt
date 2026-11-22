@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
-import lineageos.providers.LineageSettings
 
 /** Reads, writes and observes [Pref]s in the settings providers. */
 class SettingsRepository(private val resolver: ContentResolver) {
@@ -51,8 +50,6 @@ class SettingsRepository(private val resolver: ContentResolver) {
             Namespace.SYSTEM -> Settings.System.putString(resolver, key, raw)
             Namespace.SECURE -> Settings.Secure.putString(resolver, key, raw)
             Namespace.GLOBAL -> Settings.Global.putString(resolver, key, raw)
-            Namespace.LINEAGE_SYSTEM -> LineageSettings.System.putString(resolver, key, raw)
-            Namespace.LINEAGE_SECURE -> LineageSettings.Secure.putString(resolver, key, raw)
         }
     }
 
@@ -79,15 +76,11 @@ class SettingsRepository(private val resolver: ContentResolver) {
         Namespace.SYSTEM -> Settings.System.getString(resolver, key)
         Namespace.SECURE -> Settings.Secure.getString(resolver, key)
         Namespace.GLOBAL -> Settings.Global.getString(resolver, key)
-        Namespace.LINEAGE_SYSTEM -> LineageSettings.System.getString(resolver, key)
-        Namespace.LINEAGE_SECURE -> LineageSettings.Secure.getString(resolver, key)
     }
 
     private fun uriFor(pref: Pref<*>): Uri = when (pref.namespace) {
         Namespace.SYSTEM -> Settings.System.getUriFor(pref.key)
         Namespace.SECURE -> Settings.Secure.getUriFor(pref.key)
         Namespace.GLOBAL -> Settings.Global.getUriFor(pref.key)
-        Namespace.LINEAGE_SYSTEM -> LineageSettings.System.getUriFor(pref.key)
-        Namespace.LINEAGE_SECURE -> LineageSettings.Secure.getUriFor(pref.key)
     }
 }

@@ -17,10 +17,10 @@ import org.yasvara.laras.data.Namespace
  */
 enum class ThemeKey(val namespace: Namespace, val key: String) {
     COLOR(Namespace.SECURE, "yasvara_color"),
-    PURE_BLACK(Namespace.LINEAGE_SECURE, "berry_black_theme"),
+    PURE_BLACK(Namespace.SECURE, "berry_black_theme"),
     OVERLAYS(Namespace.SECURE, "theme_customization_overlay_packages"),
     THEME(Namespace.SECURE, "yasvara_theme"),
-    BATTERY_STYLE(Namespace.LINEAGE_SYSTEM, "status_bar_battery_style"),
+    BATTERY_STYLE(Namespace.SYSTEM, "status_bar_battery_style"),
     PACK(Namespace.SECURE, "yasvara_theme_pack"),
 }
 

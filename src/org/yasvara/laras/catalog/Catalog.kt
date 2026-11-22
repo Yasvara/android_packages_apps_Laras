@@ -8,7 +8,7 @@ package org.yasvara.laras.catalog
 import android.os.SystemProperties
 import android.provider.Settings
 import androidx.annotation.StringRes
-import lineageos.providers.LineageSettings
+import com.android.internal.yasvara.YasvaraSettings
 import org.yasvara.laras.R
 import org.yasvara.laras.data.ChoiceOption
 import org.yasvara.laras.data.ChoicePref
@@ -117,11 +117,11 @@ enum class WifiBandPref(override val value: Int, override val label: Int) : Choi
 
 object Prefs {
     val statusBarClock = ChoicePref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.STATUS_BAR_CLOCK,
+        Namespace.SYSTEM, YasvaraSettings.System.STATUS_BAR_CLOCK,
         ClockPosition.entries, ClockPosition.LEFT,
     )
     val statusBarAmPm = ChoicePref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.STATUS_BAR_AM_PM,
+        Namespace.SYSTEM, YasvaraSettings.System.STATUS_BAR_AM_PM,
         AmPmStyle.entries, AmPmStyle.HIDDEN,
     )
     /** The whole `yasvara_theme` object, for editors that read several fields (app icons). */
@@ -131,11 +131,11 @@ object Prefs {
         StatusIconSet.entries, StatusIconSet.DEFAULT, StatusIconSet::id,
     )
     val batteryStyle = ChoicePref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.STATUS_BAR_BATTERY_STYLE,
+        Namespace.SYSTEM, YasvaraSettings.System.STATUS_BAR_BATTERY_STYLE,
         BatteryStyle.entries, BatteryStyle.ICON,
     )
     val batteryPercent = ChoicePref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.STATUS_BAR_SHOW_BATTERY_PERCENT,
+        Namespace.SYSTEM, YasvaraSettings.System.STATUS_BAR_SHOW_BATTERY_PERCENT,
         BatteryPercent.entries, BatteryPercent.HIDDEN,
     )
     /** The lock screen clock face; edited on the canvas, never as a plain row. */
@@ -166,30 +166,30 @@ object Prefs {
         Namespace.SECURE, Settings.Secure.LOCK_SCREEN_ALLOW_PRIVATE_NOTIFICATIONS, true,
     )
     val pureBlack = SwitchPref(
-        Namespace.LINEAGE_SECURE, LineageSettings.Secure.BERRY_BLACK_THEME, false,
+        Namespace.SECURE, YasvaraSettings.Secure.BERRY_BLACK_THEME, false,
     )
     val qsBrightnessSlider = SwitchPref(
-        Namespace.LINEAGE_SECURE, LineageSettings.Secure.QS_SHOW_BRIGHTNESS_SLIDER, true,
+        Namespace.SECURE, YasvaraSettings.Secure.QS_SHOW_BRIGHTNESS_SLIDER, true,
     )
     val qsBrightnessPosition = ChoicePref(
-        Namespace.LINEAGE_SECURE, LineageSettings.Secure.QS_BRIGHTNESS_SLIDER_POSITION,
+        Namespace.SECURE, YasvaraSettings.Secure.QS_BRIGHTNESS_SLIDER_POSITION,
         SliderPosition.entries, SliderPosition.TOP,
     )
     val qsAutoBrightness = SwitchPref(
-        Namespace.LINEAGE_SECURE, LineageSettings.Secure.QS_SHOW_AUTO_BRIGHTNESS, true,
+        Namespace.SECURE, YasvaraSettings.Secure.QS_SHOW_AUTO_BRIGHTNESS, true,
     )
     val volumePanelLeft = SwitchPref(
-        Namespace.LINEAGE_SECURE, LineageSettings.Secure.VOLUME_PANEL_ON_LEFT, false,
+        Namespace.SECURE, YasvaraSettings.Secure.VOLUME_PANEL_ON_LEFT, false,
     )
     val doubleTapSleep = SwitchPref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.DOUBLE_TAP_SLEEP_GESTURE, true,
+        Namespace.SYSTEM, YasvaraSettings.System.DOUBLE_TAP_SLEEP_GESTURE, true,
     )
     val quickPulldown = ChoicePref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.STATUS_BAR_QUICK_QS_PULLDOWN,
+        Namespace.SYSTEM, YasvaraSettings.System.STATUS_BAR_QUICK_QS_PULLDOWN,
         PulldownSide.entries, PulldownSide.OFF,
     )
     val scramblePin = SwitchPref(
-        Namespace.LINEAGE_SYSTEM, LineageSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, false,
+        Namespace.SYSTEM, YasvaraSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, false,
     )
     val alwaysOn = SwitchPref(Namespace.SECURE, Settings.Secure.DOZE_ALWAYS_ON, false)
 

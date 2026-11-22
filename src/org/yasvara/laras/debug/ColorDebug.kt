@@ -11,7 +11,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import lineageos.providers.LineageSettings
+import android.provider.Settings
+import com.android.internal.yasvara.YasvaraSettings
 import org.yasvara.monet.YasColorSpec
 import org.yasvara.monet.YasSeedResolver
 import org.yasvara.monet.YasvaraMonet
@@ -37,8 +38,8 @@ object ColorDebug {
         val wallpaper = WallpaperManager.getInstance(context)
             .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
         val contrast = context.getSystemService(UiModeManager::class.java).contrast.toDouble()
-        val pureBlack = LineageSettings.Secure.getInt(
-            context.contentResolver, LineageSettings.Secure.BERRY_BLACK_THEME, 0,
+        val pureBlack = Settings.Secure.getInt(
+            context.contentResolver, YasvaraSettings.Secure.BERRY_BLACK_THEME, 0,
         ) == 1
         val resolved = YasvaraMonet.resolve(
             spec, YasSeedResolver.seed(spec, wallpaper), contrast, pureBlack,

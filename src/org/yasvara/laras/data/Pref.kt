@@ -10,7 +10,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /** The settings table a preference lives in. */
-enum class Namespace { SYSTEM, SECURE, GLOBAL, LINEAGE_SYSTEM, LINEAGE_SECURE }
+enum class Namespace { SYSTEM, SECURE, GLOBAL }
 
 /**
  * A typed system setting.

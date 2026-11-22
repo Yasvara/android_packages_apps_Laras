@@ -67,7 +67,6 @@ android_app {
         "androidx.navigation3_navigation3-runtime",
         "androidx.navigation3_navigation3-ui",
         "kotlinx_coroutines_android",
-        "org.lineageos.platform.internal",
         // The lock screen clock faces, drawn here exactly as SystemUI draws them.
         "SystemUIClocks-YasvaraLib",
         "SystemUIPluginLib",
