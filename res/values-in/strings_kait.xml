@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="group_modules">Kait</string>
+    <string name="akar_entry_summary">Akses root dan modul Xposed (Kait) bawaan ROM</string>
+    <string name="group_modules_summary">Modul Xposed bawaan ROM dengan Rust &amp; ART</string>
+    <string name="kait_hero_title">Runtime modul Kait</string>
+    <string name="kait_hero_sub_ready">%1$d aktif dari %2$d modul · %3$d proses dikaitkan</string>
+    <string name="kait_badge_active">RUST · ART</string>
+    <string name="kait_tab_info">Info</string>
+    <string name="kait_tab_modules">Modul</string>
+    <string name="kait_tab_repo">Repositori</string>
+    <string name="kait_bento_modules">Modul terpasang</string>
+    <string name="kait_bento_modules_sub">%1$d aktif · %2$d total</string>
+    <string name="kait_bento_processes">Proses dikaitkan</string>
+    <string name="kait_bento_processes_sub">%1$d proses berjalan</string>
+    <string name="kait_bento_repo">Repositori modul</string>
+    <string name="kait_bento_repo_sub">%1$d katalog · %2$d update</string>
+    <string name="kait_bento_repo_tap">Jelajahi &amp; unduh modul</string>
+    <string name="kait_pin_shortcut">Sematkan pintasan</string>
+    <string name="kait_pin_shortcut_done">Terpasang di layar utama</string>
+    <string name="kait_pin_shortcut_hint">Ke layar utama</string>
+    <string name="kait_pin_unsupported">Peluncur tidak mendukung pintasan disematkan</string>
+    <string name="kait_drawer_icon">Laci aplikasi</string>
+    <string name="kait_drawer_icon_sub">Tampilkan ikon Kait di peluncur</string>
+    <string name="kait_active_modules_section">Modul aktif</string>
+    <string name="kait_arch_section">Arsitektur runtime</string>
+    <string name="kait_arch_engine">Inti native</string>
+    <string name="kait_arch_engine_val">libyasvara_kait.so · Rust 1.93 + ROM-ART</string>
+    <string name="kait_arch_trampoline">Jalur hook ART</string>
+    <string name="kait_arch_trampoline_val">art_quick_kait_trampoline · tanpa memfd</string>
+    <string name="kait_arch_api">Kompatibilitas API</string>
+    <string name="kait_arch_api_val">libxposed API 102 · Legacy 93 · XResources</string>
+    <string name="kait_arch_stealth">Isolasi proses</string>
+    <string name="kait_arch_stealth_val">Hanya aplikasi terpilih · Selaras Tabir</string>
+    <string name="kait_search_modules">Cari modul terpasang…</string>
+    <string name="kait_search_repo">Cari 800+ modul di Repositori Xposed…</string>
+    <string name="kait_filter_all">Semua (%1$d)</string>
+    <string name="kait_filter_enabled">Aktif (%1$d)</string>
+    <string name="kait_filter_disabled">Mati (%1$d)</string>
+    <string name="kait_filter_updates">Update (%1$d)</string>
+    <string name="kait_filter_installed">Terpasang (%1$d)</string>
+    <string name="kait_sort_updated">Terbaru diperbarui</string>
+    <string name="kait_sort_stars">Populer (★)</string>
+    <string name="kait_sort_name">Nama (A–Z)</string>
+    <string name="kait_btn_scope">Kaitkan aplikasi (%1$d)</string>
+    <string name="kait_btn_scope_empty">Pilih aplikasi untuk dikaitkan</string>
+    <string name="kait_btn_open_ui">Buka modul</string>
+    <string name="kait_btn_restart_targets">Restart target</string>
+    <string name="kait_restarted_targets">%1$d aplikasi target dimulai ulang</string>
+    <string name="kait_action_app_info">Info aplikasi</string>
+    <string name="kait_action_uninstall">Copot pemasangan modul</string>
+    <string name="kait_action_view_repo">Lihat di repositori</string>
+    <string name="kait_repo_offline_cached">Menampilkan katalog repositori tersimpan</string>
+    <string name="kait_repo_empty">Repositori belum termuat. Tarik untuk muat ulang atau periksa jaringan.</string>
+    <string name="kait_repo_installed_badge">TERPASANG</string>
+    <string name="kait_repo_update_badge">UPDATE</string>
+    <string name="kait_repo_releases">Rilis &amp; unduhan APK</string>
+    <string name="kait_repo_recommended_scope">Rekomendasi aplikasi target</string>
+    <string name="kait_repo_readme">Tentang modul</string>
+    <string name="kait_repo_download_apk">Unduh APK (%1$s)</string>
+    <string name="kait_repo_open_github">GitHub</string>
+    <string name="kait_repo_open_homepage">Situs web</string>
+    <string name="kait_processes_sheet_title">Proses aktif dikaitkan (%1$d)</string>
+    <string name="kait_processes_sheet_empty">Belum ada proses yang berjalan dengan Kait.</string>
+    <string name="kait_running_badge">BERJALAN</string>
+    <string name="kait_scope_filter_all">Semua</string>
+    <string name="kait_scope_filter_selected">Dikaitkan (%1$d)</string>
+    <string name="kait_scope_filter_recommended">Rekomendasi (%1$d)</string>
+    <string name="kait_scope_filter_running">Berjalan (%1$d)</string>
+    <string name="kait_unavailable">Kait tidak berjalan</string>
+    <string name="kait_unavailable_body">Sistem tidak menjalankan layanan Kait sehingga modul tidak dapat dikelola.</string>
+    <string name="kait_empty">Belum ada modul terpasang</string>
+    <string name="kait_empty_body">Pasang modul dari tab Repositori (libxposed API 101/102 atau klasik) dan modul akan muncul di sini.</string>
+    <string name="kait_restart_note">Aplikasi dimulai ulang otomatis saat modul atau daftar kaitannya diubah.</string>
+    <string name="kait_problem">Tidak dapat dimuat: %1$s</string>
+    <string name="kait_off">Nonaktif</string>
+    <string name="kait_no_scope">Aktif, belum ada aplikasi yang dikaitkan</string>
+    <plurals name="kait_scope_count">
+        <item quantity="one">Dikaitkan ke %1$d aplikasi</item>
+        <item quantity="other">Dikaitkan ke %1$d aplikasi</item>
+    </plurals>
+    <plurals name="kait_scope_running">
+        <item quantity="one">Dikaitkan ke %1$d aplikasi · berjalan</item>
+        <item quantity="other">Dikaitkan ke %1$d aplikasi · berjalan</item>
+    </plurals>
+    <string name="kait_scope_title">Aplikasi yang dikaitkan (Scope)</string>
+    <string name="kait_scope_module_off">Modul sedang nonaktif; daftar kaitan berlaku saat modul diaktifkan</string>
+    <string name="kait_scope_recommended">+ Rekomendasi</string>
+    <string name="kait_scope_clear">Bersihkan</string>
+    <string name="kait_recommended_badge">REK</string>
+    <string name="kait_crash_bypassed_title">Dijeda otomatis karena crash</string>
+    <string name="kait_crash_bypassed_body">Kait menjeda hook pada %1$s setelah crash berulang saat dibuka.</string>
+    <string name="kait_crash_bypassed_reset">Aktifkan lagi</string>
+</resources>
