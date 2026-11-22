@@ -51,7 +51,7 @@ import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.screens.Page
 
 /**
- * Laras › Connectivity › Wi-Fi region (SPEC-0014 §3.4): automatic detection, or a manual
+ * Laras › Connectivity › Wi-Fi region: automatic detection, or a manual
  * country behind the Advanced gate. The firmware applies that country's rules, radar
  * protection included, in both modes.
  */

@@ -3,7 +3,7 @@
      SPDX-FileCopyrightText: The Yasvara Project
      SPDX-License-Identifier: Apache-2.0
 -->
-<!-- Multitasking › Layang floating windows (SPEC-0008 §12). -->
+<!-- Multitasking › Layang floating windows. -->
 <resources>
     <string name="group_multitasking">Multitasking</string>
     <string name="group_multitasking_summary">Floating windows</string>

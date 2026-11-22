@@ -45,7 +45,7 @@ import org.yasvara.monet.YasSeedResolver
 import org.yasvara.monet.YasStyle
 import org.yasvara.monet.YasvaraMonet
 
-/** The six styles of the simple surface, in order (SPEC-0002 §11 Q4); the rest are Studio's. */
+/** The six styles of the simple surface, in order (Q4); the rest are Studio's. */
 val SimpleStyles =
     listOf(
         YasStyle.TONAL_SPOT,
@@ -248,7 +248,7 @@ class ColorViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** SPEC-0002 §3.3: SystemUI must have applied the very colours Laras resolved. */
+    /** SystemUI must have applied the very colours Laras resolved. */
     private suspend fun checkParity(expected: String) {
         val actual = withContext(Dispatchers.IO) { transition.appliedFingerprint() }
         if (actual == expected) Log.i(TAG, "Fingerprint parity ok: $expected")

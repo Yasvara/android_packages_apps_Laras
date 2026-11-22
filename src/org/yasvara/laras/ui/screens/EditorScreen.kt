@@ -202,7 +202,7 @@ private fun ElementSection(
             Icon(element.icon, null, Modifier.size(18.dp), tint = content)
             Text(stringResource(element.title), style = MaterialTheme.typography.titleSmall, color = content)
         }
-        // The depth switch lives in the Depth card, with the saved pictures (SPEC-0013 §11).
+        // The depth switch lives in the Depth card, with the saved pictures.
         val depthSwitch = element.entries.firstOrNull { it.pref == Prefs.depthEnabled }
         depthSwitch?.let { DepthCard(it, prefs, editor, Modifier.padding(bottom = 8.dp)) }
         if (element == Element.STATUS_BAR_ICONS) ThinIconsSuggestion(prefs, editor)
@@ -223,7 +223,7 @@ private fun ElementSection(
 
 /**
  * With large text, suggests the Thin icon set, whose hairlines stay light when the status bar
- * grows with the font (SPEC-0003 §7.5). Gone once Thin is chosen.
+ * grows with the font. Gone once Thin is chosen.
  */
 @Composable
 private fun ThinIconsSuggestion(prefs: PrefSnapshot, editor: PrefEditor) {

@@ -182,8 +182,9 @@ fun HomeScreen(
                     SectionLabel(stringResource(R.string.home_system), Modifier.padding(horizontal = 16.dp))
                 }
                 // A group still on the roadmap stays off the home page until it has something in it.
+                // Kait (MODULES) is unified into Akar (5-tab Info · Root · Modul · Repositori · Setelan).
                 // Style and navigation span the width; the rest pair up beneath them.
-                val shown = SystemGroup.entries.filterNot { it.planned }
+                val shown = SystemGroup.entries.filterNot { it.planned || it == SystemGroup.MODULES }
                 val rows = shown.filter { it.wide }.map { listOf(it) } + shown.filterNot { it.wide }.chunked(2)
                 items(rows.size, key = { "groups-$it" }) { row ->
                     Row(
@@ -192,8 +193,11 @@ fun HomeScreen(
                     ) {
                         rows[row].forEachIndexed { column, group ->
                             GroupCard(group, row * 2 + column, facts, prefs, Modifier.weight(1f)) {
-                                if (group == SystemGroup.PENTAS) openPentas(context)
-                                else onOpen(Route.Group(group))
+                                when (group) {
+                                    SystemGroup.PENTAS -> openPentas(context)
+                                    SystemGroup.MODULES -> onOpen(Route.Kait())
+                                    else -> onOpen(Route.Group(group))
+                                }
                             }
                         }
                         if (rows[row].size == 1 && !rows[row][0].wide) Spacer(Modifier.weight(1f))
@@ -227,7 +231,7 @@ private fun ChangedAction(count: Int, onClick: () -> Unit) {
  * The screen states side by side, like pages of the real phone: swipe to change state, tap a
  * part of the centred canvas to edit it. A neighbour's canvas scrolls into place when tapped.
  * Each canvas keeps its natural shape: a screen is a phone, while a bar surface (the shade)
- * takes the width, where its parts are big enough to tap (SPEC-0003 §4.1).
+ * takes the width, where its parts are big enough to tap.
  */
 @Composable
 private fun SurfaceCarousel(
@@ -393,7 +397,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Pentas is its own app; its settings open there (SPEC-0012 §5). */
+/** Pentas is its own app; its settings open there. */
 private fun openPentas(context: android.content.Context) {
     runCatching {
         context.startActivity(

@@ -77,7 +77,7 @@ import org.yasvara.laras.ui.screens.Page
 private val DELAY_PRESETS = listOf(1, 3, 7, 14, 30)
 
 /**
- * App updates (SPEC-0005): the per-app Auto · Delay · Ask · Never policy. Core apps (Play
+ * App updates: the per-app Auto · Delay · Ask · Never policy. Core apps (Play
  * Store, Play services, system apps) are listed only when [advanced] (the Lab gate) is on.
  * [focus] opens that app's sheet straight away (the Settings › App info deep link, §4.9).
  */

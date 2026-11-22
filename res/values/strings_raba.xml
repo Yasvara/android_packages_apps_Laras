@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Sound › Haptics (Raba) -->
+    <string name="raba_title">Haptics</string>
+    <string name="raba_entry_summary">How taps, switches, sliders and edges feel</string>
+    <string name="raba_intro">Every touch plays one of the motor\'s own textures, the ones HyperOS uses. Pick a feel, or tune each kind of touch.</string>
+    <string name="raba_reset_all">Reset</string>
+
+    <string name="raba_touch">Touch haptics</string>
+    <string name="raba_touch_summary">Off silences every touch, here and in other apps</string>
+    <string name="raba_strength">Strength</string>
+    <string name="raba_strength_value"><xliff:g id="percent">%1$d</xliff:g>%%</string>
+    <string name="raba_strength_summary" formatted="false">100% is HyperOS\'s level. Above it every touch adds a few clean beats at the motor\'s own frequency, up to a 4D game hit at 150%. In long fast typing the extra beats give way as the motor warms; the tick itself never dims.</string>
+
+    <string name="raba_feel">Feel</string>
+    <string name="raba_profile_hyperos">HyperOS</string>
+    <string name="raba_profile_pixel">Pixel</string>
+    <string name="raba_profile_custom">Custom</string>
+    <string name="raba_profile_hyperos_summary">Short, crisp textures from stock HyperOS on this phone.</string>
+    <string name="raba_profile_pixel_summary">The platform\'s own effects, as on a Pixel.</string>
+    <string name="raba_profile_custom_summary">HyperOS, with the kinds you changed below.</string>
+    <string name="raba_reskin">Other apps too</string>
+    <string name="raba_reskin_summary">System UI and apps that compose their own haptics get the same textures</string>
+
+    <string name="raba_kinds">Kinds of touch</string>
+    <string name="raba_kinds_summary">Changing one switches to Custom. Tap a texture to feel it.</string>
+    <string name="raba_category_on">Haptics for this kind</string>
+    <string name="raba_category_off">Off</string>
+    <string name="raba_category_value"><xliff:g id="texture">%1$s</xliff:g> · <xliff:g id="percent">%2$d</xliff:g>%%</string>
+    <string name="raba_category_strength">Strength</string>
+    <string name="raba_category_reset">Back to HyperOS</string>
+
+    <string name="raba_cat_taps">Taps &amp; buttons</string>
+    <string name="raba_cat_taps_summary">Buttons, navigation keys, context clicks</string>
+    <string name="raba_cat_keyboard">Keyboard</string>
+    <string name="raba_cat_keyboard_summary">Key presses in keyboards that ask for them</string>
+    <string name="raba_cat_switches">Switches</string>
+    <string name="raba_cat_switches_summary">Turning switches and checkboxes on and off</string>
+    <string name="raba_cat_ticks">Sliders &amp; pickers</string>
+    <string name="raba_cat_ticks_summary">Steps on sliders, time pickers, text handles, scroll ticks</string>
+    <string name="raba_cat_edges">Edges &amp; limits</string>
+    <string name="raba_cat_edges_summary">A list hitting its end, a slider reaching either end</string>
+    <string name="raba_cat_press">Long press &amp; drag</string>
+    <string name="raba_cat_press_summary">Long presses, picking up an icon or item</string>
+    <string name="raba_cat_gestures">Pulls &amp; gestures</string>
+    <string name="raba_cat_gestures_summary">Pulling past a threshold: shade, back, drawers</string>
+    <string name="raba_cat_confirm">Confirm &amp; error</string>
+    <string name="raba_cat_confirm_summary">Confirmations, dialog buttons, rejected input</string>
+
+    <string name="raba_texture_crisp">Crisp</string>
+    <string name="raba_texture_double">Double</string>
+    <string name="raba_texture_firm">Firm</string>
+    <string name="raba_texture_deep">Deep</string>
+    <string name="raba_texture_tap">Tap</string>
+    <string name="raba_texture_pop">Pop</string>
+    <string name="raba_texture_light">Light</string>
+    <string name="raba_texture_sharp">Sharp</string>
+    <string name="raba_texture_snap">Snap</string>
+    <string name="raba_texture_soft">Soft</string>
+
+    <string name="raba_pad">Try it</string>
+    <string name="raba_pad_button">Button</string>
+    <string name="raba_pad_confirm">Confirm</string>
+    <string name="raba_pad_reject">Reject</string>
+    <string name="raba_pad_switch">Switch</string>
+    <string name="raba_pad_slider">Stepped slider</string>
+    <string name="raba_pad_pull">Pull past the line</string>
+    <string name="raba_pad_hold">Hold</string>
+    <string name="raba_pad_list">Scroll to the end</string>
+    <string name="raba_pad_list_item">Row <xliff:g id="number">%1$d</xliff:g></string>
+    <string name="raba_pad_dialog">Dialog</string>
+    <string name="raba_pad_dialog_body">Its buttons tap like dialogs in every app.</string>
+
+    <string name="raba_pentas">Game haptics</string>
+    <string name="raba_pentas_summary">4D haptics from game sound are set per game in Pentas</string>
+</resources>

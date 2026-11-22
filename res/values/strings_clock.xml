@@ -72,7 +72,7 @@
     <string name="depth_similar_body">On %1$s, from another copy of the same file.</string>
     <string name="depth_similar_use">Use saved depth</string>
     <string name="depth_similar_fresh">Start fresh</string>
-    <!-- Depth build (SPEC-0013 §4; design/laras-depth-build). -->
+    <!-- Depth build (design/laras-depth-build). -->
     <string name="depth_channel">Depth for the lock screen</string>
     <string name="depth_building_title">Making depth for your lock screen</string>
     <string name="depth_finding">Finding the subject</string>

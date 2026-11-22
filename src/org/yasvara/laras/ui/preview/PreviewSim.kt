@@ -63,7 +63,7 @@ import org.json.JSONObject
 import org.yasvara.laras.R
 
 /**
- * States the shade canvas shows instead of the phone's own (SPEC-0003 §4.1 `sim`), for states
+ * States the shade canvas shows instead of the phone's own (`sim`), for states
  * users can't easily produce: charging, a nearly empty battery, Battery Saver, 5G, roaming. A
  * null field keeps the phone's own state. Nothing here is ever saved; it lives as long as the
  * canvas.

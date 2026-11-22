@@ -9,11 +9,23 @@ package {
 
 android_app {
     name: "Laras",
+    // Sound effects live in Laras › Sound.
+    overrides: [
+        "AudioFX",
+        "MusicFX",
+    ],
 
     srcs: [
         "src/**/*.kt",
         // The control plane of the native root; the same file services.core compiles.
         ":yasvara-root-aidl",
+        ":yasvara-ketik-aidl",
+        ":yasvara-app-visibility-aidl",
+        ":yasvara-lelap-aidl",
+        ":yasvara-saring-aidl",
+        ":yasvara-padat-aidl",
+        ":yasvara-nada-aidl",
+        ":yasvara-nada-client",
     ],
     resource_dirs: ["res"],
     // Depth Studio's segmentation models, memory-mapped, so stored uncompressed.
@@ -63,14 +75,16 @@ android_app {
         "androidx-constraintlayout_constraintlayout",
         // Runs Depth Studio's EdgeTAM model; carries its own arm64 JNI library.
         "yasvara-litert",
-        // Runs the depth build's ToonOut and ISNet on the CPU (SPEC-0013 §10.4).
+        // Runs the depth build's ToonOut and ISNet on the CPU.
         "yasvara-onnxruntime",
         // The colour engine SystemUI applies with, so drafts resolve to the same colours.
         "YasvaraMonet",
-        // The management binder of the rootless Xposed runtime (vendor/yasvara/xposed).
-        "yasvara-xposed-ipc",
+        // The management binder of the ROM-native Kait hooking runtime (vendor/yasvara/kait).
+        "yasvara-kait-ipc",
     ],
     use_embedded_native_libs: true,
+    // The filter list compiler (vendor/yasvara/saring).
+    jni_libs: ["libsaring_jni"],
 
     kotlincflags: ["-Xjvm-default=all"],
 }
@@ -86,7 +100,7 @@ filegroup {
     visibility: ["//vendor:__subpackages__"],
 }
 
-// Depth Studio's saved-project and build formats and the build's image maths (SPEC-0013 §4, §6),
+// Depth Studio's saved-project and build formats and the build's image maths,
 // free of the model runtime, for host tests.
 filegroup {
     name: "Laras-depth-srcs",
@@ -101,7 +115,7 @@ filegroup {
     visibility: ["//vendor:__subpackages__"],
 }
 
-// Pre-grants POST_NOTIFICATIONS for the App updates notices (SPEC-0005 §4.6).
+// Pre-grants POST_NOTIFICATIONS for the App updates notices.
 prebuilt_etc {
     name: "default-permissions_org.yasvara.laras",
     src: "default-permissions_org.yasvara.laras.xml",

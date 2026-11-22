@@ -10,7 +10,7 @@ import org.json.JSONObject
 import org.yasvara.laras.data.Namespace
 
 /**
- * A setting a theme apply writes, in the order it is written (SPEC-0003 §6.4). The colour spec
+ * A setting a theme apply writes, in the order it is written. The colour spec
  * goes first: every SystemUI observer the later keys wake re-reads it, so each evaluation already
  * sees the final colours and the overlays change once. Pure black and the AOSP mirror follow;
  * the pack record goes last, because it only describes what the others already say.

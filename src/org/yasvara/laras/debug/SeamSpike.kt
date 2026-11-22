@@ -14,7 +14,7 @@ import android.util.Log
 import android.view.View
 
 /**
- * The M0 preview colour seam spike (SPEC-0002 §11 Q6), on debuggable builds only.
+ * The M0 preview colour seam spike (Q6), on debuggable builds only.
  *
  * `vendor/yasvara/tests/color/seam_spike.sh` drives it through the launch intent:
  * - `--es yas_seam capture` stores the system colours now applied (the reference palette);

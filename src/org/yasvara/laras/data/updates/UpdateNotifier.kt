@@ -18,7 +18,7 @@ import android.security.yasvara.YasvaraUpdatePolicy
 import org.yasvara.laras.R
 
 /**
- * Owner notices for App updates (SPEC-0005 §4.6). YasvaraUpdatePolicyService decides and rate
+ * Owner notices for App updates. YasvaraUpdatePolicyService decides and rate
  * limits; Laras only words them and handles the actions. One low-importance channel, one
  * notification per app, grouped under a summary.
  */
@@ -47,7 +47,7 @@ object UpdateNotifier {
             .setAutoCancel(true)
             .setContentIntent(storePage(context, pkg, installer, id))
         if (decision == "reverted") {
-            // A core app crash-looped while detached (SPEC-0005 §4.8); tapping opens its sheet.
+            // A core app crash-looped while detached; tapping opens its sheet.
             builder.setContentTitle(context.getString(R.string.updates_notif_reverted_title, label))
                 .bigText(context.getString(R.string.updates_notif_reverted_text))
                 .setContentIntent(sheet(context, pkg, id))

@@ -38,7 +38,7 @@ import kotlin.concurrent.thread
 import org.yasvara.laras.catalog.Element
 
 /**
- * A session with the launcher's own home screen preview (SPEC-0003 §4.4): the launcher lays out
+ * A session with the launcher's own home screen preview: the launcher lays out
  * and draws its real workspace and dock into a surface Laras embeds, the way the stock wallpaper
  * picker does, so icon shapes and packs show exactly as they will. The launcher follows the
  * applied `yasvara_theme`, so a change shows in the preview as it lands.

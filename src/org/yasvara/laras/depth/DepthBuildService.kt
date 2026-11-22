@@ -174,7 +174,7 @@ class DepthBuildService : Service() {
 
     /**
      * Gives the lock screen the build as it is, as the start of a project the Studio can open
-     * (SPEC-0013 §9 Q3), and says so.
+     * (Q3), and says so.
      */
     private fun apply(sha: String, picture: WallpaperPicture, build: DepthBuild) {
         val (w, h) = DepthStudioActivity.workingSize(picture.bitmap.width, picture.bitmap.height)

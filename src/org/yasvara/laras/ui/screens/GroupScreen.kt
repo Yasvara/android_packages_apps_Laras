@@ -26,13 +26,14 @@ import org.yasvara.laras.ui.components.GroupBadge
 import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.LarasViewModel
 import org.yasvara.laras.ui.Route
+import org.yasvara.laras.ui.keyboard.KeyboardSection
 import org.yasvara.laras.ui.lab.LabSection
 import org.yasvara.laras.ui.superuser.SuperuserSection
 import org.yasvara.laras.ui.apps.AppsSection
 import org.yasvara.laras.ui.connectivity.ConnectivityExperiments
 import org.yasvara.laras.ui.connectivity.ConnectivitySection
 import org.yasvara.laras.ui.integrity.IntegritySection
-import org.yasvara.laras.ui.xposed.ModulesSection
+import org.yasvara.laras.ui.kait.ModulesSection
 
 @Composable
 fun GroupScreen(
@@ -77,16 +78,44 @@ fun GroupScreen(
                 Column(Modifier.fillMaxWidth()) { AppsSection() }
             }
         }
+        if (group == SystemGroup.POWER) {
+            item(key = "lelap") {
+                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                    NavRow(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, groupedShape(0, 3)) {
+                        onOpen(Route.LelapApps)
+                    }
+                    NavRow(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, groupedShape(1, 3)) {
+                        onOpen(Route.LelapCuts)
+                    }
+                    NavRow(R.string.padat_title, R.string.padat_entry_summary, groupedShape(2, 3)) {
+                        onOpen(Route.Padat())
+                    }
+                }
+            }
+        }
         if (group == SystemGroup.SOUND) {
             item(key = "sound_apps") {
                 Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.swara_title, R.string.swara_entry_summary, groupedShape(0, 1)) {
+                    NavRow(R.string.nada_title, R.string.nada_entry_summary, groupedShape(0, 3)) {
+                        onOpen(Route.Nada)
+                    }
+                    NavRow(R.string.swara_title, R.string.swara_entry_summary, groupedShape(1, 3)) {
                         onOpen(Route.SoundApps)
+                    }
+                    NavRow(R.string.raba_title, R.string.raba_entry_summary, groupedShape(2, 3)) {
+                        onOpen(Route.Haptics)
                     }
                 }
             }
         }
         if (group == SystemGroup.CONNECTIVITY) {
+            item(key = "saring") {
+                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                    NavRow(R.string.saring_title, R.string.saring_entry_summary, groupedShape(0, 1)) {
+                        onOpen(Route.Saring)
+                    }
+                }
+            }
             item(key = "wifi_region") {
                 ConnectivitySection(prefs, onOpenRegion = { onOpen(Route.WifiRegion) })
             }
@@ -98,8 +127,16 @@ fun GroupScreen(
                 }
             }
         }
+        if (group == SystemGroup.KEYBOARD) {
+            item(key = "keyboard") { KeyboardSection() }
+        }
         if (group == SystemGroup.MODULES) {
-            item(key = "modules") { ModulesSection(onOpenScope = { onOpen(Route.XposedScope(it)) }) }
+            item(key = "modules") {
+                ModulesSection(
+                    onOpenScope = { onOpen(Route.XposedScope(it)) },
+                    onOpenKait = { onOpen(Route.Kait()) },
+                )
+            }
         }
         if (group == SystemGroup.LAB) {
             item(key = "lab") { LabSection(prefs, viewModel, viewModel) }
@@ -107,8 +144,11 @@ fun GroupScreen(
         if (group == SystemGroup.SUPERUSER) {
             item(key = "akar") {
                 Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.akar_title, R.string.akar_entry_summary, groupedShape(0, 1)) {
+                    NavRow(R.string.akar_title, R.string.akar_entry_summary, groupedShape(0, 2)) {
                         onOpen(Route.Akar())
+                    }
+                    NavRow(R.string.visibility_title, R.string.visibility_entry_summary, groupedShape(1, 2)) {
+                        onOpen(Route.AppVisibility)
                     }
                 }
             }

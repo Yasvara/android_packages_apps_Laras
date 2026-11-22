@@ -30,18 +30,32 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.yasvara.laras.R
+import org.yasvara.laras.data.ChoiceOption
+import org.yasvara.laras.data.integrity.IntegrityKeys
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.ChoiceButtons
 import org.yasvara.laras.ui.components.SectionCard
 import org.yasvara.laras.ui.components.SwitchRow
 
 private const val NETFLIX = "com.netflix.mediaclient"
 private const val MEDIA_PROFILE = "s25u"
 
+private enum class AppSpoofMode(override val value: Int, override val label: Int, val hint: Int) : ChoiceOption {
+    AUTO(IntegrityKeys.MODE_AUTO, R.string.integrity_mode_auto, R.string.mode_auto_hint),
+    FULL(IntegrityKeys.MODE_FULL, R.string.integrity_mode_full, R.string.mode_full_hint),
+    MODEL(IntegrityKeys.MODE_MODEL_ONLY, R.string.integrity_mode_model, R.string.mode_model_hint);
+
+    companion object {
+        fun of(value: Int) = entries.firstOrNull { it.value == value } ?: AUTO
+    }
+}
+
 /** The Apps group: Photos, Snapchat, and per-app device profiles (games, streaming). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppsSection(viewModel: AppsViewModel = viewModel()) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
+    val mode = AppSpoofMode.of(ui.spoofMode)
     var pkg by rememberSaveable { mutableStateOf("") }
     var profile by rememberSaveable { mutableStateOf(MEDIA_PROFILE) }
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -50,6 +64,14 @@ fun AppsSection(viewModel: AppsViewModel = viewModel()) {
     val hasNetflix = remember { viewModel.labelOf(NETFLIX) != null }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionCard(stringResource(R.string.integrity_spoof_mode), subtitle = stringResource(mode.hint)) {
+            ChoiceButtons(
+                AppSpoofMode.entries,
+                mode,
+                { viewModel.setSpoofMode((it as AppSpoofMode).value) },
+                Modifier.fillMaxWidth(),
+            )
+        }
         SectionCard(stringResource(R.string.apps_photos_title), subtitle = stringResource(R.string.apps_photos_summary)) {
             SwitchRow(stringResource(R.string.apps_photos_enable), ui.photos, viewModel::setPhotos)
         }

@@ -18,6 +18,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,14 +46,24 @@ import org.yasvara.laras.ui.preview.rememberKeyguardRenderer
 import org.yasvara.laras.ui.color.ColorScreen
 import org.yasvara.laras.ui.connectivity.WifiRegionScreen
 import org.yasvara.laras.ui.integrity.TargetAppsScreen
+import org.yasvara.laras.ui.root.AkarAppScreen
+import org.yasvara.laras.ui.root.AkarLogsScreen
 import org.yasvara.laras.ui.root.AkarScreen
 import org.yasvara.laras.ui.updates.AppUpdatesScreen
-import org.yasvara.laras.ui.xposed.ScopeScreen
+import org.yasvara.laras.ui.lelap.LelapAppsScreen
+import org.yasvara.laras.ui.lelap.LelapCutsScreen
+import org.yasvara.laras.ui.padat.PadatScreen
+import org.yasvara.laras.ui.saring.SaringScreen
+import org.yasvara.laras.ui.visibility.AppVisibilityScreen
+import org.yasvara.laras.ui.kait.KaitScreen
+import org.yasvara.laras.ui.kait.ScopeScreen
 import org.yasvara.laras.ui.screens.ChangedScreen
 import org.yasvara.laras.ui.screens.EditorScreen
 import org.yasvara.laras.ui.screens.GroupScreen
 import org.yasvara.laras.ui.screens.HomeScreen
 import org.yasvara.laras.ui.theme.EmphasizedAccelerate
+import org.yasvara.laras.ui.haptics.HapticsScreen
+import org.yasvara.laras.ui.sound.NadaScreen
 import org.yasvara.laras.ui.sound.SoundAppsScreen
 import org.yasvara.laras.ui.theme.EmphasizedDecelerate
 import org.yasvara.laras.ui.theme.emphasized
@@ -82,34 +93,84 @@ sealed interface Route {
         override val id = "targets"
     }
 
-    /** The apps one Xposed module is loaded into; opened from the Modules group. */
+    /** The apps one Xposed module is loaded into; opened from Kait. */
     data class XposedScope(val module: String) : Route {
         override val id = "xscope:$module"
     }
 
-    /** Per-app update policy (SPEC-0005); opened from the Apps group, or on [focus] from App info. */
+    /** Full Kait module manager (3-tab Info · Modules · Repository); opened from Home or KaitActivity. */
+    data class Kait(val focus: String? = null) : Route {
+        override val id = "kait:${focus.orEmpty()}"
+    }
+
+    /** Per-app update policy; opened from the Apps group, or on [focus] from App info. */
     data class AppUpdates(val focus: String? = null) : Route {
         override val id = "updates:${focus.orEmpty()}"
     }
 
-    /** Root access (SPEC-0006); opened from the Superuser group, or on [focus] from a notification. */
+    /** Root access; opened from the Superuser group, or on [focus] from a notification. */
     data class Akar(val focus: String? = null) : Route {
         override val id = "akar:${focus.orEmpty()}"
     }
 
-    /** System colours (SPEC-0002); opened from the Style group. */
+    /** Per-app root profile inside Akar. */
+    data class AkarApp(val packageName: String) : Route {
+        override val id = "akar_app:$packageName"
+    }
+
+    /** Merged Akar activity and denial logs. */
+    data object AkarLogs : Route {
+        override val id = "akar_logs"
+    }
+
+    /** Which apps other apps may see; opened from the Superuser group. */
+    data object AppVisibility : Route {
+        override val id = "visibility"
+    }
+
+    /** Apps that run only while open; opened from the Performance & battery group. */
+    data object LelapApps : Route {
+        override val id = "lelap_apps"
+    }
+
+    /** Telemetry and tracking cuts; opened from the Performance & battery group. */
+    data object LelapCuts : Route {
+        override val id = "lelap_cuts"
+    }
+
+    /** Ad, tracker and pop-up filtering; opened from the Connectivity group. */
+    data object Saring : Route {
+        override val id = "saring"
+    }
+
+    /** System colours; opened from the Style group. */
     data object Color : Route {
         override val id = "color"
     }
 
-    /** Per-app sound (SPEC-0010 §5.2); opened from the Sound group. */
+    /** Per-app sound; opened from the Sound group. */
     data object SoundApps : Route {
         override val id = "sound_apps"
     }
 
-    /** Wi-Fi region (SPEC-0014); opened from the Connectivity group or Settings › Hotspot. */
+    /** Processor effects (Nada); opened from the Sound group. */
+    data object Nada : Route {
+        override val id = "nada"
+    }
+
+    /** UI haptics (Raba); opened from the Sound group. */
+    data object Haptics : Route {
+        override val id = "haptics"
+    }
+
+    /** Wi-Fi region; opened from the Connectivity group or Settings › Hotspot. */
     data object WifiRegion : Route {
         override val id = "wifi_region"
+    }
+
+    /** Realtime per-app F2FS compression; opened from Performance or Settings › Storage. */
+    data class Padat(val focus: String? = null) : Route {
+        override val id = "padat:${focus.orEmpty()}"
     }
 
     companion object {
@@ -124,11 +185,21 @@ sealed interface Route {
                 "changed" -> Changed
                 "targets" -> TargetApps
                 "xscope" -> XposedScope(arg)
+                "kait" -> Kait(arg.takeIf { it.isNotEmpty() && it != id })
                 "color" -> Color
+                "visibility" -> AppVisibility
+                "lelap_apps" -> LelapApps
+                "lelap_cuts" -> LelapCuts
+                "saring" -> Saring
                 "sound_apps" -> SoundApps
+                "nada" -> Nada
+                "haptics" -> Haptics
                 "wifi_region" -> WifiRegion
+                "padat" -> Padat(arg.takeIf { it.isNotEmpty() && it != id })
                 "updates" -> AppUpdates(arg.takeIf { it.isNotEmpty() && it != id })
                 "akar" -> Akar(arg.takeIf { it.isNotEmpty() && it != id })
+                "akar_app" -> AkarApp(arg)
+                "akar_logs" -> AkarLogs
                 else -> Home
             }
         }
@@ -177,8 +248,18 @@ private val EditorMotion =
         NavDisplay.predictivePopTransitionSpec { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) }
 
 @Composable
-fun LarasApp(start: Route = Route.Home, viewModel: LarasViewModel = viewModel()) {
+fun LarasApp(
+    start: Route = Route.Home,
+    launchSeq: Int = 0,
+    viewModel: LarasViewModel = viewModel(),
+) {
     val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf(start) }
+    LaunchedEffect(launchSeq) {
+        if (launchSeq > 0) {
+            backStack.clear()
+            backStack.add(start)
+        }
+    }
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
     val device = rememberDeviceState()
     val keyguard = rememberKeyguardRenderer()
@@ -236,11 +317,51 @@ fun LarasApp(start: Route = Route.Home, viewModel: LarasViewModel = viewModel())
                     entry<Route.XposedScope> { route ->
                         ScopeScreen(route.module, onBack = back)
                     }
+                    entry<Route.Kait> { route ->
+                        AkarScreen(
+                            onBack = back,
+                            focus = route.focus,
+                            initialTab = 2,
+                            onOpenApp = { backStack.add(Route.AkarApp(it)) },
+                            onOpenLogs = { backStack.add(Route.AkarLogs) },
+                            onOpenScope = { backStack.add(Route.XposedScope(it)) },
+                        )
+                    }
                     entry<Route.AppUpdates> { route ->
                         AppUpdatesScreen(advanced = prefs[Prefs.larasAdvanced], onBack = back, focus = route.focus)
                     }
                     entry<Route.Akar> { route ->
-                        AkarScreen(onBack = back, focus = route.focus)
+                        AkarScreen(
+                            onBack = back,
+                            focus = route.focus,
+                            onOpenApp = { backStack.add(Route.AkarApp(it)) },
+                            onOpenLogs = { backStack.add(Route.AkarLogs) },
+                            onOpenScope = { backStack.add(Route.XposedScope(it)) },
+                        )
+                    }
+                    entry<Route.AkarApp> { route ->
+                        AkarAppScreen(
+                            packageName = route.packageName,
+                            onBack = back,
+                        )
+                    }
+                    entry<Route.AkarLogs> {
+                        AkarLogsScreen(
+                            onBack = back,
+                            onOpenApp = { backStack.add(Route.AkarApp(it)) },
+                        )
+                    }
+                    entry<Route.AppVisibility> {
+                        AppVisibilityScreen(onBack = back)
+                    }
+                    entry<Route.LelapApps> {
+                        LelapAppsScreen(onBack = back)
+                    }
+                    entry<Route.LelapCuts> {
+                        LelapCutsScreen(onBack = back)
+                    }
+                    entry<Route.Saring> {
+                        SaringScreen(onBack = back)
                     }
                     entry<Route.Color> {
                         ColorScreen(onBack = back)
@@ -248,8 +369,17 @@ fun LarasApp(start: Route = Route.Home, viewModel: LarasViewModel = viewModel())
                     entry<Route.SoundApps> {
                         SoundAppsScreen(onBack = back)
                     }
+                    entry<Route.Nada> {
+                        NadaScreen(onBack = back)
+                    }
+                    entry<Route.Haptics> {
+                        HapticsScreen(onBack = back)
+                    }
                     entry<Route.WifiRegion> {
                         WifiRegionScreen(prefs, onBack = back)
+                    }
+                    entry<Route.Padat> { route ->
+                        PadatScreen(onBack = back, focus = route.focus)
                     }
                     entry<Route.Changed> {
                         ChangedScreen(prefs, viewModel, onResetAll = viewModel::resetAll, onBack = back)

@@ -68,7 +68,7 @@ class ChoicePref<E>(namespace: Namespace, key: String, val options: List<E>, def
 
 /**
  * One field of a JSON object setting that several features share, like `yasvara_theme`
- * (SPEC-0003 §5.2). It reads its own field, and is written by merging into the object as stored
+ * It reads its own field, and is written by merging into the object as stored
  * ([merge]), so the other fields keep their values. The default removes the field; once no field
  * is left the setting is deleted, so its owners treat it as unused.
  */
@@ -99,7 +99,7 @@ class JsonFieldPref<E>(
 }
 
 /**
- * [stored], a shared JSON object setting (SPEC-0003 §5.2), with [fields] set; a null value
+ * [stored], a shared JSON object setting, with [fields] set; a null value
  * removes its field. An unreadable object is replaced; once no field is left the result is null,
  * so the setting is deleted and its owners treat it as unused.
  */

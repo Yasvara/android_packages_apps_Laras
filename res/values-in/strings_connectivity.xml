@@ -72,4 +72,22 @@
     <string name="cell_single">Satu carrier: <xliff:g id="width" example="20 MHz">%1$s</xliff:g></string>
     <string name="cell_metric">RSRP <xliff:g id="rsrp" example="-90">%1$d</xliff:g> dBm · RSRQ <xliff:g id="rsrq" example="-11">%2$s</xliff:g> dB · SINR <xliff:g id="sinr" example="12">%3$s</xliff:g> dB</string>
     <string name="cell_note">Kecepatan lebih ditentukan SINR dan RSRQ daripada RSRP: sel yang kuat tapi padat tetap bisa lambat.</string>
+    <string name="visibility_title">Visibilitas app</string>
+    <string name="visibility_entry_summary">Sembunyikan app pilihan dari app lain</string>
+    <string name="visibility_scope_selected">App terpilih</string>
+    <string name="visibility_scope_all">Semua app pengguna</string>
+    <string name="visibility_hide_xposed">Sembunyikan modul Xposed</string>
+    <string name="visibility_hidden">App tersembunyi</string>
+    <string name="visibility_observers">Disembunyikan dari</string>
+    <string name="visibility_exceptions">Tetap bisa melihat</string>
+    <string name="visibility_add">Tambah</string>
+    <string name="visibility_remove">Hapus</string>
+    <string name="visibility_view_as">Lihat sebagai</string>
+    <string name="visibility_view_as_pick">Pilih app</string>
+    <string name="visibility_state_hidden">Tersembunyi</string>
+    <string name="visibility_state_visible">Terlihat</string>
+    <string name="visibility_suggestion_title">Sembunyikan alat root dari detector</string>
+    <string name="visibility_suggestion_apply">Terapkan</string>
+    <string name="visibility_unavailable">Layanan visibilitas tidak berjalan</string>
+    <string name="visibility_search">Cari app</string>
 </resources>

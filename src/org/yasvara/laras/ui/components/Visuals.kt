@@ -89,6 +89,7 @@ private val SystemGroup.polygon: RoundedPolygon
         SystemGroup.SUPERUSER -> MaterialShapes.Pentagon
         SystemGroup.INTEGRITY -> MaterialShapes.Gem
         SystemGroup.APPS -> MaterialShapes.Square
+        SystemGroup.KEYBOARD -> MaterialShapes.Pill
         SystemGroup.MODULES -> MaterialShapes.Clover4Leaf
         SystemGroup.LAB -> MaterialShapes.Puffy
         SystemGroup.PENTAS -> MaterialShapes.Cookie9Sided

@@ -67,7 +67,7 @@ import org.yasvara.laras.catalog.SampleKind
 import org.yasvara.laras.ui.components.icon
 
 /**
- * A session with SystemUI's status bar preview (SPEC-0003 §4.1): SystemUI builds its real home
+ * A session with SystemUI's status bar preview: SystemUI builds its real home
  * status bar into a surface Laras embeds, so the canvas shows the status bar SystemUI would.
  * On a SystemUI without the renderer, [available] turns false and the canvas says so.
  */
@@ -240,7 +240,7 @@ private val STATUS_BAR_PARTS = listOf(
 
 /**
  * The notification shade canvas: SystemUI's own status bar across the width at nearly its real
- * size (SPEC-0003 §4.1), its parts named by callouts, and Quick Settings under it, which follow
+ * size, its parts named by callouts, and Quick Settings under it, which follow
  * once SystemUI renders them (roadmap). While the battery or the icons are picked, a card under
  * the bar tries their states on the canvas alone; the pickers' samples follow those states.
  */

@@ -10,9 +10,9 @@
     <uses-permission android:name="android.permission.BIND_WALLPAPER" />
     <uses-permission android:name="android.permission.CUSTOMIZE_SYSTEM_UI" />
     <uses-permission android:name="android.permission.READ_WALLPAPER_INTERNAL" />
-    <!-- Depth library: sets a saved picture as the wallpaper with its depth (SPEC-0013 §11). -->
+    <!-- Depth library: sets a saved picture as the wallpaper with its depth. -->
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
-    <!-- Depth build (SPEC-0013 §4): a foreground service, started when SystemUI asks. -->
+    <!-- Depth build: a foreground service, started when SystemUI asks. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
     <uses-permission android:name="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
@@ -21,20 +21,47 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="yasvara.permission.WRITE_ATTESTATION" />
-    <!-- The Modules group: Xposed modules and their scope (YasvaraXposed in system_server). -->
-    <uses-permission android:name="yasvara.permission.MANAGE_XPOSED" />
-    <!-- App updates: per-app detach / delay / ask (YasvaraUpdatePolicyService, SPEC-0005). -->
+    <!-- Kait: modules and per-user scope (YasvaraKait in system_server). -->
+    <uses-permission android:name="yasvara.permission.MANAGE_KAIT" />
+    <!-- App updates: per-app detach / delay / ask (YasvaraUpdatePolicyService). -->
     <uses-permission android:name="yasvara.permission.MANAGE_UPDATE_POLICY" />
     <uses-permission android:name="yasvara.permission.MANAGE_SWARA" />
-    <!-- Akar: the native root's control plane (YasvaraRootService, SPEC-0006). Signature level
+    <!-- Akar: the native root's control plane (YasvaraRootService). Signature level
          (platform key): other platform apps may hold it, nothing else, and not by pm grant. -->
     <permission
         android:name="yasvara.permission.MANAGE_ROOT"
         android:protectionLevel="signature" />
     <uses-permission android:name="yasvara.permission.MANAGE_ROOT" />
+    <!-- Ketik: Gboard flag overrides (YasvaraKetikService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_KETIK"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_KETIK" />
+    <!-- Package visibility rules (YasvaraAppVisibilityService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_APP_VISIBILITY"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_APP_VISIBILITY" />
+    <!-- App sleep and telemetry cuts (YasvaraLelapService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_LELAP"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_LELAP" />
+    <!-- Name and browser filtering (YasvaraSaringService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_SARING"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_SARING" />
+    <!-- Realtime per-app F2FS compression (PadatService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_PADAT"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_PADAT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Connectivity (SPEC-0014): hotspot width, allowed channels, network mode, signal bars,
+    <!-- Connectivity: hotspot width, allowed channels, network mode, signal bars,
          the serving cell card (ServiceState without location). -->
     <uses-permission android:name="android.permission.OVERRIDE_WIFI_CONFIG" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
@@ -42,7 +69,7 @@
     <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <!-- The launcher's home screen preview and icon shapes (SPEC-0003 §4.4). -->
+    <!-- The launcher's home screen preview and icon shapes. -->
     <uses-permission android:name="com.android.launcher3.permission.GRID_CONTROL" />
     <uses-permission android:name="lineageos.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="lineageos.permission.WRITE_SETTINGS" />
@@ -65,24 +92,34 @@
                 <action android:name="org.yasvara.laras.action.OPEN" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Settings › App info › Updates (SPEC-0005 §4.9); extra "package". -->
+            <!-- Settings › App info › Updates; extra "package". -->
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.APP_UPDATES" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Notification of a refused root request (SPEC-0006); extra "package". -->
+            <!-- Notification of a refused root request; extra "package". -->
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.AKAR" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Volume Panel "Apps" › Manage (SPEC-0010 §5.1). -->
+            <!-- Kait: opens Kait module manager or a specific module's scope; extra "package". -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.KAIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Volume Panel "Apps" › Manage. -->
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.SOUND_APPS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Settings › Hotspot › Speed › Wi-Fi region (SPEC-0014). -->
+            <!-- Settings › Hotspot › Speed › Wi-Fi region. -->
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.WIFI_REGION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Settings › Storage › Padat F2FS compression; optional extra "package". -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.PADAT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- Settings homepage entry, placed first in the personalisation group. -->
@@ -112,13 +149,68 @@
                 android:resource="@string/settings_entry_summary" />
         </activity>
 
-        <!-- App updates (SPEC-0005 §4.6): system_server reports blocked / to-review updates. -->
+        <!-- Standalone entry point for Homescreen pinned shortcuts and optional App Drawer icon. -->
+        <activity
+            android:name=".AkarActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|uiMode|assetsPaths"
+            android:exported="true"
+            android:icon="@mipmap/ic_akar_launcher"
+            android:label="@string/akar_title"
+            android:launchMode="singleTop"
+            android:taskAffinity="org.yasvara.laras.akar"
+            android:theme="@style/Theme.Laras" />
+        <activity-alias
+            android:name=".AkarLauncherAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_akar_launcher"
+            android:label="@string/akar_title"
+            android:targetActivity=".AkarActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Kait: standalone entry point for Homescreen pinned shortcuts and optional App Drawer icon. -->
+        <activity
+            android:name=".KaitActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|uiMode|assetsPaths"
+            android:exported="true"
+            android:icon="@mipmap/ic_kait_launcher"
+            android:label="@string/group_modules"
+            android:launchMode="singleTop"
+            android:taskAffinity="org.yasvara.laras.kait"
+            android:theme="@style/Theme.Laras" />
+        <activity-alias
+            android:name=".KaitLauncherAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_kait_launcher"
+            android:label="@string/group_modules"
+            android:targetActivity=".KaitActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App updates: system_server reports blocked / to-review updates. -->
         <receiver
             android:name=".data.updates.UpdateEventReceiver"
             android:exported="true"
             android:permission="yasvara.permission.MANAGE_UPDATE_POLICY">
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.UPDATE_EVENT" />
+            </intent-filter>
+        </receiver>
+        <!-- Ketik: the crash guard undid a keyboard change. -->
+        <receiver
+            android:name=".data.ketik.KetikRevertReceiver"
+            android:exported="true"
+            android:permission="yasvara.permission.MANAGE_KETIK">
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.KETIK_REVERTED" />
             </intent-filter>
         </receiver>
         <receiver
@@ -131,7 +223,7 @@
             android:noHistory="true"
             android:theme="@android:style/Theme.NoDisplay" />
 
-        <!-- Akar (SPEC-0006): system_server reports an app the root daemon refused. -->
+        <!-- Akar: system_server reports an app the root daemon refused. -->
         <receiver
             android:name=".data.root.RootDeniedReceiver"
             android:exported="true"
@@ -157,7 +249,12 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Laras" />
-        <!-- Builds depth for new lock wallpapers (SPEC-0013 §4, §9 Q3). -->
+        <!-- Refreshes the filter lists once a day. -->
+        <service
+            android:name=".data.saring.SaringUpdateJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- Builds depth for new lock wallpapers (§9 Q3). -->
         <service
             android:name=".depth.DepthBuildService"
             android:exported="false"

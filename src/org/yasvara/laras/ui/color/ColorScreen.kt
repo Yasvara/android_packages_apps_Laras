@@ -94,7 +94,7 @@ import org.yasvara.monet.YasResolvedScheme
 import org.yasvara.monet.YasStyle
 
 /**
- * Colour, the simple surface (SPEC-0002 §5.1): where the colours come from, the style, how vivid,
+ * Colour, the simple surface: where the colours come from, the style, how vivid,
  * how much contrast, and pure black. Everything is a draft, shown at once in this screen's own
  * colours; Apply recolours the system behind SystemUI's reveal from the Apply button.
  */
@@ -312,7 +312,7 @@ private fun SeedDot(
     )
 }
 
-/** The six simple styles, each drawn with the swatches it would give (SPEC-0002 §5.2). */
+/** The six simple styles, each drawn with the swatches it would give. */
 @Composable
 private fun StyleCarousel(
     selected: YasStyle,
@@ -443,7 +443,7 @@ private enum class SourceTab(override val value: Int, override val label: Int) :
     PRESETS(1, R.string.color_source_presets),
 }
 
-/** The simple surface's contrast chips; null follows the system (SPEC-0002 §4.4). */
+/** The simple surface's contrast chips; null follows the system. */
 private enum class ContrastChoice(val level: Double?, override val label: Int) : ChoiceOption {
     SYSTEM(null, R.string.color_contrast_system),
     STANDARD(0.0, R.string.color_contrast_standard),

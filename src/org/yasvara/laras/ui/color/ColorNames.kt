@@ -11,7 +11,7 @@ import org.yasvara.laras.R
 import kotlin.math.roundToInt
 
 /**
- * Colour names for screen readers (SPEC-0002 §5.8): "Primary, blue, tone 40". Hue buckets follow
+ * Colour names for screen readers: "Primary, blue, tone 40". Hue buckets follow
  * HCT hue, so a name matches what the engine sees; low chroma reads as grey.
  */
 object ColorNames {

@@ -39,7 +39,7 @@ enum class AmPmStyle(override val value: Int, override val label: Int) : ChoiceO
     HIDDEN(2, R.string.option_hidden),
 }
 
-/** Lineage's battery styles (0-3) and Yasvara's (100 up, SPEC-0003 §4.3), in picker order. */
+/** Lineage's battery styles (0-3) and Yasvara's (100 up), in picker order. */
 enum class BatteryStyle(override val value: Int, override val label: Int) : ChoiceOption {
     ICON(0, R.string.option_icon),
     CAPSULE(100, R.string.option_capsule),
@@ -54,7 +54,7 @@ enum class BatteryStyle(override val value: Int, override val label: Int) : Choi
     val isPercentage: Boolean get() = this == CAPSULE || this == GLYPH || this == TEXT
 }
 
-/** Status bar icon sets (SPEC-0003 §4.2), by their `yasvara_theme.statusIcons` id. */
+/** Status bar icon sets, by their `yasvara_theme.statusIcons` id. */
 enum class StatusIconSet(val id: String, override val label: Int) : ChoiceOption {
     DEFAULT("aosp", R.string.option_default),
     WEDGE("yas-wedge", R.string.icons_wedge),
@@ -90,7 +90,7 @@ enum class DepthClockLayer(override val value: Int, override val label: Int) : C
     BEHIND(2, R.string.depth_clock_behind),
 }
 
-/** Layang default window size (SPEC-0008 §6.4), stored as 0/1/2. */
+/** Layang default window size, stored as 0/1/2. */
 enum class LayangSize(override val value: Int, override val label: Int) : ChoiceOption {
     SMALL(0, R.string.layang_size_s),
     MEDIUM(1, R.string.layang_size_m),
@@ -108,7 +108,7 @@ enum class SliderPosition(override val value: Int, override val label: Int) : Ch
     BOTTOM(1, R.string.option_bottom),
 }
 
-/** How strongly Wi-Fi network selection favours 5/6 GHz (SPEC-0014 §8), read by the Wi-Fi service. */
+/** How strongly Wi-Fi network selection favours 5/6 GHz, read by the Wi-Fi service. */
 enum class WifiBandPref(override val value: Int, override val label: Int) : ChoiceOption {
     STOCK(0, R.string.wifi_band_stock),
     PREFER(1, R.string.wifi_band_prefer),
@@ -193,7 +193,7 @@ object Prefs {
     )
     val alwaysOn = SwitchPref(Namespace.SECURE, Settings.Secure.DOZE_ALWAYS_ON, false)
 
-    // Layang floating windows (SPEC-0008 §8, §12). Keys are android.app.yasvara.Layang.KEY_*.
+    // Layang floating windows. Keys are android.app.yasvara.Layang.KEY_*.
     val layangEnabled = SwitchPref(Namespace.SECURE, "yasvara_layang_enabled", true)
     val layangChip = SwitchPref(Namespace.SECURE, "yasvara_layang_chip", true)
     val layangRemember = SwitchPref(Namespace.SECURE, "yasvara_layang_remember", true)
@@ -209,7 +209,7 @@ object Prefs {
     )
     val layangAutoPark = SwitchPref(Namespace.SECURE, "yasvara_layang_auto_park", true)
     val layangGhostAlpha = IntSliderPref(Namespace.SECURE, "yasvara_layang_ghost_alpha", 60, 20..80)
-    // Connectivity (SPEC-0014). Keys are com.android.server.wifi.YasvaraWifiTuning.KEY_*.
+    // Connectivity. Keys are com.android.server.wifi.YasvaraWifiTuning.KEY_*.
     /** "auto" or empty for automatic, else the manual ISO country; edited on its own screen. */
     val wifiRegion = StringPref(Namespace.GLOBAL, "yasvara_wifi_region")
     /** "CC:source" published by the Wi-Fi service; read only. */
@@ -224,17 +224,17 @@ object Prefs {
     /**
      * Unlocks customizations that can make the phone hard to use when they go wrong (imported
      * fonts, emoji, boot and charger art, unsigned theme packs). Turned on from Lab, behind a
-     * warning, never as a plain switch (SPEC-0003 §3.3).
+     * warning, never as a plain switch.
      */
     val larasAdvanced = SwitchPref(Namespace.SECURE, "yasvara_laras_advanced", false)
 
-    // Set by SystemUI when a customization family keeps failing (SPEC-0001/0002/0003 §9); Laras
+    // Set by SystemUI when a customization family keeps failing; Laras
     // clears them when the user asks to try again.
     val lockSafeMode = SwitchPref(Namespace.GLOBAL, "yasvara_lock_safe_mode", false)
     val colorSafeMode = SwitchPref(Namespace.GLOBAL, "yasvara_color_safe", false)
     val themeSafeMode = SwitchPref(Namespace.GLOBAL, "yasvara_theme_safe", false)
 
-    /** The colour spec SystemUI applies (SPEC-0002 §4.5); absent means stock colours. */
+    /** The colour spec SystemUI applies; absent means stock colours. */
     val colorSpec = StringPref(Namespace.SECURE, "yasvara_color")
 
     // Superuser: each relaxes one guard the device owner can already defeat over adb. Off by
@@ -266,7 +266,7 @@ class Entry(
 )
 
 /**
- * Pickers whose options SystemUI draws (SPEC-0003 §4.1 `YAS_SAMPLE`): the draft value of each
+ * Pickers whose options SystemUI draws (`YAS_SAMPLE`): the draft value of each
  * option, by the kind's id, as the status bar preview takes it.
  */
 enum class SampleKind(val id: String, val key: (ChoiceOption) -> String) {
@@ -416,8 +416,9 @@ enum class SystemGroup(
         R.string.group_gestures, R.string.group_gestures_summary,
         listOf(Entry(Prefs.doubleTapSleep, R.string.pref_double_tap_sleep)),
     ),
-    POWER(R.string.group_power, R.string.group_power_summary),
-    /** Wi-Fi region, band preference and the network experiments (SPEC-0014); see GroupScreen. */
+    /** Sleeping apps and telemetry cuts; see GroupScreen. */
+    POWER(R.string.group_power, R.string.group_power_summary, section = true),
+    /** Wi-Fi region, band preference and the network experiments; see GroupScreen. */
     CONNECTIVITY(
         R.string.group_connectivity, R.string.group_connectivity_summary,
         listOf(
@@ -429,7 +430,7 @@ enum class SystemGroup(
             Entry(Prefs.simToolkit, R.string.pref_sim_toolkit, R.string.pref_sim_toolkit_summary),
         ),
     ),
-    /** Layang floating windows (SPEC-0008 §12); Desk joins later (SPEC-0009). */
+    /** Layang floating windows; Desk joins later. */
     MULTITASKING(
         R.string.group_multitasking, R.string.group_multitasking_summary,
         listOf(
@@ -483,10 +484,12 @@ enum class SystemGroup(
     ),
     INTEGRITY(R.string.group_integrity, R.string.group_integrity_summary, section = true),
     APPS(R.string.group_apps, R.string.group_apps_summary, section = true),
+    /** Hidden Gboard features; see GroupScreen. */
+    KEYBOARD(R.string.group_keyboard, R.string.group_keyboard_summary, section = true),
     /** The ROM's rootless Xposed runtime: modules and the apps each is loaded into. */
     MODULES(R.string.group_modules, R.string.group_modules_summary, section = true),
     LAB(R.string.group_lab, R.string.group_lab_summary, section = true),
-    /** Pentas, the game and video sidebars (SPEC-0012 §5): its own app, opened from here. */
+    /** Pentas, the game and video sidebars: its own app, opened from here. */
     PENTAS(R.string.group_pentas, R.string.group_pentas_summary, section = true),
     ;
 

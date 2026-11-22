@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.security.yasvara.YasvaraSpoofProfiles.Profile
 import org.yasvara.laras.data.integrity.AppProfilesRepository
+import org.yasvara.laras.data.integrity.IntegrityKeys
 import org.yasvara.laras.data.integrity.SecureStore
 
 class Assignment(val packageName: String, val label: String, val profile: Profile?)
@@ -23,6 +24,7 @@ class Assignment(val packageName: String, val label: String, val profile: Profil
 data class AppsUi(
     val photos: Boolean = true,
     val snapchat: Boolean = true,
+    val spoofMode: Int = IntegrityKeys.MODE_AUTO,
     val assignments: List<Assignment> = emptyList(),
     val profiles: List<Profile> = emptyList(),
 )
@@ -39,6 +41,8 @@ class AppsViewModel(private val app: Application) : AndroidViewModel(app) {
     fun setPhotos(on: Boolean) = edit { repository.photos = on }
 
     fun setSnapchat(on: Boolean) = edit { repository.snapchat = on }
+
+    fun setSpoofMode(mode: Int) = edit { repository.spoofMode = mode }
 
     fun assign(packageName: String, profileId: String) = edit { repository.assign(packageName.trim(), profileId) }
 
@@ -62,7 +66,7 @@ class AppsViewModel(private val app: Application) : AndroidViewModel(app) {
                 Assignment(pkg, labelOf(pkg) ?: pkg, repository.profile(id))
             }.sortedBy { it.label.lowercase() }
             _state.update {
-                AppsUi(repository.photos, repository.snapchat, assignments, repository.profiles())
+                AppsUi(repository.photos, repository.snapchat, repository.spoofMode, assignments, repository.profiles())
             }
         }
     }

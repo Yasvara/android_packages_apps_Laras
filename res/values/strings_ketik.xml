@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="group_keyboard">Keyboard</string>
+    <string name="group_keyboard_summary">Hidden Gboard features</string>
+    <string name="ketik_title">Keyboard</string>
+
+    <string name="ketik_writing_tools">AI Writing Tools</string>
+    <string name="ketik_writing_tools_summary">Proofread and rewrite your text, using Google\'s servers</string>
+    <string name="ketik_key_shape">Key shape</string>
+    <string name="ketik_key_shape_summary">Adds a key shape choice to Gboard\'s theme settings</string>
+    <string name="ketik_quick_insert">Quick Insert</string>
+    <string name="ketik_quick_insert_summary">A panel and toolbar button for inserting content</string>
+    <string name="ketik_trackpad">Cursor trackpad</string>
+    <string name="ketik_trackpad_summary">Long-press the spacebar to move the cursor, with lock mode</string>
+    <string name="ketik_bluetooth_mic">Bluetooth microphone</string>
+    <string name="ketik_bluetooth_mic_summary">Adds the setting to use it for voice typing</string>
+    <string name="ketik_dismiss_proactive">Dismiss suggestions</string>
+    <string name="ketik_dismiss_proactive_summary">Adds a close button to the proactive suggestions bar</string>
+    <string name="ketik_smart_compose">Smart Compose</string>
+    <string name="ketik_smart_compose_summary">Adds the setting for inline suggestions. They may not appear in every app</string>
+    <string name="ketik_accessibility">Accessibility layout</string>
+    <string name="ketik_accessibility_summary">Gboard\'s simulated physical keyboard layout</string>
+    <string name="ketik_clipboard_limit">Longer clipboard items</string>
+    <string name="ketik_clipboard_limit_summary">Keeps up to 100,000 characters per text item, instead of 20,000</string>
+    <string name="ketik_scan_text">Scan text</string>
+    <string name="ketik_scan_text_summary">Type text from the camera</string>
+
+    <string name="ketik_state_active">Active in Gboard</string>
+    <string name="ketik_state_waiting">Gboard will apply this next time the keyboard opens</string>
+    <string name="ketik_state_missing">Not available in this Gboard version</string>
+    <string name="ketik_state_not_applied">Gboard has not applied this</string>
+    <string name="ketik_note">These turn on features already inside Gboard. Google can change or remove them at any time, and Gboard keeps updating as usual.</string>
+
+    <string name="ketik_cloud_title">Send text to Google?</string>
+    <string name="ketik_cloud_body">This phone can\'t run Writing Tools on the device. When you use them, the text you choose goes to Google\'s servers. Nothing is sent until you open Writing Tools.</string>
+    <string name="ketik_cloud_confirm">Turn on</string>
+
+    <string name="ketik_reverted_title">Keyboard change undone</string>
+    <string name="ketik_reverted_text">Gboard kept crashing after a change here, so these were removed:</string>
+    <string name="ketik_reverted_dismiss">OK</string>
+    <string name="ketik_unavailable">Not available</string>
+    <string name="ketik_unavailable_body">The keyboard service isn\'t running on this build.</string>
+    <string name="ketik_no_gboard">Gboard isn\'t installed</string>
+    <string name="ketik_no_gboard_body">These features belong to Gboard. Install it from Play to use them.</string>
+</resources>

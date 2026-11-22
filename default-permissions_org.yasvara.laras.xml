@@ -3,11 +3,11 @@
      SPDX-FileCopyrightText: The Yasvara Project
      SPDX-License-Identifier: Apache-2.0
 -->
-<!-- Laras notifies the owner about paused and to-be-reviewed app updates (SPEC-0005 §4.6). -->
+<!-- Laras notifies the owner about paused and to-be-reviewed app updates. -->
 <exceptions>
     <exception package="org.yasvara.laras">
         <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
-        <!-- Allowed Wi-Fi channels for the Wi-Fi region card (SPEC-0014). -->
+        <!-- Allowed Wi-Fi channels for the Wi-Fi region card. -->
         <permission name="android.permission.NEARBY_WIFI_DEVICES" fixed="false" />
     </exception>
 </exceptions>

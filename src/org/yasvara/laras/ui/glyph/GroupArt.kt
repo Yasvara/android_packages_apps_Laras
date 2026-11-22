@@ -201,7 +201,7 @@ private fun readSystem(context: Context): HomeFacts {
 const val PENTAS_PACKAGE = "org.yasvara.pentas"
 
 /**
- * The games Pentas serves, by its own rule (SPEC-0012 §3): the user's list, plus installed
+ * The games Pentas serves, by its own rule: the user's list, plus installed
  * apps that declare themselves games while auto-detect is on. Last played first, then by name.
  * Empty when Pentas isn't installed.
  */

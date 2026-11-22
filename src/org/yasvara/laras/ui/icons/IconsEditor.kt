@@ -65,7 +65,7 @@ import org.yasvara.laras.ui.components.CheckSwitch
 import org.yasvara.laras.ui.components.groupedShape
 
 /**
- * The app icons (SPEC-0003 §4.4): the shape, the icon pack and themed icons, in one sheet, as
+ * The app icons: the shape, the icon pack and themed icons, in one sheet, as
  * the interplay table puts them together. Each choice applies at once; the home canvas above
  * shows the launcher's own drawing of it. Everything is re-read when the theme changes
  * from elsewhere: [theme], the stored `yasvara_theme`, keys the re-read.

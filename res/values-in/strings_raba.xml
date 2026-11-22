@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="raba_title">Getaran</string>
+    <string name="raba_entry_summary">Rasa ketukan, sakelar, slider, dan tepi</string>
+    <string name="raba_intro">Setiap sentuhan memainkan salah satu tekstur bawaan motor, yang juga dipakai HyperOS. Pilih rasa, atau atur tiap jenis sentuhan.</string>
+    <string name="raba_reset_all">Reset</string>
+
+    <string name="raba_touch">Getaran sentuh</string>
+    <string name="raba_touch_summary">Mati membungkam semua sentuhan, di sini dan di aplikasi lain</string>
+    <string name="raba_strength">Kekuatan</string>
+    <string name="raba_strength_value"><xliff:g id="percent">%1$d</xliff:g>%%</string>
+    <string name="raba_strength_summary" formatted="false">100% adalah level HyperOS. Di atasnya tiap sentuhan menambah beberapa denyut bersih di frekuensi motor, sampai setara hentakan 4D game di 150%. Saat mengetik cepat lama, denyut tambahan mengalah ketika motor hangat; tick-nya sendiri tidak pernah meredup.</string>
+
+    <string name="raba_feel">Rasa</string>
+    <string name="raba_profile_hyperos">HyperOS</string>
+    <string name="raba_profile_pixel">Pixel</string>
+    <string name="raba_profile_custom">Kustom</string>
+    <string name="raba_profile_hyperos_summary">Tekstur pendek dan renyah dari HyperOS bawaan ponsel ini.</string>
+    <string name="raba_profile_pixel_summary">Efek bawaan platform, seperti di Pixel.</string>
+    <string name="raba_profile_custom_summary">HyperOS, dengan jenis yang Anda ubah di bawah.</string>
+    <string name="raba_reskin">Aplikasi lain juga</string>
+    <string name="raba_reskin_summary">System UI dan aplikasi yang menyusun getarannya sendiri ikut memakai tekstur yang sama</string>
+
+    <string name="raba_kinds">Jenis sentuhan</string>
+    <string name="raba_kinds_summary">Mengubah salah satu beralih ke Kustom. Ketuk tekstur untuk merasakannya.</string>
+    <string name="raba_category_on">Getaran untuk jenis ini</string>
+    <string name="raba_category_off">Mati</string>
+    <string name="raba_category_value"><xliff:g id="texture">%1$s</xliff:g> · <xliff:g id="percent">%2$d</xliff:g>%%</string>
+    <string name="raba_category_strength">Kekuatan</string>
+    <string name="raba_category_reset">Kembali ke HyperOS</string>
+
+    <string name="raba_cat_taps">Ketukan &amp; tombol</string>
+    <string name="raba_cat_taps_summary">Tombol, tombol navigasi, klik konteks</string>
+    <string name="raba_cat_keyboard">Keyboard</string>
+    <string name="raba_cat_keyboard_summary">Tekanan tombol di keyboard yang memintanya</string>
+    <string name="raba_cat_switches">Sakelar</string>
+    <string name="raba_cat_switches_summary">Menyalakan dan mematikan sakelar dan kotak centang</string>
+    <string name="raba_cat_ticks">Slider &amp; pemilih</string>
+    <string name="raba_cat_ticks_summary">Langkah slider, pemilih waktu, pegangan teks, tik gulir</string>
+    <string name="raba_cat_edges">Tepi &amp; batas</string>
+    <string name="raba_cat_edges_summary">Daftar mencapai ujung, slider mencapai salah satu ujung</string>
+    <string name="raba_cat_press">Tekan lama &amp; seret</string>
+    <string name="raba_cat_press_summary">Tekan lama, mengangkat ikon atau item</string>
+    <string name="raba_cat_gestures">Tarikan &amp; gestur</string>
+    <string name="raba_cat_gestures_summary">Menarik melewati batas: panel, kembali, laci</string>
+    <string name="raba_cat_confirm">Konfirmasi &amp; galat</string>
+    <string name="raba_cat_confirm_summary">Konfirmasi, tombol dialog, input yang ditolak</string>
+
+    <string name="raba_texture_crisp">Renyah</string>
+    <string name="raba_texture_double">Ganda</string>
+    <string name="raba_texture_firm">Mantap</string>
+    <string name="raba_texture_deep">Dalam</string>
+    <string name="raba_texture_tap">Ketuk</string>
+    <string name="raba_texture_pop">Letup</string>
+    <string name="raba_texture_light">Ringan</string>
+    <string name="raba_texture_sharp">Tajam</string>
+    <string name="raba_texture_snap">Jepret</string>
+    <string name="raba_texture_soft">Lembut</string>
+
+    <string name="raba_pad">Coba</string>
+    <string name="raba_pad_button">Tombol</string>
+    <string name="raba_pad_confirm">Konfirmasi</string>
+    <string name="raba_pad_reject">Tolak</string>
+    <string name="raba_pad_switch">Sakelar</string>
+    <string name="raba_pad_slider">Slider berlangkah</string>
+    <string name="raba_pad_pull">Tarik melewati garis</string>
+    <string name="raba_pad_hold">Tahan</string>
+    <string name="raba_pad_list">Gulir sampai ujung</string>
+    <string name="raba_pad_list_item">Baris <xliff:g id="number">%1$d</xliff:g></string>
+    <string name="raba_pad_dialog">Dialog</string>
+    <string name="raba_pad_dialog_body">Tombolnya terasa seperti dialog di semua aplikasi.</string>
+
+    <string name="raba_pentas">Getaran game</string>
+    <string name="raba_pentas_summary">Getaran 4D dari suara game diatur per game di Pentas</string>
+</resources>

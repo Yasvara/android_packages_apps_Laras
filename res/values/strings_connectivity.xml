@@ -4,7 +4,7 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <!-- Connectivity (SPEC-0014) -->
+    <!-- Connectivity -->
     <string name="group_connectivity">Connectivity</string>
     <string name="group_connectivity_summary">Wi-Fi region and mobile data</string>
     <string name="pref_wifi_band">Prefer faster Wi-Fi bands</string>

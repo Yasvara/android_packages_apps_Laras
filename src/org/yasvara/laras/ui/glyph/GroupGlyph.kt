@@ -69,6 +69,7 @@ private fun DrawScope.drawGlyph(group: SystemGroup, t: Float, color: Color) = wh
     SystemGroup.SUPERUSER -> key(t, color)
     SystemGroup.INTEGRITY -> shield(t, color)
     SystemGroup.APPS -> tiles(t, color)
+    SystemGroup.KEYBOARD -> keys(t, color)
     SystemGroup.MODULES -> hook(t, color)
     SystemGroup.LAB -> flask(t, color)
     SystemGroup.PENTAS -> edge(t, color)
@@ -264,6 +265,17 @@ private fun DrawScope.flask(t: Float, color: Color) {
 }
 
 /** A hook drawn down its shank and round its bend, then the barb catches. */
+/** The keyboard's keys light up across the rows, then the spacebar draws in. */
+private fun DrawScope.keys(t: Float, color: Color) {
+    drawRoundRect(color, Offset(2f, 5f), Size(20f, 14f), CornerRadius(2.5f), style = Line)
+    for (row in 0..1) for (column in 0..3) {
+        val a = stagger(t, row * 4 + column, 8)
+        if (a > 0f) drawCircle(color, 1f * a, Offset(6f + column * 4f, 9f + row * 3.2f))
+    }
+    val bar = ((t - 0.7f) / 0.3f).coerceIn(0f, 1f)
+    if (bar > 0f) drawLine(color, Offset(12f - 4f * bar, 15.8f), Offset(12f + 4f * bar, 15.8f), Line.width, StrokeCap.Round)
+}
+
 private fun DrawScope.hook(t: Float, color: Color) {
     drawCircle(color, radius = 2f, center = Offset(15f, 4f), style = Line)
     val hook = Path().apply {

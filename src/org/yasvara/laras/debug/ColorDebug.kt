@@ -17,7 +17,7 @@ import org.yasvara.monet.YasSeedResolver
 import org.yasvara.monet.YasvaraMonet
 
 /**
- * Fingerprint parity (SPEC-0002 §3.3, §10), on debuggable builds only:
+ * Fingerprint parity, on debuggable builds only:
  * `am start -a org.yasvara.laras.action.OPEN --es yas_resolve '<spec json>'` logs the fingerprint
  * Laras resolves for the spec on this device, which `vendor/yasvara/tests/color/
  * fingerprint_parity.sh` compares with the one SystemUI reports after applying it.

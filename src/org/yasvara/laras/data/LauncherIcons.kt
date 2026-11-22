@@ -16,7 +16,7 @@ import org.json.JSONObject
 import org.yasvara.laras.ui.preview.Launcher
 
 /**
- * The home screen's icons (SPEC-0003 §4.4): the shapes the launcher offers, the installed icon
+ * The home screen's icons: the shapes the launcher offers, the installed icon
  * packs, and the launcher's themed icons. The shape and the pack live in `yasvara_theme`, which
  * the launcher and SystemUI follow; themed icons stay the launcher's own setting.
  */

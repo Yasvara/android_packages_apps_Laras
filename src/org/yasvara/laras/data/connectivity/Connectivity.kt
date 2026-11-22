@@ -25,7 +25,7 @@ import org.yasvara.laras.R
 import org.yasvara.laras.data.ChoiceOption
 
 /*
- * The Connectivity group's data (SPEC-0014): the Wi-Fi region the Wi-Fi service publishes, and
+ * The Connectivity group's data: the Wi-Fi region the Wi-Fi service publishes, and
  * the experiments that go through public system APIs (hotspot width, network mode, signal bars).
  * Nothing here bypasses a country's rules: the firmware keeps DFS and power limits in every mode.
  */

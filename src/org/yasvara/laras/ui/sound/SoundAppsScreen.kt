@@ -67,7 +67,7 @@ private data class SoundApp(
 }
 
 /**
- * Sound › Apps (SPEC-0010 §5.2): every launchable app, searchable, with the full Swara rule.
+ * Sound › Apps: every launchable app, searchable, with the full Swara rule.
  * Apps that play, record or have a rule come first.
  */
 @Composable

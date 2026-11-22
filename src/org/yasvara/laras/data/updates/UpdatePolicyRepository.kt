@@ -48,7 +48,7 @@ data class UpdateEvent(
     val decision: String,
 )
 
-/** One saved APK set in the version vault (SPEC-0005 §4.4). */
+/** One saved APK set in the version vault. */
 data class VaultEntry(
     val versionCode: Long,
     val versionName: String,

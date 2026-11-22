@@ -73,7 +73,7 @@ sealed interface RollbackState {
     data class Done(val pkg: String, val ok: Boolean, val message: String?) : RollbackState
 }
 
-/** The App updates screen (SPEC-0005 §4.7). Every change is written to system_server at once. */
+/** The App updates screen. Every change is written to system_server at once. */
 class AppUpdatesViewModel(app: Application) : AndroidViewModel(app) {
     private val repository = UpdatePolicyRepository(app)
     private val _state = MutableStateFlow(AppUpdatesUi())
@@ -172,7 +172,7 @@ class AppUpdatesViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Reinstalls a saved version (SPEC-0005 §4.4). */
+    /** Reinstalls a saved version. */
     fun rollback(pkg: String, versionCode: Long, clearData: Boolean, pin: Boolean) {
         val app = getApplication<Application>()
         val result = PendingIntent.getBroadcast(app, pkg.hashCode(),

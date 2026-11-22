@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="group_keyboard">Keyboard</string>
+    <string name="group_keyboard_summary">Fitur tersembunyi Gboard</string>
+    <string name="ketik_title">Keyboard</string>
+
+    <string name="ketik_writing_tools">AI Writing Tools</string>
+    <string name="ketik_writing_tools_summary">Koreksi dan tulis ulang teks, memakai server Google</string>
+    <string name="ketik_key_shape">Bentuk tombol</string>
+    <string name="ketik_key_shape_summary">Menambah pilihan bentuk tombol di setelan tema Gboard</string>
+    <string name="ketik_quick_insert">Quick Insert</string>
+    <string name="ketik_quick_insert_summary">Panel dan tombol toolbar untuk menyisipkan konten</string>
+    <string name="ketik_trackpad">Trackpad kursor</string>
+    <string name="ketik_trackpad_summary">Tahan spasi untuk menggerakkan kursor, dengan mode kunci</string>
+    <string name="ketik_bluetooth_mic">Mikrofon Bluetooth</string>
+    <string name="ketik_bluetooth_mic_summary">Menambah setelan untuk memakainya saat mengetik dengan suara</string>
+    <string name="ketik_dismiss_proactive">Tutup saran</string>
+    <string name="ketik_dismiss_proactive_summary">Menambah tombol tutup di bilah saran proaktif</string>
+    <string name="ketik_smart_compose">Smart Compose</string>
+    <string name="ketik_smart_compose_summary">Menambah setelan saran langsung. Saran mungkin tidak muncul di semua app</string>
+    <string name="ketik_accessibility">Tata letak aksesibilitas</string>
+    <string name="ketik_accessibility_summary">Tata letak keyboard fisik simulasi dari Gboard</string>
+    <string name="ketik_clipboard_limit">Item clipboard lebih panjang</string>
+    <string name="ketik_clipboard_limit_summary">Menyimpan hingga 100.000 karakter per item teks, bukan 20.000</string>
+    <string name="ketik_scan_text">Pindai teks</string>
+    <string name="ketik_scan_text_summary">Ketik teks dari kamera</string>
+
+    <string name="ketik_state_active">Aktif di Gboard</string>
+    <string name="ketik_state_waiting">Gboard menerapkannya saat keyboard dibuka lagi</string>
+    <string name="ketik_state_missing">Tidak tersedia di versi Gboard ini</string>
+    <string name="ketik_state_not_applied">Belum diterapkan Gboard</string>
+    <string name="ketik_note">Ini mengaktifkan fitur yang sudah ada di dalam Gboard. Google bisa mengubah atau menghapusnya kapan saja, dan Gboard tetap update seperti biasa.</string>
+
+    <string name="ketik_cloud_title">Kirim teks ke Google?</string>
+    <string name="ketik_cloud_body">HP ini tidak bisa menjalankan Writing Tools di perangkat. Saat kamu memakainya, teks yang kamu pilih dikirim ke server Google. Tidak ada yang dikirim sampai kamu membuka Writing Tools.</string>
+    <string name="ketik_cloud_confirm">Aktifkan</string>
+
+    <string name="ketik_reverted_title">Perubahan keyboard dibatalkan</string>
+    <string name="ketik_reverted_text">Gboard terus crash setelah perubahan di sini, jadi ini dihapus:</string>
+    <string name="ketik_reverted_dismiss">OK</string>
+    <string name="ketik_unavailable">Tidak tersedia</string>
+    <string name="ketik_unavailable_body">Layanan keyboard tidak berjalan di build ini.</string>
+    <string name="ketik_no_gboard">Gboard belum terpasang</string>
+    <string name="ketik_no_gboard_body">Fitur ini milik Gboard. Pasang dari Play untuk memakainya.</string>
+</resources>

@@ -46,7 +46,7 @@ import org.yasvara.laras.catalog.SampleKind
 import org.yasvara.laras.data.ChoiceOption
 
 /**
- * Option samples SystemUI draws with its own status bar (SPEC-0003 §4.1 `YAS_SAMPLE`): what
+ * Option samples SystemUI draws with its own status bar (`YAS_SAMPLE`): what
  * each battery style or icon set looks like, in the canvas's state. Filled by the status bar
  * canvas while it is open; empty without one, and the pickers fall back to plain buttons.
  */

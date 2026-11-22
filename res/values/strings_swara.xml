@@ -4,7 +4,7 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <!-- Sound › Apps (SPEC-0010 §5.2) -->
+    <!-- Sound › Apps -->
     <string name="swara_title">App sound</string>
     <string name="swara_entry_summary">Volume, mic and speaker for each app</string>
     <string name="swara_intro">Each app\'s volume works on top of the system volume. A change stays until you change it back, and the volume panel shows every app that is turned down.</string>

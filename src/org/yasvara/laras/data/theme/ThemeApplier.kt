@@ -38,7 +38,7 @@ class SettingsThemeStore(private val settings: SettingsRepository) : ThemeStore 
 }
 
 /**
- * SystemUI's theme apply transition (SPEC-0002 §7.1): it covers the screen with a snapshot
+ * SystemUI's theme apply transition: it covers the screen with a snapshot
  * before a theme is written and reveals the result from the touch point once the new theme is
  * drawn. Every call degrades to a plain apply when SystemUI does not offer it.
  */
