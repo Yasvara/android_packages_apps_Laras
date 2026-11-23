@@ -8,17 +8,31 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,25 +43,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Compress
 import androidx.compose.material.icons.rounded.Equalizer
-import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Restore
-import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.Speaker
+import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Waves
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,18 +80,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.server.yasvara.nada.INadaManager
 import com.android.server.yasvara.nada.Nada
@@ -95,24 +121,25 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.withContext
 import org.yasvara.laras.R
+import org.yasvara.laras.data.sound.NadaShortcuts
 import org.yasvara.laras.ui.components.CheckSwitch
-import org.yasvara.laras.ui.components.SectionCard
+import org.yasvara.laras.ui.components.HeroBackdropKind
+import org.yasvara.laras.ui.components.LarasCollapsibleCard
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
+import org.yasvara.laras.ui.components.LarasMascotIcon
+import org.yasvara.laras.ui.components.LarasShapes
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.SwitchRow
 import org.yasvara.laras.ui.components.Tone
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.screens.Page
 
 private const val TAG = "LarasNada"
 
-/**
- * A starting point for a profile. [routes] limits it to the device classes it was made for;
- * [source] says where its numbers come from.
- */
 private class Preset(val name: String, val spec: String, val routes: Set<String>, val source: String)
 
-// Speaker presets come from stepped-sine sweeps of onyx's speaker through the mixer, mic presets
-// 1/5/10 (they agree within 1 dB; preset 9 does not), three runs each (lab/nada/measure/2026-11-12/fit).
 private val BUILT_IN = listOf(
     Preset("Reference", "on:0", emptySet(), "Bit-exact: the engine does not touch the audio."),
     Preset("Speaker · balanced",
@@ -124,8 +151,6 @@ private val BUILT_IN = listOf(
         "on:1|eq.on:1|eq.bands:pk/4398/-8/1.64|bass.on:1|bass.gain:0|bass.cut:350|bass.harm:100",
         setOf("spk"), "Measured on this phone: no boosts, same level as off (−0.5 dB); deviation 5.6 → 4.0 dB, " +
             "distortion unchanged; bass below 350 Hz replaced by its overtones."),
-    // Traced from a shared TOZO-app EQ screenshot (lab/nada/measure/2026-11-12/tozo), fitted with
-    // lab/nada/tools/eq_match.py.
     Preset("TOZO AeroSound6 Pro",
         "on:1|eq.on:1|eq.bands:ls/29/-3.9/0.54,pk/458/1.1/0.77,pk/2041/-0.8/1.08,pk/9420/-5.1/1.26",
         setOf("bt"), "A listener's TOZO-app tune for these earbuds, matched within 0.13 dB rms from 20 Hz " +
@@ -140,8 +165,10 @@ private val BUILT_IN = listOf(
 private fun engineKeys(v: Map<String, String>) = v.filterKeys { !it.startsWith(Nada.DOLBY) }
 
 /**
- * Processor effects, ViPER-style: one row per effect with its switch; its controls open while
- * it is on. Everything is drawn from the engine's schema. [app] edits that app's own profile.
+ * Processor effects with:
+ * - Animated Mascot + Sine-Wave Hero Card showing live "Active now" effect chips;
+ * - Sticky Animated Bento Route Cards (Speaker, Wired, USB, Bluetooth, Other);
+ * - Collapsible accordion effect cards and collapsible Advanced parametric band controls.
  */
 @Composable
 fun NadaScreen(onBack: () -> Unit, app: String? = null) {
@@ -155,6 +182,10 @@ fun NadaScreen(onBack: () -> Unit, app: String? = null) {
     var state by remember { mutableStateOf("") }
     var info by remember { mutableStateOf<Pair<String, String>?>(null) }
     var saving by remember { mutableStateOf(false) }
+    var expandedGroup by rememberSaveable { mutableStateOf<String?>(null) }
+    var presetsOpen by rememberSaveable { mutableStateOf(false) }
+    var diagOpen by rememberSaveable { mutableStateOf(false) }
+    var drawerEnabled by remember { mutableStateOf(NadaShortcuts.isDrawerEnabled(context)) }
     val store = remember { context.getSharedPreferences("nada_presets", Context.MODE_PRIVATE) }
     var saved by remember { mutableStateOf(store.all.mapValues { it.value.toString() }.toSortedMap()) }
 
@@ -172,7 +203,6 @@ fun NadaScreen(onBack: () -> Unit, app: String? = null) {
     LaunchedEffect(nada, scope) {
         if (nada == null) return@LaunchedEffect
         values = withContext(Dispatchers.IO) { runCatching { Nada.decode(nada.getProfile(scope)) }.getOrDefault(emptyMap()) }
-        // Edits go out at most every 60 ms, so a dragged slider is heard while it moves.
         snapshotFlow { values }.drop(1).collectLatest { v ->
             delay(60)
             withContext(Dispatchers.IO) { runCatching { nada.setProfile(scope, Nada.encode(v)) }.onFailure { Log.w(TAG, "set", it) } }
@@ -198,32 +228,87 @@ fun NadaScreen(onBack: () -> Unit, app: String? = null) {
     fun reset(k: String) { values = values - k }
     fun apply(spec: String) { values = values.filterKeys { it.startsWith(Nada.DOLBY) } + Nada.decode(spec) }
 
-    Page(title = stringResource(R.string.nada_title), onBack = onBack) {
+    Page(
+        title = stringResource(R.string.nada_title),
+        onBack = onBack,
+        actions = {
+            if (NadaShortcuts.isPinSupported(context)) {
+                IconButton(
+                    onClick = {
+                        val ok = NadaShortcuts.requestPin(context)
+                        Toast.makeText(
+                            context,
+                            if (ok) R.string.kait_pin_shortcut_done else R.string.kait_pin_unsupported,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    },
+                ) {
+                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = stringResource(R.string.kait_pin_shortcut))
+                }
+            }
+            IconButton(
+                onClick = {
+                    val next = !drawerEnabled
+                    NadaShortcuts.setDrawerEnabled(context, next)
+                    drawerEnabled = next
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.kait_drawer_icon) + ": " +
+                            context.getString(if (next) R.string.akar_freeze_on else R.string.akar_freeze_off),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                },
+            ) {
+                Icon(
+                    Icons.Rounded.Apps,
+                    contentDescription = stringResource(R.string.kait_drawer_icon),
+                    tint = if (drawerEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    ) {
         val s = schema
         if (nada == null || s == null) {
             item { Text(stringResource(R.string.nada_unavailable), Modifier.padding(20.dp)) }
             return@Page
         }
         val master = (values["on"]?.toFloatOrNull() ?: 0f) != 0f
-        if (app == null) {
-            item(key = "scope") {
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Nada.ROUTES.forEach { r ->
-                        FilterChip(selected = scope == r, onClick = { scope = r },
-                            label = { Text(routeLabel(r) + if (r == route) " •" else "") })
-                    }
-                }
-            }
-        }
         item(key = "master") {
-            MasterCard(s, values, state, scope.takeIf { it in Nada.ROUTES } ?: route, ::set, ::reset)
+            MasterCard(
+                s = s,
+                values = values,
+                state = state,
+                route = scope.takeIf { it in Nada.ROUTES } ?: route,
+                onSelectEffect = { groupId -> expandedGroup = if (expandedGroup == groupId) null else groupId },
+                set = ::set,
+                reset = ::reset,
+            )
+            Spacer(Modifier.height(6.dp))
+        }
+        if (app == null) {
+            larasStickyControls(key = "nada_sticky_bento_routes") {
+                NadaRouteBentoRow(
+                    routes = Nada.ROUTES.toList(),
+                    selected = scope,
+                    liveRoute = route,
+                    onSelect = { scope = it },
+                )
+            }
         }
         item(key = "presets") {
             val engine = engineKeys(values)
             val shown = BUILT_IN.filter { it.routes.isEmpty() || scope !in Nada.ROUTES || scope in it.routes }
-            SectionCard(title = stringResource(R.string.nada_presets), modifier = Modifier.padding(vertical = 12.dp),
-                subtitle = stringResource(R.string.nada_presets_summary)) {
+            val activePresetName = shown.firstOrNull { engine == Nada.decode(it.spec) }?.name
+                ?: saved.entries.firstOrNull { engine == Nada.decode(it.value) }?.key
+                ?: stringResource(R.string.nada_presets_summary)
+            LarasCollapsibleCard(
+                title = stringResource(R.string.nada_presets),
+                summary = activePresetName,
+                leadingIcon = Icons.Rounded.Tune,
+                expanded = presetsOpen,
+                onToggleExpand = { presetsOpen = !presetsOpen },
+                modifier = Modifier.padding(bottom = 6.dp),
+            ) {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     shown.forEach { p ->
                         PresetChip(p.name, engine == Nada.decode(p.spec), onClick = { apply(p.spec) },
@@ -238,25 +323,48 @@ fun NadaScreen(onBack: () -> Unit, app: String? = null) {
                     }
                     TextButton(onClick = { saving = true }) { Text(stringResource(R.string.nada_preset_save)) }
                 }
-                Text(stringResource(R.string.nada_presets_hint), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.nada_presets_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         val effects = s.groups.filter { it.id != "main" }
         effects.forEachIndexed { i, group ->
             item(key = "g_" + group.id) {
-                // Dolby runs on the DSP chip and does not follow the engine's master switch.
                 val live = master || group.kind == "dsp"
-                EffectCard(group, values, impulses, groupedShape(i, effects.size), live,
-                    onInfo = { info = group.title to group.summary }, onImport = { pick.launch(arrayOf("audio/*")) },
-                    set = ::set, reset = ::reset)
-                Spacer(Modifier.height(2.dp))
+                EffectCard(
+                    group = group,
+                    values = values,
+                    impulses = impulses,
+                    shape = groupedShape(i, effects.size),
+                    live = live,
+                    expanded = expandedGroup == group.id,
+                    onToggleExpand = { expandedGroup = if (expandedGroup == group.id) null else group.id },
+                    onInfo = { info = group.title to group.summary },
+                    onImport = { pick.launch(arrayOf("audio/*")) },
+                    set = ::set,
+                    reset = ::reset,
+                )
             }
         }
         item(key = "diag") {
-            SectionCard(title = stringResource(R.string.nada_diag_title), modifier = Modifier.padding(top = 12.dp),
-                subtitle = stringResource(R.string.nada_diag_summary)) {
-                diagnostics(state).forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+            val diagLines = diagnostics(state)
+            LarasCollapsibleCard(
+                title = stringResource(R.string.nada_diag_title),
+                summary = diagLines.firstOrNull() ?: stringResource(R.string.nada_diag_summary),
+                leadingIcon = Icons.Rounded.Speed,
+                expanded = diagOpen,
+                onToggleExpand = { diagOpen = !diagOpen },
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Text(
+                    stringResource(R.string.nada_diag_summary),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                diagLines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
         }
     }
@@ -280,51 +388,311 @@ fun NadaScreen(onBack: () -> Unit, app: String? = null) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * Animated Bento Route Cards for Speaker, Wired, USB, Bluetooth, and Other.
+ * Each card draws a custom animated Canvas glyph that pulses smoothly when active/selected.
+ */
 @Composable
-private fun PresetChip(name: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
-    Surface(shape = RoundedCornerShape(12.dp),
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)) {
-        Text(name, Modifier.padding(horizontal = 14.dp, vertical = 9.dp), style = MaterialTheme.typography.labelLarge)
+private fun NadaRouteBentoRow(
+    routes: List<String>,
+    selected: String,
+    liveRoute: String,
+    onSelect: (String) -> Unit,
+) {
+    val animEnabled = remember { android.animation.ValueAnimator.areAnimatorsEnabled() }
+    val pulseState = if (animEnabled) {
+        val infinite = rememberInfiniteTransition(label = "routeBento")
+        infinite.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1800, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "bentoPulse",
+        )
+    } else null
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        routes.forEach { r ->
+            val isSelected = r == selected
+            val isLive = r == liveRoute
+            val scheme = MaterialTheme.colorScheme
+            val bg by animateColorAsState(
+                if (isSelected) scheme.primaryContainer else LarasSurfaces.card,
+                label = "routeBg",
+            )
+            val fg = if (isSelected) scheme.onPrimaryContainer else scheme.onSurface
+            val border = if (isSelected) BorderStroke(1.5.dp, scheme.primary) else null
+
+            Surface(
+                onClick = { onSelect(r) },
+                shape = RoundedCornerShape(18.dp),
+                color = bg,
+                contentColor = fg,
+                border = border,
+                modifier = Modifier.width(84.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Canvas(Modifier.size(34.dp)) {
+                        val c = Offset(size.width / 2f, size.height / 2f)
+                        val rad = size.minDimension / 2f
+                        val anim = if (isSelected || isLive) (pulseState?.value ?: 0.5f) else 0.25f
+                        val stroke = Stroke(width = 2.1.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        when (r) {
+                            "spk" -> {
+                                // Speaker cone + radiating acoustic rings
+                                drawCircle(fg.copy(alpha = 0.15f + 0.20f * anim), rad * (0.72f + 0.24f * anim), c)
+                                drawCircle(fg, rad * 0.56f, c, style = stroke)
+                                drawCircle(fg, rad * (0.20f + 0.08f * anim), c)
+                            }
+                            "wired" -> {
+                                // Headphone arc + animated earcups
+                                drawArc(
+                                    color = fg,
+                                    startAngle = 180f,
+                                    sweepAngle = 180f,
+                                    useCenter = false,
+                                    topLeft = Offset(c.x - rad * 0.68f, c.y - rad * 0.68f),
+                                    size = Size(rad * 1.36f, rad * 1.36f),
+                                    style = stroke,
+                                )
+                                val cupH = rad * (0.52f + 0.10f * anim)
+                                drawRoundRect(fg, Offset(c.x - rad * 0.78f, c.y - rad * 0.1f), Size(rad * 0.26f, cupH), CornerRadius(6f))
+                                drawRoundRect(fg, Offset(c.x + rad * 0.52f, c.y - rad * 0.1f), Size(rad * 0.26f, cupH), CornerRadius(6f))
+                            }
+                            "usb" -> {
+                                // USB-C DAC plug + pulsing audio cable wave
+                                drawRoundRect(
+                                    color = fg,
+                                    topLeft = Offset(c.x - rad * 0.45f, c.y - rad * 0.58f),
+                                    size = Size(rad * 0.90f, rad * 0.65f),
+                                    cornerRadius = CornerRadius(8f),
+                                    style = stroke,
+                                )
+                                drawLine(fg, Offset(c.x - rad * 0.22f, c.y - rad * 0.82f), Offset(c.x - rad * 0.22f, c.y - rad * 0.58f), stroke.width)
+                                drawLine(fg, Offset(c.x + rad * 0.22f, c.y - rad * 0.82f), Offset(c.x + rad * 0.22f, c.y - rad * 0.58f), stroke.width)
+                                drawLine(fg, Offset(c.x, c.y + rad * 0.08f), Offset(c.x, c.y + rad * (0.65f + 0.18f * anim)), stroke.width, StrokeCap.Round)
+                            }
+                            "bt" -> {
+                                // Bluetooth rune + animated wireless signal arcs
+                                val btPath = Path().apply {
+                                    moveTo(c.x - rad * 0.35f, c.y - rad * 0.38f)
+                                    lineTo(c.x + rad * 0.25f, c.y + rad * 0.35f)
+                                    lineTo(c.x - rad * 0.05f, c.y + rad * 0.68f)
+                                    lineTo(c.x - rad * 0.05f, c.y - rad * 0.68f)
+                                    lineTo(c.x + rad * 0.25f, c.y - rad * 0.35f)
+                                    lineTo(c.x - rad * 0.35f, c.y + rad * 0.38f)
+                                }
+                                drawPath(btPath, fg, style = stroke)
+                                drawArc(
+                                    color = fg.copy(alpha = 0.4f + 0.5f * anim),
+                                    startAngle = -40f,
+                                    sweepAngle = 80f,
+                                    useCenter = false,
+                                    topLeft = Offset(c.x - rad * 0.2f, c.y - rad * 0.55f),
+                                    size = Size(rad * (0.85f + 0.15f * anim), rad * 1.1f),
+                                    style = stroke,
+                                )
+                            }
+                            else -> {
+                                // 3 animated studio mixer faders
+                                val xs = listOf(-0.48f, 0f, 0.48f)
+                                val knobs = listOf(0.25f - 0.2f * anim, -0.25f + 0.2f * anim, 0.15f)
+                                xs.forEachIndexed { idx, rx ->
+                                    val x = c.x + rx * rad
+                                    drawLine(fg.copy(alpha = 0.45f), Offset(x, c.y - rad * 0.65f), Offset(x, c.y + rad * 0.65f), stroke.width, StrokeCap.Round)
+                                    drawCircle(fg, rad * 0.18f, Offset(x, c.y + knobs[idx] * rad))
+                                }
+                            }
+                        }
+                    }
+                    Text(
+                        text = routeLabel(r) + if (isLive) " •" else "",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
     }
 }
 
-/** The engine's switch, headroom, and what it is doing to the sound right now. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PresetChip(name: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+    ) {
+        Text(name, Modifier.padding(horizontal = 12.dp, vertical = 7.dp), style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/**
+ * The engine's Hero Card with animated Mascot + Sine-Wave background art, master switch,
+ * headroom summary, and live "Active now" effect chips.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MasterCard(
     s: Nada.Schema,
     values: Map<String, String>,
     state: String,
     route: String,
+    onSelectEffect: (String) -> Unit,
     set: (String, String) -> Unit,
     reset: (String) -> Unit,
 ) {
-    val on = (values["on"]?.toFloatOrNull() ?: 0f) != 0f
-    Surface(shape = RoundedCornerShape(28.dp),
-        color = if (on) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceBright) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.nada_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                Surface(onClick = { set("on", if (on) "0" else "1") }, color = androidx.compose.ui.graphics.Color.Transparent) {
-                    CheckSwitch(on)
+    fun num(k: String) = values[k]?.toFloatOrNull() ?: s.params[k]?.def ?: 0f
+    val on = num("on") != 0f
+    var showPreamp by rememberSaveable { mutableStateOf(false) }
+    val turn by animateFloatAsState(if (showPreamp) 180f else 0f, label = "preampTurn")
+    val scheme = MaterialTheme.colorScheme
+    val container by animateColorAsState(
+        if (on) scheme.primaryContainer else LarasSurfaces.card,
+        label = "nadaHeroBg",
+    )
+    val content = if (on) scheme.onPrimaryContainer else scheme.onSurface
+
+    val activeGroups = remember(s, values) {
+        s.groups.filter { g ->
+            g.id != "main" && (
+                (on && g.kind != "dsp" && g.switchParam()?.let { num(it.key) != 0f } == true) ||
+                    (g.kind == "dsp" && g.switchParam()?.let { num(it.key) != 0f } == true)
+                )
+        }
+    }
+
+    Surface(
+        shape = LarasShapes.Hero,
+        color = container,
+        contentColor = content,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            LarasHeroBackdrop(
+                kind = HeroBackdropKind.NADA_AUDIO,
+                modifier = Modifier.matchParentSize(),
+                color = content,
+                alpha = if (on) 0.22f else 0.10f,
+                animated = on,
+            )
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { showPreamp = !showPreamp },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LarasMascotIcon(
+                        modifier = Modifier.size(36.dp),
+                        color = if (on) content else scheme.primary,
+                        withHeadphones = true,
+                    )
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            stringResource(R.string.nada_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = pathLine(state, route) ?: routeLabel(route),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = content.copy(alpha = 0.80f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Icon(
+                        Icons.Rounded.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp).rotate(turn),
+                        tint = content.copy(alpha = 0.75f),
+                    )
+                    Surface(onClick = { set("on", if (on) "0" else "1") }, color = androidx.compose.ui.graphics.Color.Transparent) {
+                        CheckSwitch(on)
+                    }
                 }
-            }
-            val (tone, text) = fidelity(s, values)
-            StatusLine(if (tone == Tone.GOOD) Icons.Rounded.CheckCircle else Icons.Rounded.Warning, tone, text)
-            pathLine(state, route)?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            s.groups.firstOrNull { it.id == "main" }?.params?.filter { it.key != "on" }?.forEach { p ->
-                val auto = values["pre.auto"]?.toFloatOrNull() ?: s.params["pre.auto"]?.def ?: 1f
-                if (p.key == "pre.gain" && auto != 0f) return@forEach
-                ParamControl(p, values, emptyList(), {}, set, reset)
+
+                // "ACTIVE NOW" section showing which processor effects are currently running
+                if (activeGroups.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "ACTIVE NOW (${activeGroups.size})",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = content.copy(alpha = 0.75f),
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            activeGroups.forEach { g ->
+                                val detail = when (g.id) {
+                                    "eq" -> parseBands(values["eq.bands"].orEmpty()).size.takeIf { it > 0 }?.let { " ($it bands)" }.orEmpty()
+                                    "bass" -> values["bass.cut"]?.let { " (${it} Hz)" }.orEmpty()
+                                    else -> ""
+                                }
+                                Surface(
+                                    onClick = { onSelectEffect(g.id) },
+                                    shape = LarasShapes.Pill,
+                                    color = scheme.surface.copy(alpha = 0.24f),
+                                    contentColor = content,
+                                ) {
+                                    Row(
+                                        Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    ) {
+                                        Icon(groupIcon(g.id), null, Modifier.size(14.dp))
+                                        Text(
+                                            text = g.title + detail,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    val (tone, text) = fidelity(s, values)
+                    StatusLine(if (tone == Tone.GOOD) Icons.Rounded.CheckCircle else Icons.Rounded.Warning, tone, text)
+                }
+
+                AnimatedVisibility(visible = showPreamp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val (tone, text) = fidelity(s, values)
+                        if (activeGroups.isNotEmpty()) {
+                            StatusLine(if (tone == Tone.GOOD) Icons.Rounded.CheckCircle else Icons.Rounded.Warning, tone, text)
+                        }
+                        s.groups.firstOrNull { it.id == "main" }?.params?.filter { it.key != "on" }?.forEach { p ->
+                            val auto = values["pre.auto"]?.toFloatOrNull() ?: s.params["pre.auto"]?.def ?: 1f
+                            if (p.key == "pre.gain" && auto != 0f) return@forEach
+                            ParamControl(p, values, emptyList(), {}, set, reset)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-/** What the current settings do to fidelity, judged from which effects are on. */
 @Composable
 private fun fidelity(s: Nada.Schema, v: Map<String, String>): Pair<Tone, String> {
     fun num(k: String) = v[k]?.toFloatOrNull() ?: s.params[k]?.def ?: 0f
@@ -345,7 +713,6 @@ private fun dump(state: String) = state.lines().filter { it.startsWith("insert "
     line.split(' ').mapNotNull { val kv = it.split('=', limit = 2); if (kv.size == 2) kv[0] to kv[1] else null }.toMap()
 }
 
-/** Delay and headroom of this device class's mix points, from the engine's own report. */
 private fun pathLine(state: String, route: String): String? {
     val mine = dump(state).filter { it["route"] == route && it["stages"] != "-" }
     if (mine.isEmpty()) return null
@@ -362,8 +729,7 @@ private fun pathLine(state: String, route: String): String? {
         music?.let { "Music +" + ms(it) },
         games?.let { "Games +" + ms(it) },
         "headroom ${any["pre_db"]} dB",
-        if (lim > 0f) "limiter caught up to $lim dB" else "limiter idle",
-        mine.mapNotNull { it["skipped"]?.takeIf { s -> s != "-" } }.firstOrNull()?.let { "not on games: $it" },
+        if (lim > 0f) "limiter $lim dB" else null,
     ).joinToString(" · ")
 }
 
@@ -393,7 +759,6 @@ private fun badge(kind: String): String? = when (kind) {
     else -> null
 }
 
-/** One effect: icon, name, kind and switch; its controls while it is on. */
 @Composable
 private fun EffectCard(
     group: Nada.Group,
@@ -401,6 +766,8 @@ private fun EffectCard(
     impulses: List<String>,
     shape: androidx.compose.ui.graphics.Shape,
     live: Boolean,
+    expanded: Boolean,
+    onToggleExpand: () -> Unit,
     onInfo: () -> Unit,
     onImport: () -> Unit,
     set: (String, String) -> Unit,
@@ -408,29 +775,36 @@ private fun EffectCard(
 ) {
     val sw = group.switchParam()
     val on = sw == null || (values[sw.key]?.toFloatOrNull() ?: sw.def) != 0f
-    Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceBright, modifier = Modifier.alpha(if (live) 1f else 0.55f)) {
-        Column(Modifier.padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(groupIcon(group.id), null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(group.title, style = MaterialTheme.typography.titleSmall)
-                    badge(group.kind)?.let {
-                        Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                IconButton(onClick = onInfo) { Icon(Icons.Rounded.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
-                if (sw != null) {
-                    Surface(onClick = { set(sw.key, if (on) "0" else "1") }, color = androidx.compose.ui.graphics.Color.Transparent) {
-                        CheckSwitch(on)
-                    }
-                }
+    val kindBadge = badge(group.kind)
+    val summaryText = buildList {
+        if (!kindBadge.isNullOrBlank()) add(kindBadge)
+        if (group.id == "eq" && on) {
+            val bandCount = parseBands(values["eq.bands"].orEmpty()).size
+            if (bandCount > 0) add("$bandCount bands active")
+        } else if (on && live) {
+            add("Active")
+        }
+    }.joinToString(" · ")
+
+    LarasCollapsibleCard(
+        title = group.title,
+        summary = summaryText.ifEmpty { null },
+        summaryColor = if (on && live) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        leadingIcon = groupIcon(group.id),
+        expanded = expanded,
+        onToggleExpand = onToggleExpand,
+        checked = if (sw != null) on else null,
+        onCheckedChange = if (sw != null) ({ isChecked -> set(sw.key, if (isChecked) "1" else "0") }) else null,
+        trailingActions = {
+            IconButton(onClick = onInfo, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Rounded.Info, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            AnimatedVisibility(on) {
-                Column(Modifier.padding(top = 4.dp, bottom = 8.dp, end = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    group.params.filter { it !== sw }.forEach { p -> ParamControl(p, values, impulses, onImport, set, reset) }
-                }
-            }
+        },
+        shape = shape,
+        modifier = Modifier.alpha(if (live) 1f else 0.55f),
+    ) {
+        group.params.filter { it !== sw }.forEach { p ->
+            ParamControl(p, values, impulses, onImport, set, reset)
         }
     }
 }
@@ -453,7 +827,7 @@ private fun ParamControl(
         }
         Nada.Param.ENUM -> Column {
             val cur = (values[p.key]?.toFloatOrNull() ?: p.def).roundToInt()
-            Text(p.title, style = MaterialTheme.typography.bodyLarge)
+            Text(p.title, style = MaterialTheme.typography.bodyMedium)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 p.options.forEachIndexed { i, name ->
                     FilterChip(selected = cur == i, onClick = { set(p.key, i.toString()) }, label = { Text(name) })
@@ -462,7 +836,7 @@ private fun ParamControl(
         }
         Nada.Param.BANDS -> EqEditor(values[p.key].orEmpty()) { set(p.key, it) }
         else -> Column {
-            Text(p.title, style = MaterialTheme.typography.bodyLarge)
+            Text(p.title, style = MaterialTheme.typography.bodyMedium)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 impulses.forEach { name ->
                     FilterChip(selected = values[p.key] == name, onClick = { set(p.key, name) }, label = { Text(name) })
@@ -475,7 +849,6 @@ private fun ParamControl(
 
 private fun trim(v: Float): String = if (v == v.roundToInt().toFloat()) v.roundToInt().toString() else "%.2f".format(java.util.Locale.ROOT, v)
 
-/** A slider with its value, and a reset to the default once it has moved. */
 @Composable
 private fun NumberRow(
     title: String,
@@ -490,15 +863,15 @@ private fun NumberRow(
 ) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text(trim(value) + (if (unit.isEmpty()) "" else " $unit"), style = MaterialTheme.typography.bodyMedium,
+            Text(title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(trim(value) + (if (unit.isEmpty()) "" else " $unit"), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (value != def) {
-                IconButton(onClick = onReset, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Rounded.Restore, stringResource(R.string.nada_reset_to, trim(def) + " " + unit), Modifier.size(18.dp))
+                IconButton(onClick = onReset, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Rounded.Restore, stringResource(R.string.nada_reset_to, trim(def) + " " + unit), Modifier.size(16.dp))
                 }
             } else {
-                Spacer(Modifier.width(36.dp))
+                Spacer(Modifier.width(32.dp))
             }
         }
         Slider(value = value.coerceIn(min, max), valueRange = min..max,
@@ -515,7 +888,6 @@ private fun parseBands(s: String): List<Band> = s.split(',').mapNotNull {
 
 private fun formatBands(b: List<Band>) = b.joinToString(",") { "${it.type}/${trim(it.f)}/${trim(it.gain)}/${trim(it.q)}" }
 
-/** Ten octave bands, 31 Hz to 16 kHz; graphic mode writes these as peaking sections. */
 private val GRAPHIC = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
 private const val GRAPHIC_Q = 1.41f
 
@@ -533,7 +905,6 @@ private val GRAPHIC_PRESETS = listOf(
     "V-shape" to floatArrayOf(4f, 3f, 1.5f, 0f, -1.5f, -1.5f, 0f, 1.5f, 3f, 3.5f),
 )
 
-/** Response of one section at [f] Hz, cookbook forms at 48 kHz (display only). */
 private fun bandDb(b: Band, f: Double): Double {
     val fs = 48000.0
     if (b.f >= fs / 2) return 0.0
@@ -557,28 +928,37 @@ private fun bandDb(b: Band, f: Double): Double {
     return 20 * log10(mag(k[0], k[1], k[2]) / mag(k[3], k[4], k[5]))
 }
 
-/** The curve of all bands, graphic mode with draggable points, parametric mode for the rest. */
 @Composable
 private fun EqEditor(spec: String, onChange: (String) -> Unit) {
     val bands = parseBands(spec)
     val gains = graphicGains(bands)
     var parametric by remember { mutableStateOf(bands.isNotEmpty() && gains == null) }
+    var showAdvancedBands by rememberSaveable { mutableStateOf(false) }
+    val advTurn by animateFloatAsState(if (showAdvancedBands) 180f else 0f, label = "advBandsTurn")
     val primary = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = !parametric, onClick = { parametric = false }, label = { Text(stringResource(R.string.nada_eq_graphic)) })
-            FilterChip(selected = parametric, onClick = { parametric = true }, label = { Text(stringResource(R.string.nada_eq_parametric)) })
+            FilterChip(
+                selected = !parametric,
+                onClick = { parametric = false },
+                label = { Text(stringResource(R.string.nada_eq_graphic)) },
+                leadingIcon = { Icon(Icons.Rounded.GraphicEq, null, Modifier.size(FilterChipDefaults.IconSize)) },
+            )
+            FilterChip(
+                selected = parametric,
+                onClick = { parametric = true },
+                label = { Text(stringResource(R.string.nada_eq_parametric)) },
+                leadingIcon = { Icon(Icons.Rounded.Tune, null, Modifier.size(FilterChipDefaults.IconSize)) },
+            )
         }
-        // x: 31 Hz … 16 kHz on a log scale (nine octaves); y: ±12 dB.
         fun x(f: Double, w: Float) = (log2(f / 31.25) / 9.0 * w).toFloat()
         fun y(db: Double, h: Float) = (h / 2 - db / 12.0 * (h / 2 - 8)).toFloat()
         val g = gains ?: FloatArray(GRAPHIC.size)
-        // The gesture outlives the edits it makes, so it reads the latest state.
         val latest by rememberUpdatedState(g)
         val emit by rememberUpdatedState(onChange)
         Canvas(
-            Modifier.fillMaxWidth().height(170.dp).pointerInput(parametric) {
+            Modifier.fillMaxWidth().height(140.dp).pointerInput(parametric) {
                 if (parametric) return@pointerInput
                 fun nearest(px: Float) = (px / size.width * 9).roundToInt().coerceIn(0, 9)
                 fun gainAt(py: Float) = (((size.height / 2 - py) / (size.height / 2 - 8) * 12) * 2).roundToInt() / 2f
@@ -628,42 +1008,86 @@ private fun EqEditor(spec: String, onChange: (String) -> Unit) {
                 }
             }
         } else {
-            BandEditor(spec, onChange)
+            Surface(
+                onClick = { showAdvancedBands = !showAdvancedBands },
+                shape = LarasShapes.Inset,
+                color = LarasSurfaces.nestedCard,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Icon(Icons.Rounded.Tune, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "${stringResource(R.string.adv_title)} (${bands.size} bands · ${stringResource(R.string.nada_band_freq)}, ${stringResource(R.string.nada_band_gain)}, ${stringResource(R.string.nada_band_q)})",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(Icons.Rounded.ExpandMore, null, Modifier.size(18.dp).rotate(advTurn), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            AnimatedVisibility(visible = showAdvancedBands) {
+                BandEditor(spec, onChange)
+            }
         }
     }
 }
 
 private val BAND_TYPES = listOf("pk", "ls", "hs", "hp", "lp")
 
-/** Parametric bands: type, frequency on a log scale, gain and Q. */
 @Composable
 private fun BandEditor(spec: String, onChange: (String) -> Unit) {
     val bands = parseBands(spec)
+    var activeBandIdx by rememberSaveable { mutableStateOf(0) }
+    val safeIdx = activeBandIdx.coerceIn(0, (bands.size - 1).coerceAtLeast(0))
     fun put(i: Int, b: Band) = onChange(formatBands(bands.toMutableList().also { it[i] = b }))
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        bands.forEachIndexed { i, b ->
+        if (bands.isNotEmpty()) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                bands.forEachIndexed { i, b ->
+                    FilterChip(
+                        selected = i == safeIdx,
+                        onClick = { activeBandIdx = i },
+                        label = { Text("#${i + 1} ${b.f.roundToInt()} Hz") },
+                    )
+                }
+                if (bands.size < 32) {
+                    TextButton(onClick = {
+                        onChange(formatBands(bands + Band("pk", 1000f, 0f, 1f)))
+                        activeBandIdx = bands.size
+                    }) {
+                        Text(stringResource(R.string.nada_band_add))
+                    }
+                }
+            }
+
+            val b = bands[safeIdx]
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BAND_TYPES.forEach { t ->
-                    FilterChip(selected = b.type == t, onClick = { put(i, b.copy(type = t)) }, label = { Text(bandLabel(t)) })
+                    FilterChip(selected = b.type == t, onClick = { put(safeIdx, b.copy(type = t)) }, label = { Text(bandLabel(t)) })
                 }
-                TextButton(onClick = { onChange(formatBands(bands.filterIndexed { n, _ -> n != i })) }) {
+                TextButton(onClick = {
+                    onChange(formatBands(bands.filterIndexed { n, _ -> n != safeIdx }))
+                    activeBandIdx = (safeIdx - 1).coerceAtLeast(0)
+                }) {
                     Text(stringResource(R.string.nada_band_remove))
                 }
             }
-            // 20 Hz to 20 kHz on a log scale, snapped to 1/24 octave.
             val pos = (ln(b.f / 20f) / ln(1000f)).coerceIn(0f, 1f)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.nada_band_freq), style = MaterialTheme.typography.bodyLarge)
-                Text("${b.f.roundToInt()} Hz", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.nada_band_freq), style = MaterialTheme.typography.bodyMedium)
+                Text("${b.f.roundToInt()} Hz", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Slider(value = pos, onValueChange = { put(i, b.copy(f = (20f * 1000f.pow((it * 240).roundToInt() / 240f)).roundToInt().toFloat())) })
+            Slider(value = pos, onValueChange = { put(safeIdx, b.copy(f = (20f * 1000f.pow((it * 240).roundToInt() / 240f)).roundToInt().toFloat())) })
             if (b.type != "hp" && b.type != "lp") {
-                NumberRow(stringResource(R.string.nada_band_gain), b.gain, 0f, -12f, 12f, 0.5f, "dB", { put(i, b.copy(gain = it)) }, { put(i, b.copy(gain = 0f)) })
+                NumberRow(stringResource(R.string.nada_band_gain), b.gain, 0f, -12f, 12f, 0.5f, "dB", { put(safeIdx, b.copy(gain = it)) }, { put(safeIdx, b.copy(gain = 0f)) })
             }
-            NumberRow(stringResource(R.string.nada_band_q), b.q, 0.71f, 0.3f, 8f, 0.1f, "", { put(i, b.copy(q = it)) }, { put(i, b.copy(q = 0.71f)) })
-        }
-        if (bands.size < 32) {
-            TextButton(onClick = { onChange(formatBands(bands + Band("pk", 1000f, 0f, 1f))) }) {
+            NumberRow(stringResource(R.string.nada_band_q), b.q, 0.71f, 0.3f, 8f, 0.1f, "", { put(safeIdx, b.copy(q = it)) }, { put(safeIdx, b.copy(q = 0.71f)) })
+        } else {
+            TextButton(onClick = { onChange(formatBands(listOf(Band("pk", 1000f, 0f, 1f)))) }) {
                 Text(stringResource(R.string.nada_band_add))
             }
         }
@@ -688,7 +1112,6 @@ private fun routeLabel(route: String) = stringResource(when (route) {
     else -> R.string.nada_route_other
 })
 
-// One line per mix point that is processing: what the engine measured on the phone.
 private fun diagnostics(state: String): List<String> = dump(state).mapNotNull { f ->
     if (f["stages"] == "-" || f["calls"] == "0") return@mapNotNull null
     fun us(k: String) = "%.1f".format(java.util.Locale.ROOT, (f[k]?.toLongOrNull() ?: 0) / 1000f)
@@ -697,7 +1120,6 @@ private fun diagnostics(state: String): List<String> = dump(state).mapNotNull { 
         (if (f["overload"] == "1") " · overload" else "")
 }.ifEmpty { listOf("—") }
 
-// WAV (PCM 16/24/32 or float32) to float32, channel after channel, handed over on a pipe.
 private fun importImpulse(context: android.content.Context, nada: INadaManager, uri: Uri): String {
     val bytes = context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
     val b = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
@@ -720,7 +1142,6 @@ private fun importImpulse(context: android.content.Context, nada: INadaManager, 
             val step = bits / 8
             val frames = minOf(size, bytes.size - at) / step / channels
             data = FloatArray(frames * channels) { n ->
-                // Planar output: all of channel 0, then channel 1.
                 val o = at + ((n % frames) * channels + n / frames) * step
                 when {
                     format == 3 -> b.getFloat(o)

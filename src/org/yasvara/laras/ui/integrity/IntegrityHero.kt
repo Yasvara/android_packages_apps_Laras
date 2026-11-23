@@ -23,11 +23,8 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.GppGood
-import androidx.compose.material.icons.rounded.GppMaybe
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -55,14 +52,12 @@ import org.yasvara.laras.data.integrity.CheckState
 import org.yasvara.laras.data.integrity.IntegrityReport
 import org.yasvara.laras.data.integrity.Revocation
 import org.yasvara.laras.data.integrity.Tier
+import org.yasvara.laras.ui.components.HeroBackdropKind
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
+import org.yasvara.laras.ui.components.LarasMascotIcon
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.Tone
 
-/**
- * Material 3 Expressive integrity hero focused on hardware keybox attestation and live
- * Google revocation checking. STRONG is only shown when a fresh attestation chain passes
- * all checks and is confirmed not revoked or compromised.
- */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun IntegrityHero(
@@ -89,57 +84,61 @@ internal fun IntegrityHero(
     val report = state.check.report
     var details by rememberSaveable { mutableStateOf(false) }
 
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(32.dp), color = container, contentColor = content) {
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Surface(
-                    Modifier.size(56.dp),
-                    shape = MaterialShapes.Gem.toShape(),
-                    color = colors.surface.copy(alpha = 0.65f),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            when {
-                                state.health == Health.ATTENTION -> Icons.Rounded.GppMaybe
-                                expected == Tier.STRONG || expected == Tier.DEVICE -> Icons.Rounded.GppGood
-                                else -> Icons.Rounded.Shield
-                            },
-                            null,
-                            Modifier.size(28.dp),
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), color = container, contentColor = content) {
+        Box(Modifier.fillMaxWidth()) {
+            LarasHeroBackdrop(
+                kind = HeroBackdropKind.INTEGRITY_KEYBOX,
+                modifier = Modifier.matchParentSize(),
+                color = content,
+                alpha = if (state.health == Health.READY) 0.20f else 0.10f,
+                animated = state.health == Health.READY,
+            )
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Surface(
+                        Modifier.size(48.dp),
+                        shape = MaterialShapes.Gem.toShape(),
+                        color = colors.surface.copy(alpha = 0.65f),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            LarasMascotIcon(
+                                modifier = Modifier.size(28.dp),
+                                color = content,
+                            )
+                        }
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(R.string.hero_overline), style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            expected?.let { stringResource(it.label()) } ?: stringResource(R.string.hero_unverified),
+                            style = MaterialTheme.typography.headlineSmall,
                         )
                     }
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(R.string.hero_overline), style = MaterialTheme.typography.labelLarge)
-                    Text(
-                        expected?.let { stringResource(it.label()) } ?: stringResource(R.string.hero_unverified),
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
+
+                TierSteps(expected)
+
+                if (state.keybox.enabled && state.keybox.info != null) {
+                    KeyboxRevocationPill(state.keybox.revocation)
                 }
-            }
 
-            TierSteps(expected)
+                Text(pathLine(state), style = MaterialTheme.typography.bodySmall)
 
-            if (state.keybox.enabled && state.keybox.info != null) {
-                KeyboxRevocationPill(state.keybox.revocation)
-            }
+                NextStep(state, onFix, onRestart, onRunCheck)
 
-            Text(pathLine(state), style = MaterialTheme.typography.bodyMedium)
-
-            NextStep(state, onFix, onRestart, onRunCheck)
-
-            if (report != null && state.keybox.enabled && state.keybox.info != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton({ details = !details }) {
-                        Text(stringResource(if (details) R.string.check_hide else R.string.check_details))
-                        Icon(
-                            if (details) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                            null,
-                            Modifier.padding(start = 4.dp).size(18.dp),
-                        )
-                    }
-                    AnimatedVisibility(details) {
-                        Panel { CheckList(report) }
+                if (report != null && state.keybox.enabled && state.keybox.info != null) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton({ details = !details }) {
+                            Text(stringResource(if (details) R.string.check_hide else R.string.check_details))
+                            Icon(
+                                if (details) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                null,
+                                Modifier.padding(start = 4.dp).size(18.dp),
+                            )
+                        }
+                        AnimatedVisibility(details) {
+                            Panel { CheckList(report) }
+                        }
                     }
                 }
             }
@@ -195,7 +194,6 @@ private fun KeyboxRevocationPill(revocation: Revocation) {
 
 private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 
-/** Says what the level rests on, in one line. */
 @Composable
 private fun pathLine(state: IntegrityUiState): String = when {
     state.issue == Issue.KEYBOX_REVOKED -> stringResource(R.string.hero_keybox_revoked_body)
@@ -217,7 +215,6 @@ private fun pathLine(state: IntegrityUiState): String = when {
     else -> stringResource(R.string.hero_via_none)
 }
 
-/** At most one call to action: the issue first, then a pending restart, then verifying. */
 @Composable
 private fun NextStep(
     state: IntegrityUiState,
@@ -292,7 +289,6 @@ internal fun Tier.label() = when (this) {
     Tier.STRONG -> R.string.tier_strong
 }
 
-/** Basic, Device, Strong as three connected steps, filled and ticked up to [tier]. */
 @Composable
 private fun TierSteps(tier: Tier?) {
     val reached = (tier ?: Tier.NONE).ordinal
@@ -306,12 +302,12 @@ private fun TierSteps(tier: Tier?) {
                 label = "step",
             )
             Surface(
-                Modifier.weight(1f).height(42.dp),
+                Modifier.weight(1f).height(38.dp),
                 shape = RoundedCornerShape(
-                    topStart = if (i == 0) 21.dp else 6.dp,
-                    bottomStart = if (i == 0) 21.dp else 6.dp,
-                    topEnd = if (i == steps.lastIndex) 21.dp else 6.dp,
-                    bottomEnd = if (i == steps.lastIndex) 21.dp else 6.dp,
+                    topStart = if (i == 0) 19.dp else 6.dp,
+                    bottomStart = if (i == 0) 19.dp else 6.dp,
+                    topEnd = if (i == steps.lastIndex) 19.dp else 6.dp,
+                    bottomEnd = if (i == steps.lastIndex) 19.dp else 6.dp,
                 ),
                 color = fill,
                 contentColor = if (on) colors.onPrimary else colors.onSurfaceVariant,
@@ -355,7 +351,6 @@ private fun CheckList(report: IntegrityReport) {
     }
 }
 
-/** A neutral inset that keeps status colours readable on the tinted hero. */
 @Composable
 private fun Panel(content: @Composable () -> Unit) {
     Surface(

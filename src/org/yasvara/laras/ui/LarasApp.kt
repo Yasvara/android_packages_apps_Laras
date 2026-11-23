@@ -44,7 +44,6 @@ import org.yasvara.laras.ui.haptics.HapticsScreen
 import org.yasvara.laras.ui.integrity.TargetAppsScreen
 import org.yasvara.laras.ui.kait.ScopeScreen
 import org.yasvara.laras.ui.lelap.LelapAppsScreen
-import org.yasvara.laras.ui.lelap.LelapCutsScreen
 import org.yasvara.laras.ui.padat.PadatScreen
 import org.yasvara.laras.ui.preview.LocalKeyguardRenderer
 import org.yasvara.laras.ui.preview.LockView
@@ -55,6 +54,7 @@ import org.yasvara.laras.ui.root.AkarLogsScreen
 import org.yasvara.laras.ui.root.AkarScreen
 import org.yasvara.laras.ui.root.AkarSettingsScreen
 import org.yasvara.laras.ui.saring.SaringScreen
+import org.yasvara.laras.ui.saring.SaringTab
 import org.yasvara.laras.ui.screens.ChangedScreen
 import org.yasvara.laras.ui.screens.EditorScreen
 import org.yasvara.laras.ui.screens.GroupScreen
@@ -259,8 +259,8 @@ fun LarasApp(
                     }
                     entry<Route.AppVisibility> { AppVisibilityScreen(onBack = back) }
                     entry<Route.LelapApps> { LelapAppsScreen(onBack = back) }
-                    entry<Route.LelapCuts> { LelapCutsScreen(onBack = back) }
-                    entry<Route.Saring> { SaringScreen(onBack = back) }
+                    entry<Route.LelapCuts> { SaringScreen(onBack = back, initialTab = SaringTab.TELEMETRY) }
+                    entry<Route.Saring> { SaringScreen(onBack = back, initialTab = SaringTab.OVERVIEW) }
                     entry<Route.Color> { ColorScreen(onBack = back) }
                     entry<Route.SoundApps> { SoundAppsScreen(onBack = back) }
                     entry<Route.Nada> { NadaScreen(onBack = back) }

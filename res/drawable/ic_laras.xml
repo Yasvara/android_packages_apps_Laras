@@ -9,7 +9,8 @@
     android:viewportWidth="24"
     android:viewportHeight="24"
     android:tint="?android:attr/colorControlNormal">
+    <!-- Laras Mascot: Cyber-spirit head with tuned ears and expressive eyes -->
     <path
         android:fillColor="@android:color/white"
-        android:pathData="M5,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M11,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M17,4.5a1,1 0 0,1 2,0v15a1,1 0 0,1 -2,0z M6,15.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0 M12,8.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0 M18,12.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+        android:pathData="M4.5,10.2 L3.4,3.6 L8.8,6.4 C10.9,5.6 13.1,5.6 15.2,6.4 L20.6,3.6 L19.5,10.2 C20.8,15.6 17.2,19.8 12,20.4 C6.8,19.8 3.2,15.6 4.5,10.2 Z M8.8,12.2 A1.5,1.5 0 1,0 8.8,15.2 A1.5,1.5 0 1,0 8.8,12.2 Z M15.2,12.2 A1.5,1.5 0 1,0 15.2,15.2 A1.5,1.5 0 1,0 15.2,12.2 Z M10.2,16.6 Q12,18.0 13.8,16.6" />
 </vector>

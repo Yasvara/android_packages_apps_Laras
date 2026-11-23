@@ -4,6 +4,7 @@
  */
 package org.yasvara.laras.ui.updates
 
+import android.security.yasvara.YasvaraUpdatePolicy
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
@@ -22,30 +23,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.PauseCircleOutline
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,11 +59,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.security.yasvara.YasvaraUpdatePolicy
 import org.yasvara.laras.R
 import org.yasvara.laras.data.updates.UpdateApp
 import org.yasvara.laras.data.updates.UpdateEvent
@@ -71,16 +71,20 @@ import org.yasvara.laras.data.updates.UpdateNotifier
 import org.yasvara.laras.data.updates.UpdatePolicy
 import org.yasvara.laras.data.updates.VaultEntry
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.HeroBackdropKind
+import org.yasvara.laras.ui.components.LarasEmptyState
+import org.yasvara.laras.ui.components.LarasFilterRow
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
+import org.yasvara.laras.ui.components.LarasMascotIcon
+import org.yasvara.laras.ui.components.LarasSearchBar
+import org.yasvara.laras.ui.components.LarasShapes
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.screens.Page
 
 private val DELAY_PRESETS = listOf(1, 3, 7, 14, 30)
 
-/**
- * App updates: the per-app Auto · Delay · Ask · Never policy. Core apps (Play
- * Store, Play services, system apps) are listed only when [advanced] (the Lab gate) is on.
- * [focus] opens that app's sheet straight away (the Settings › App info deep link, §4.9).
- */
 @Composable
 fun AppUpdatesScreen(
     advanced: Boolean,
@@ -97,34 +101,34 @@ fun AppUpdatesScreen(
 
     Page(stringResource(R.string.updates_title), onBack) {
         item("summary") { SummaryCard(ui) }
-        item("search") {
-            Column(Modifier.padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = ui.query,
-                    onValueChange = viewModel::setQuery,
-                    placeholder = { Text(stringResource(R.string.updates_search)) },
-                    leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                    trailingIcon = {
-                        if (ui.query.isNotEmpty()) {
-                            IconButton({ viewModel.setQuery("") }) {
-                                Icon(Icons.Rounded.Close, stringResource(R.string.updates_clear))
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    UpdateFilter.entries.forEach { f ->
-                        FilterChip(
-                            selected = ui.filter == f,
-                            onClick = { viewModel.setFilter(f) },
-                            label = { Text(stringResource(filterLabel(f))) },
-                        )
+        larasStickyControls(key = "updates_sticky_controls") {
+            LarasSearchBar(
+                query = ui.query,
+                onQueryChange = viewModel::setQuery,
+                placeholder = stringResource(R.string.updates_search),
+            )
+            LarasFilterRow(
+                options = UpdateFilter.entries,
+                selected = ui.filter,
+                label = { f -> stringResource(filterLabel(f)) },
+                leadingIcon = { f ->
+                    when (f) {
+                        UpdateFilter.ALL -> Icons.Rounded.Apps
+                        UpdateFilter.PAUSED -> Icons.Rounded.PauseCircleOutline
+                        UpdateFilter.DELAYED -> Icons.Rounded.Schedule
+                        UpdateFilter.ASK -> Icons.Rounded.HelpOutline
                     }
-                }
-            }
+                },
+                count = { f ->
+                    when (f) {
+                        UpdateFilter.ALL -> ui.apps.size
+                        UpdateFilter.PAUSED -> ui.count(UpdatePolicy.NEVER)
+                        UpdateFilter.DELAYED -> ui.count(UpdatePolicy.DELAY)
+                        UpdateFilter.ASK -> ui.count(UpdatePolicy.ASK)
+                    }
+                },
+                onSelect = viewModel::setFilter,
+            )
         }
         when {
             ui.loading -> item("loading") {
@@ -132,8 +136,8 @@ fun AppUpdatesScreen(
                     CircularProgressIndicator()
                 }
             }
-            !ui.available -> item("unavailable") { Hint(stringResource(R.string.updates_unavailable)) }
-            visible.isEmpty() -> item("empty") { Hint(stringResource(R.string.updates_empty)) }
+            !ui.available -> item("unavailable") { LarasEmptyState(title = stringResource(R.string.updates_unavailable)) }
+            visible.isEmpty() -> item("empty") { LarasEmptyState(title = stringResource(R.string.updates_empty)) }
         }
         items(visible.size, key = { visible[it].packageName }) { i ->
             AppRow(visible[i], groupedShape(i, visible.size)) {
@@ -151,26 +155,49 @@ fun AppUpdatesScreen(
 
 @Composable
 private fun SummaryCard(ui: AppUpdatesUi) {
-    Surface(Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceBright) {
-        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Icon(Icons.Rounded.SystemUpdate, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
-            Column {
-                Text(stringResource(R.string.updates_summary_title), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.updates_summary_counts, ui.count(UpdatePolicy.NEVER),
-                        ui.count(UpdatePolicy.DELAY), ui.count(UpdatePolicy.ASK)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    Surface(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        shape = LarasShapes.Hero,
+        color = LarasSurfaces.card,
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            LarasHeroBackdrop(
+                kind = HeroBackdropKind.UPDATES_SYSTEM,
+                modifier = Modifier.matchParentSize(),
+                color = MaterialTheme.colorScheme.primary,
+                alpha = 0.16f,
+            )
+            Row(
+                Modifier.padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                LarasMascotIcon(
+                    modifier = Modifier.size(36.dp),
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                if (ui.vaultBytes > 0) {
+                Column {
+                    Text(stringResource(R.string.updates_summary_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        stringResource(R.string.updates_vault_size,
-                            Formatter.formatShortFileSize(LocalContext.current, ui.vaultBytes)),
+                        stringResource(
+                            R.string.updates_summary_counts,
+                            ui.count(UpdatePolicy.NEVER),
+                            ui.count(UpdatePolicy.DELAY),
+                            ui.count(UpdatePolicy.ASK),
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (ui.vaultBytes > 0) {
+                        Text(
+                            stringResource(
+                                R.string.updates_vault_size,
+                                Formatter.formatShortFileSize(LocalContext.current, ui.vaultBytes),
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -179,18 +206,21 @@ private fun SummaryCard(ui: AppUpdatesUi) {
 
 @Composable
 private fun AppRow(app: UpdateApp, shape: androidx.compose.ui.graphics.Shape, onClick: () -> Unit) {
-    Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceBright, onClick = onClick) {
+    Surface(shape = shape, color = LarasSurfaces.card, onClick = onClick) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            AppIcon(app.packageName)
+            AppIcon(app.packageName, size = 38.dp)
             Column(Modifier.weight(1f)) {
                 Text(app.label, style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                Text(app.versionName.ifEmpty { app.versionCode.toString() },
-                    style = MaterialTheme.typography.bodySmall, maxLines = 1,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    app.versionName.ifEmpty { app.versionCode.toString() },
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             PolicyChip(app.policy, app.delayDays)
         }
@@ -211,7 +241,8 @@ private fun PolicyChip(policy: UpdatePolicy, delayDays: Int) {
             if (policy == UpdatePolicy.DELAY) stringResource(R.string.updates_chip_delay, delayDays)
             else stringResource(policyLabel(policy)),
             Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-            style = MaterialTheme.typography.labelMedium, color = fg,
+            style = MaterialTheme.typography.labelMedium,
+            color = fg,
         )
     }
 }
@@ -234,9 +265,12 @@ private fun PolicySheet(app: UpdateApp, viewModel: AppUpdatesViewModel, onDismis
                 Column {
                     Text(app.label, style = MaterialTheme.typography.headlineSmall)
                     Text(
-                        stringResource(R.string.updates_sheet_from, app.versionName,
+                        stringResource(
+                            R.string.updates_sheet_from,
+                            app.versionName,
                             viewModel.installerLabel(app.installer) ?: app.installer
-                                ?: stringResource(R.string.updates_installer_unknown)),
+                                ?: stringResource(R.string.updates_installer_unknown),
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -244,9 +278,12 @@ private fun PolicySheet(app: UpdateApp, viewModel: AppUpdatesViewModel, onDismis
             }
             if (app.core) {
                 Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.errorContainer) {
-                    Text(stringResource(R.string.updates_core_warning), Modifier.padding(16.dp),
+                    Text(
+                        stringResource(R.string.updates_core_warning),
+                        Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onErrorContainer)
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
                 }
             }
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -263,13 +300,16 @@ private fun PolicySheet(app: UpdateApp, viewModel: AppUpdatesViewModel, onDismis
                 else if (app.policy == UpdatePolicy.NEVER && detail.shownInStore) stringResource(R.string.updates_help_never_shown)
                 else stringResource(policyHelp(app.policy)),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (app.policy == UpdatePolicy.NEVER && detail.since > 0) {
                 val days = ((System.currentTimeMillis() - detail.since) / DateUtils.DAY_IN_MILLIS).toInt()
-                Text(pluralStringResource(R.plurals.updates_paused_for, days, days),
+                Text(
+                    pluralStringResource(R.plurals.updates_paused_for, days, days),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (days >= YasvaraUpdatePolicy.STALE_REMINDER_DAYS) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             if (app.policy == UpdatePolicy.DELAY) {
@@ -302,27 +342,42 @@ private fun PolicySheet(app: UpdateApp, viewModel: AppUpdatesViewModel, onDismis
                         custom = ""
                     }, enabled = valid) { Text(stringResource(R.string.updates_delay_apply)) }
                 }
-                Text(stringResource(R.string.updates_delay_hint), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.updates_delay_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             if (app.policy == UpdatePolicy.NEVER) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.updates_show_in_store), style = MaterialTheme.typography.bodyLarge)
-                        Text(stringResource(if (detail.shownInStore) R.string.updates_show_in_store_on
-                                else R.string.updates_show_in_store_off),
+                        Text(
+                            stringResource(
+                                if (detail.shownInStore) R.string.updates_show_in_store_on
+                                else R.string.updates_show_in_store_off,
+                            ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                     Switch(detail.shownInStore, { viewModel.setShownInStore(app.packageName, it) })
                 }
                 val context = LocalContext.current
                 if (detail.allowOnceUntil > 0) {
-                    Text(stringResource(R.string.updates_allowed_until,
-                            DateUtils.formatDateTime(context, detail.allowOnceUntil,
-                                DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_SHOW_WEEKDAY)),
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        stringResource(
+                            R.string.updates_allowed_until,
+                            DateUtils.formatDateTime(
+                                context,
+                                detail.allowOnceUntil,
+                                DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_SHOW_WEEKDAY,
+                            ),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button({ openStore(context, app) }) { Text(stringResource(R.string.updates_open_store)) }
                         OutlinedButton({ viewModel.allowOnce(app.packageName, false) }) {
@@ -335,7 +390,6 @@ private fun PolicySheet(app: UpdateApp, viewModel: AppUpdatesViewModel, onDismis
                         openStore(context, app)
                     }) { Text(stringResource(R.string.updates_allow_once)) }
                 }
-                // The newest version a store tried; skipping it resumes updates from the next one.
                 val offered = detail.history.firstOrNull { it.toVersionCode > app.versionCode }
                 if (offered != null) {
                     OutlinedButton({ viewModel.skipVersion(app.packageName, offered.toVersionCode) }) {
@@ -368,12 +422,14 @@ private fun HistoryRow(event: UpdateEvent, viewModel: AppUpdatesViewModel) {
         "allowed" -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.secondary
     }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         Surface(shape = RoundedCornerShape(50), color = color, modifier = Modifier.size(8.dp)) {}
         Column(Modifier.weight(1f)) {
-            Text(stringResource(decisionLabel(event.decision), event.toVersionCode),
-                style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(decisionLabel(event.decision), event.toVersionCode), style = MaterialTheme.typography.bodyMedium)
             Text(
                 "${viewModel.installerLabel(event.installer) ?: event.installer} · " +
                     DateUtils.getRelativeTimeSpanString(event.time),
@@ -382,12 +438,6 @@ private fun HistoryRow(event: UpdateEvent, viewModel: AppUpdatesViewModel) {
             )
         }
     }
-}
-
-@Composable
-private fun Hint(text: String) {
-    Text(text, Modifier.padding(24.dp), style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 private fun policyLabel(policy: UpdatePolicy) = when (policy) {
@@ -403,7 +453,7 @@ private fun policyHelp(policy: UpdatePolicy) = when (policy) {
     UpdatePolicy.DELAY -> R.string.updates_help_delay
     UpdatePolicy.ASK -> R.string.updates_help_ask
     UpdatePolicy.NEVER -> R.string.updates_help_never
-    UpdatePolicy.SKIP -> R.string.updates_policy_skip
+    UpdatePolicy.SKIP -> R.string.updates_help_skip
 }
 
 private fun filterLabel(filter: UpdateFilter) = when (filter) {
@@ -432,10 +482,8 @@ private fun VaultSection(app: UpdateApp, vault: List<VaultEntry>, enabled: Boole
     HorizontalDivider()
     Text(stringResource(R.string.updates_vault_title), style = MaterialTheme.typography.titleSmall)
     if (app.policy == UpdatePolicy.AUTO) {
-        // Other policies always save; Auto apps opt in (§4.4).
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.updates_vault_keep), Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.updates_vault_keep), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             Switch(checked = enabled, onCheckedChange = { viewModel.setVaultEnabled(app.packageName, it) })
         }
     }
@@ -447,11 +495,13 @@ private fun VaultSection(app: UpdateApp, vault: List<VaultEntry>, enabled: Boole
         )
     }
     vault.forEach { entry ->
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Column(Modifier.weight(1f)) {
-                Text(entry.versionName.ifEmpty { entry.versionCode.toString() },
-                    style = MaterialTheme.typography.bodyLarge)
+                Text(entry.versionName.ifEmpty { entry.versionCode.toString() }, style = MaterialTheme.typography.bodyLarge)
                 Text(
                     Formatter.formatShortFileSize(context, entry.bytes) + " · " +
                         DateUtils.getRelativeTimeSpanString(entry.savedAt),
@@ -462,8 +512,10 @@ private fun VaultSection(app: UpdateApp, vault: List<VaultEntry>, enabled: Boole
             TextButton({ viewModel.deleteVault(app.packageName, entry.versionCode) }) {
                 Text(stringResource(R.string.updates_vault_delete))
             }
-            FilledTonalButton({ confirm = entry },
-                enabled = rollback !is RollbackState.Running && entry.versionCode != app.versionCode) {
+            FilledTonalButton(
+                { confirm = entry },
+                enabled = rollback !is RollbackState.Running && entry.versionCode != app.versionCode,
+            ) {
                 Text(stringResource(R.string.updates_vault_rollback))
             }
         }
@@ -492,8 +544,7 @@ private fun VaultSection(app: UpdateApp, vault: List<VaultEntry>, enabled: Boole
         AlertDialog(
             onDismissRequest = { confirm = null },
             title = {
-                Text(stringResource(R.string.updates_rollback_title,
-                    entry.versionName.ifEmpty { entry.versionCode.toString() }))
+                Text(stringResource(R.string.updates_rollback_title, entry.versionName.ifEmpty { entry.versionCode.toString() }))
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

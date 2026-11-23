@@ -57,14 +57,14 @@ fun GroupScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 12.dp),
+                        .padding(horizontal = 4.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    GroupBadge(group, 56.dp)
+                    GroupBadge(group, 48.dp)
                     Text(
                         stringResource(group.summary),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                     )
@@ -132,7 +132,6 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
     )
     SystemGroup.POWER -> listOf(
         NavLink(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, Route.LelapApps),
-        NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
         NavLink(R.string.padat_title, R.string.padat_entry_summary, Route.Padat()),
     )
     SystemGroup.SOUND -> listOf(
@@ -142,6 +141,11 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
     )
     SystemGroup.CONNECTIVITY -> listOf(
         NavLink(R.string.saring_title, R.string.saring_entry_summary, Route.Saring),
+        NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
+    )
+    SystemGroup.PRIVACY -> listOf(
+        NavLink(R.string.saring_title, R.string.saring_entry_summary, Route.Saring),
+        NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
     )
     SystemGroup.SUPERUSER -> listOf(
         NavLink(R.string.akar_title, R.string.akar_entry_summary, Route.Akar()),

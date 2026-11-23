@@ -27,6 +27,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.CloudDownload
@@ -36,8 +38,11 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.SortByAlpha
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +86,7 @@ import org.yasvara.laras.ui.components.LarasSpacing
 import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.Tone
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 
 /* -------------------------------------------------------------------------- */
 /* Installed Modules Tab (hosted inside AkarScreen)                           */
@@ -139,32 +145,38 @@ fun KaitModulesTab(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = LarasSpacing.ScreenHorizontal, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = LarasSpacing.ScreenHorizontal, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item(key = "search_and_filters") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AnimatedVisibility(visible = showSearch || query.isNotEmpty()) {
-                        LarasSearchBar(
-                            query = query,
-                            onQueryChange = onQueryChange,
-                            placeholder = stringResource(R.string.kait_search_modules),
-                        )
-                    }
-                    LarasFilterRow(
-                        options = filterOptions,
-                        selected = filter,
-                        label = {
-                            when (it) {
-                                ModuleListFilter.ALL -> stringResource(R.string.kait_filter_all, allCount)
-                                ModuleListFilter.ENABLED -> stringResource(R.string.kait_filter_enabled, enabledCount)
-                                ModuleListFilter.DISABLED -> stringResource(R.string.kait_filter_disabled, disabledCount)
-                                ModuleListFilter.UPDATES -> stringResource(R.string.kait_filter_updates, updatesCount)
-                            }
-                        },
-                        onSelect = onFilterChange,
+            larasStickyControls(key = "modules_sticky_controls") {
+                AnimatedVisibility(visible = showSearch || query.isNotEmpty()) {
+                    LarasSearchBar(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        placeholder = stringResource(R.string.kait_search_modules),
                     )
                 }
+                LarasFilterRow(
+                    options = filterOptions,
+                    selected = filter,
+                    label = {
+                        when (it) {
+                            ModuleListFilter.ALL -> stringResource(R.string.kait_filter_all, allCount)
+                            ModuleListFilter.ENABLED -> stringResource(R.string.kait_filter_enabled, enabledCount)
+                            ModuleListFilter.DISABLED -> stringResource(R.string.kait_filter_disabled, disabledCount)
+                            ModuleListFilter.UPDATES -> stringResource(R.string.kait_filter_updates, updatesCount)
+                        }
+                    },
+                    leadingIcon = {
+                        when (it) {
+                            ModuleListFilter.ALL -> Icons.Rounded.Apps
+                            ModuleListFilter.ENABLED -> Icons.Rounded.CheckCircle
+                            ModuleListFilter.DISABLED -> Icons.Rounded.PowerSettingsNew
+                            ModuleListFilter.UPDATES -> Icons.Rounded.Download
+                        }
+                    },
+                    onSelect = onFilterChange,
+                )
             }
 
             when {
@@ -212,7 +224,7 @@ fun KaitModulesTab(
                             stringResource(R.string.kait_restart_note),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         )
                     }
                 }
@@ -222,10 +234,10 @@ fun KaitModulesTab(
 }
 
 /**
- * Clean, zero-redundancy module card:
- * - Header toggles the module or opens overflow actions;
- * - Scope strip is the single canonical tap target for target apps (no duplicate button underneath);
- * - Complementary actions (`Open UI` / `Update`) appear only when applicable.
+ * Compact, zero-redundancy module card:
+ * - Row 1: AppIcon (40.dp), Title + single-line metadata (`vX.Y · API 101 · Author`), overflow menu `⋮`, and `CheckSwitch`;
+ * - Row 2 (Merged Footer): Compact Scope Pill (`● [icons] N apps ›` without duplicate "running" / "RUNNING" text) on the left,
+ *   and compact `UI` / `vX.Y.Z` action pills on the right.
  */
 @Composable
 private fun KaitModuleCard(
@@ -244,16 +256,16 @@ private fun KaitModuleCard(
 
     Surface(shape = LarasShapes.Card, color = LarasSurfaces.card) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                AppIcon(module.packageName, size = 44.dp)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                AppIcon(module.packageName, size = 40.dp)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = module.label,
                         style = MaterialTheme.typography.titleMedium,
@@ -261,26 +273,26 @@ private fun KaitModuleCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        val verText = if (module.versionName.isNotBlank()) "v${module.versionName}" else "v${module.versionCode}"
-                        Text(verText, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
-                        if (module.apiLabel.isNotBlank()) LarasBadge(module.apiLabel)
-                        if (module.hasNativeHook) LarasBadge("NATIVE", tone = Tone.GOOD)
+                    val verText = if (module.versionName.isNotBlank()) {
+                        "v${module.versionName.substringBefore(" ")}"
+                    } else {
+                        "v${module.versionCode}"
                     }
-                    if (module.author.isNotBlank()) {
-                        Text(
-                            text = module.author,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = scheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                    val metaLine = buildList {
+                        add(verText)
+                        if (module.apiLabel.isNotBlank()) add(module.apiLabel)
+                        if (module.hasNativeHook) add("NATIVE")
+                        if (module.author.isNotBlank()) add(module.author)
+                    }.joinToString(" · ")
+                    Text(
+                        text = metaLine,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
-                IconButton(onClick = onMoreActions) {
+                IconButton(onClick = onMoreActions, modifier = Modifier.size(34.dp)) {
                     Icon(
                         Icons.Rounded.MoreVert,
                         contentDescription = stringResource(R.string.kait_action_app_info),
@@ -302,11 +314,11 @@ private fun KaitModuleCard(
             if (!loadable) {
                 Surface(shape = LarasShapes.Inset, color = scheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        Modifier.padding(12.dp),
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(Icons.Rounded.ErrorOutline, null, tint = scheme.onErrorContainer, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.ErrorOutline, null, tint = scheme.onErrorContainer, modifier = Modifier.size(16.dp))
                         Text(
                             stringResource(R.string.kait_problem, module.problem!!),
                             style = MaterialTheme.typography.bodySmall,
@@ -317,88 +329,123 @@ private fun KaitModuleCard(
             } else if (module.description.isNotBlank()) {
                 Text(
                     text = module.description,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = scheme.onSurfaceVariant,
-                    maxLines = 3,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
 
-            // Single canonical Scope entry point (no duplicate button underneath).
-            Surface(
-                onClick = onOpenScope,
-                shape = LarasShapes.Inset,
-                color = LarasSurfaces.nestedCard,
+            // Merged bottom row: Compact Scope Pill (Left) + Compact UI & Update Pills (Right)
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Surface(
+                    onClick = onOpenScope,
+                    shape = LarasShapes.Pill,
+                    color = LarasSurfaces.nestedCard,
                 ) {
-                    if (module.scope.isEmpty()) {
-                        Icon(
-                            Icons.Rounded.Checklist,
-                            contentDescription = null,
-                            tint = if (module.enabled) scheme.primary else scheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = if (module.enabled) stringResource(R.string.kait_btn_scope_empty)
-                            else stringResource(R.string.kait_off),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
-                        )
-                    } else {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy((-6).dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            module.scope.take(5).forEach { AppIcon(it, size = 24.dp) }
-                        }
-                        if (module.scope.size > 5) LarasBadge("+${module.scope.size - 5}")
-                        Text(
-                            text = pluralStringResource(
-                                if (runningTargetsCount > 0) R.plurals.kait_scope_running else R.plurals.kait_scope_count,
-                                module.scope.size,
-                                module.scope.size,
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    Row(
+                        Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                         if (runningTargetsCount > 0 && module.enabled) {
-                            LarasBadge(stringResource(R.string.kait_running_badge), tone = Tone.GOOD)
+                            Surface(
+                                shape = LarasShapes.Pill,
+                                color = scheme.primary,
+                                modifier = Modifier.size(7.dp),
+                            ) {}
                         }
+                        if (module.scope.isEmpty()) {
+                            Icon(
+                                Icons.Rounded.Checklist,
+                                contentDescription = null,
+                                tint = if (module.enabled) scheme.primary else scheme.onSurfaceVariant,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Text(
+                                text = if (module.enabled) stringResource(R.string.kait_btn_scope_empty)
+                                else stringResource(R.string.kait_off),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = scheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        } else {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy((-5).dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                module.scope.take(3).forEach { AppIcon(it, size = 18.dp) }
+                            }
+                            if (module.scope.size > 3) {
+                                LarasBadge("+${module.scope.size - 3}")
+                            }
+                            Text(
+                                text = pluralStringResource(
+                                    R.plurals.kait_scope_count,
+                                    module.scope.size,
+                                    module.scope.size,
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Icon(Icons.Rounded.ChevronRight, null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                     }
-                    Icon(Icons.Rounded.ChevronRight, null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
-            }
 
-            if (module.canOpenUi || hasUpdate) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (module.canOpenUi) {
-                        FilledTonalButton(onClick = onOpenUi, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.kait_btn_open_ui), maxLines = 1)
+                Spacer(Modifier.weight(1f))
+
+                if (module.canOpenUi) {
+                    Surface(
+                        onClick = onOpenUi,
+                        shape = LarasShapes.Pill,
+                        color = scheme.secondaryContainer,
+                        contentColor = scheme.onSecondaryContainer,
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.size(14.dp))
+                            Text(
+                                text = stringResource(R.string.kait_btn_open_ui),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
                         }
                     }
-                    if (hasUpdate) {
-                        OutlinedButton(onClick = onOpenUpdate, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Rounded.Download, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
+                }
+
+                if (hasUpdate) {
+                    Surface(
+                        onClick = onOpenUpdate,
+                        shape = LarasShapes.Pill,
+                        color = scheme.primaryContainer,
+                        contentColor = scheme.onPrimaryContainer,
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(Icons.Rounded.Download, null, Modifier.size(14.dp))
                             Text(
                                 text = if (!latestOnlineVersion.isNullOrBlank()) {
-                                    "${stringResource(R.string.kait_repo_update_badge)} $latestOnlineVersion"
+                                    "v${latestOnlineVersion.removePrefix("v")}"
                                 } else {
                                     stringResource(R.string.kait_repo_update_badge)
                                 },
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
@@ -464,43 +511,55 @@ fun KaitRepoTab(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = LarasSpacing.ScreenHorizontal, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = LarasSpacing.ScreenHorizontal, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item(key = "repo_controls") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LarasSearchBar(
-                        query = query,
-                        onQueryChange = onQueryChange,
-                        placeholder = stringResource(R.string.kait_search_repo),
-                    )
-                    LarasFilterRow(
-                        options = RepoListFilter.entries,
-                        selected = filter,
-                        label = {
+            larasStickyControls(key = "repo_sticky_controls") {
+                LarasSearchBar(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    placeholder = stringResource(R.string.kait_search_repo),
+                )
+                LarasFilterRow(
+                    options = RepoListFilter.entries,
+                    selected = filter,
+                    label = {
+                        when (it) {
+                            RepoListFilter.ALL -> stringResource(R.string.kait_filter_all, catalog.modules.size)
+                            RepoListFilter.INSTALLED -> stringResource(R.string.kait_filter_installed, installedInRepoCount)
+                            RepoListFilter.UPDATES -> stringResource(R.string.kait_filter_updates, updatesInRepoCount)
+                        }
+                    },
+                    leadingIcon = {
+                        when (it) {
+                            RepoListFilter.ALL -> Icons.Rounded.Apps
+                            RepoListFilter.INSTALLED -> Icons.Rounded.CheckCircle
+                            RepoListFilter.UPDATES -> Icons.Rounded.Download
+                        }
+                    },
+                    onSelect = onFilterChange,
+                )
+                LarasFilterRow(
+                    options = RepoSortOrder.entries,
+                    selected = sort,
+                    label = {
+                        stringResource(
                             when (it) {
-                                RepoListFilter.ALL -> stringResource(R.string.kait_filter_all, catalog.modules.size)
-                                RepoListFilter.INSTALLED -> stringResource(R.string.kait_filter_installed, installedInRepoCount)
-                                RepoListFilter.UPDATES -> stringResource(R.string.kait_filter_updates, updatesInRepoCount)
-                            }
-                        },
-                        onSelect = onFilterChange,
-                    )
-                    LarasFilterRow(
-                        options = RepoSortOrder.entries,
-                        selected = sort,
-                        label = {
-                            stringResource(
-                                when (it) {
-                                    RepoSortOrder.UPDATED -> R.string.kait_sort_updated
-                                    RepoSortOrder.STARS -> R.string.kait_sort_stars
-                                    RepoSortOrder.NAME -> R.string.kait_sort_name
-                                },
-                            )
-                        },
-                        onSelect = onSortChange,
-                    )
-                }
+                                RepoSortOrder.UPDATED -> R.string.kait_sort_updated
+                                RepoSortOrder.STARS -> R.string.kait_sort_stars
+                                RepoSortOrder.NAME -> R.string.kait_sort_name
+                            },
+                        )
+                    },
+                    leadingIcon = {
+                        when (it) {
+                            RepoSortOrder.UPDATED -> Icons.Rounded.Schedule
+                            RepoSortOrder.STARS -> Icons.Rounded.Star
+                            RepoSortOrder.NAME -> Icons.Rounded.SortByAlpha
+                        }
+                    },
+                    onSelect = onSortChange,
+                )
             }
 
             if (catalog.fromCache) {
@@ -553,7 +612,6 @@ fun KaitRepoTab(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OnlineModuleCard(
     module: OnlineModule,
@@ -565,8 +623,8 @@ private fun OnlineModuleCard(
     val scheme = MaterialTheme.colorScheme
     Surface(onClick = onClick, shape = LarasShapes.Card, color = LarasSurfaces.card) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(
                 Modifier.fillMaxWidth(),
@@ -574,9 +632,9 @@ private fun OnlineModuleCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (isInstalled) {
-                    AppIcon(module.packageName, size = 42.dp)
+                    AppIcon(module.packageName, size = 38.dp)
                 } else {
-                    Surface(shape = RoundedCornerShape(14.dp), color = scheme.primaryContainer, modifier = Modifier.size(42.dp)) {
+                    Surface(shape = RoundedCornerShape(12.dp), color = scheme.primaryContainer, modifier = Modifier.size(38.dp)) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
                                 module.title.take(1).uppercase(),
@@ -603,10 +661,14 @@ private fun OnlineModuleCard(
                             LarasBadge(stringResource(R.string.kait_repo_installed_badge), tone = Tone.GOOD)
                         }
                     }
+                    val meta = buildList {
+                        if (module.authors.isNotBlank()) add(module.authors)
+                        module.latestVersion?.versionName?.takeIf { it.isNotBlank() }?.let { add("v${it.removePrefix("v")}") }
+                        if (module.updatedAt.isNotBlank()) add(module.updatedAt)
+                    }.joinToString(" · ")
                     Text(
-                        module.packageName,
+                        meta.ifEmpty { module.packageName },
                         style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
                         color = scheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -629,40 +691,29 @@ private fun OnlineModuleCard(
             if (module.summary.isNotBlank()) {
                 Text(
                     module.summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                val meta = buildList {
-                    if (module.authors.isNotBlank()) add(module.authors)
-                    module.latestVersion?.versionName?.takeIf { it.isNotBlank() }?.let(::add)
-                    if (module.updatedAt.isNotBlank()) add(module.updatedAt)
-                }.joinToString(" · ")
-                Text(
-                    meta,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = scheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
                 )
-                onOpenScope?.let {
-                    TextButton(onClick = it, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)) {
-                        Icon(Icons.Rounded.Checklist, null, Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(R.string.kait_scope_title), style = MaterialTheme.typography.labelMedium)
-                    }
-                }
             }
 
-            if (module.scope.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    module.scope.take(4).forEach { LarasBadge(it, tone = Tone.NEUTRAL) }
-                    if (module.scope.size > 4) LarasBadge("+${module.scope.size - 4}", tone = Tone.NEUTRAL)
+            if (module.scope.isNotEmpty() || onOpenScope != null) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    module.scope.take(2).forEach { LarasBadge(it, tone = Tone.NEUTRAL) }
+                    if (module.scope.size > 2) LarasBadge("+${module.scope.size - 2}", tone = Tone.NEUTRAL)
+                    Spacer(Modifier.weight(1f))
+                    onOpenScope?.let {
+                        TextButton(onClick = it, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                            Icon(Icons.Rounded.Checklist, null, Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.kait_scope_title), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
             }
         }
@@ -984,12 +1035,6 @@ private fun ReleaseDownloadCard(release: OnlineRelease, onDownload: (String) -> 
             }
         }
     }
-}
-
-/** Kept as source-compatible alias for `ScopeScreen.kt`. */
-@Composable
-internal fun KaitPillBadge(text: String, containerColor: Color, contentColor: Color) {
-    LarasBadge(text = text, containerColor = containerColor, contentColor = contentColor)
 }
 
 @Composable

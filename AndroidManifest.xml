@@ -105,6 +105,11 @@
                 <action android:name="org.yasvara.laras.action.KAIT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- Nada: opens Processor effects directly. -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.NADA" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
             <!-- Volume Panel "Apps" › Manage. -->
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.SOUND_APPS" />
@@ -187,6 +192,29 @@
             android:icon="@mipmap/ic_kait_launcher"
             android:label="@string/group_modules"
             android:targetActivity=".KaitActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Nada (Processor effects): standalone entry point for Homescreen pinned shortcuts and App Drawer icon (enabled by default for quick access). -->
+        <activity
+            android:name=".NadaActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|uiMode|assetsPaths"
+            android:exported="true"
+            android:icon="@mipmap/ic_nada_launcher"
+            android:label="@string/nada_title"
+            android:launchMode="singleTop"
+            android:taskAffinity="org.yasvara.laras.nada"
+            android:theme="@style/Theme.Laras" />
+        <activity-alias
+            android:name=".NadaLauncherAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_nada_launcher"
+            android:label="@string/nada_title"
+            android:targetActivity=".NadaActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

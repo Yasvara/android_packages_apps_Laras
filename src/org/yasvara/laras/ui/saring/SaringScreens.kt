@@ -11,6 +11,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,11 +22,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Android
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -47,22 +56,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.yasvara.laras.R
+import org.yasvara.laras.data.lelap.CutGroup
+import org.yasvara.laras.data.lelap.LelapCatalog
+import org.yasvara.laras.data.lelap.Risk
 import org.yasvara.laras.data.saring.Refusal
 import org.yasvara.laras.data.saring.SaringApp
 import org.yasvara.laras.ui.components.AppIcon
 import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.ui.components.HeroBackdropKind
 import org.yasvara.laras.ui.components.LarasBadge
 import org.yasvara.laras.ui.components.LarasEmptyState
 import org.yasvara.laras.ui.components.LarasFilterRow
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
+import org.yasvara.laras.ui.components.LarasMascotIcon
 import org.yasvara.laras.ui.components.LarasSearchBar
 import org.yasvara.laras.ui.components.LarasSectionHeader
 import org.yasvara.laras.ui.components.LarasShapes
@@ -72,29 +89,32 @@ import org.yasvara.laras.ui.components.LarasSwitchRow
 import org.yasvara.laras.ui.components.LarasTabBar
 import org.yasvara.laras.ui.components.StatFigure
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
+import org.yasvara.laras.ui.lelap.LelapViewModel
 import org.yasvara.laras.ui.screens.Page
 
 private const val DETAILS_SHOWN = 8
 private const val PAUSE_SECONDS = 5 * 60
 
-private enum class SaringTab(val label: Int) {
+enum class SaringTab(val label: Int) {
     OVERVIEW(R.string.saring_tab_overview),
     LISTS(R.string.saring_tab_lists),
+    TELEMETRY(R.string.lelap_cuts_title),
     APPS(R.string.saring_tab_apps),
     ACTIVITY(R.string.saring_tab_activity),
 }
 
-private enum class SaringAppFilter(val label: Int, val test: (SaringApp) -> Boolean) {
-    ALL(R.string.lelap_filter_all, { true }),
-    BLOCKED(R.string.saring_filter_blocked, { it.refused > 0 }),
-    EXEMPT(R.string.saring_filter_exempt, { it.exempt }),
-    USER(R.string.lelap_filter_user, { !it.system }),
-    SYSTEM(R.string.lelap_filter_system, { it.system }),
+private enum class SaringAppFilter(val label: Int, val icon: ImageVector, val test: (SaringApp) -> Boolean) {
+    ALL(R.string.lelap_filter_all, Icons.Rounded.Apps, { true }),
+    BLOCKED(R.string.saring_filter_blocked, Icons.Rounded.Block, { it.refused > 0 }),
+    EXEMPT(R.string.saring_filter_exempt, Icons.Rounded.CheckCircle, { it.exempt }),
+    USER(R.string.lelap_filter_user, Icons.Rounded.Person, { !it.system }),
+    SYSTEM(R.string.lelap_filter_system, Icons.Rounded.Android, { it.system }),
 }
 
-private enum class LogBy(val label: Int) {
-    APP(R.string.saring_log_by_app),
-    NAME(R.string.saring_log_by_name),
+private enum class LogBy(val label: Int, val icon: ImageVector) {
+    APP(R.string.saring_log_by_app, Icons.Rounded.Apps),
+    NAME(R.string.saring_log_by_name, Icons.Rounded.Dns),
 }
 
 private class LogGroup(
@@ -126,16 +146,26 @@ private fun compact(value: Long): String = when {
     else -> value.toString()
 }
 
+/**
+ * Unified Name, Browser, Tracker & Telemetry filtering (Saring + Tracking & telemetry cuts in one place).
+ */
 @Composable
-fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
+fun SaringScreen(
+    onBack: () -> Unit,
+    initialTab: SaringTab = SaringTab.OVERVIEW,
+    viewModel: SaringViewModel = viewModel(),
+    lelapViewModel: LelapViewModel = viewModel(),
+) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
+    val lelapUi by lelapViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
-    var tab by rememberSaveable { mutableStateOf(SaringTab.OVERVIEW) }
+    var tab by rememberSaveable(initialTab) { mutableStateOf(initialTab) }
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(SaringAppFilter.ALL) }
     var logBy by rememberSaveable { mutableStateOf(LogBy.APP) }
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
+    var confirmCut by rememberSaveable { mutableStateOf<String?>(null) }
 
     LifecycleResumeEffect(Unit) {
         viewModel.reload()
@@ -181,10 +211,11 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
                 selected = tab,
                 label = { stringResource(it.label) },
                 onSelect = { tab = it },
+                scrollable = true,
             )
         },
     ) {
-        if (!ui.available) {
+        if (!ui.available && tab != SaringTab.TELEMETRY) {
             item(key = "unavailable") {
                 LarasEmptyState(title = stringResource(R.string.saring_unavailable))
             }
@@ -194,8 +225,8 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
         when (tab) {
             SaringTab.OVERVIEW -> {
                 item(key = "hero") {
-                    SaringMasterHero(ui, viewModel)
-                    Spacer(Modifier.height(10.dp))
+                    SaringMasterHero(ui, lelapUi.cutsOn.size, viewModel)
+                    Spacer(Modifier.height(8.dp))
                 }
                 item(key = "stats") {
                     LarasStatBar(
@@ -203,7 +234,9 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
                             StatFigure(compact(ui.stats.refused), stringResource(R.string.saring_stat_refused)) {
                                 tab = SaringTab.ACTIVITY
                             },
-                            StatFigure(compact(ui.stats.checked), stringResource(R.string.saring_stat_checked)),
+                            StatFigure(lelapUi.cutsOn.size.toString(), stringResource(R.string.lelap_cuts_title)) {
+                                tab = SaringTab.TELEMETRY
+                            },
                             StatFigure(compact(ui.stats.names), stringResource(R.string.saring_stat_names)) {
                                 tab = SaringTab.LISTS
                             },
@@ -345,23 +378,60 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
                     ) { viewModel.setOwnerRule(rule.name, null) }
                 }
             }
+            SaringTab.TELEMETRY -> {
+                if (!lelapUi.available) {
+                    item(key = "lelap_unavailable") {
+                        LarasEmptyState(title = stringResource(R.string.lelap_unavailable))
+                    }
+                } else {
+                    item(key = "cuts_intro") {
+                        Text(
+                            stringResource(R.string.lelap_cuts_intro),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                        )
+                    }
+                    for (group in CutGroup.entries) {
+                        val cuts = LelapCatalog.cuts.filter { it.group == group }
+                        item(key = "group:" + group.name) {
+                            LarasSectionHeader(
+                                title = stringResource(group.title),
+                                summary = stringResource(group.summary),
+                            )
+                        }
+                        items(cuts.size, key = { "cut:" + cuts[it].id }) { i ->
+                            val cut = cuts[i]
+                            LarasSwitchRow(
+                                title = stringResource(cut.title),
+                                summary = stringResource(cut.summary),
+                                checked = cut.id in lelapUi.cutsOn,
+                                leading = if (cut.risk == Risk.DANGEROUS) {
+                                    { Icon(Icons.Rounded.Warning, stringResource(R.string.lelap_dangerous), tint = MaterialTheme.colorScheme.error) }
+                                } else null,
+                                shape = groupedShape(i, cuts.size),
+                                onCheckedChange = { on ->
+                                    if (on && cut.risk == Risk.DANGEROUS) confirmCut = cut.id else lelapViewModel.setCut(cut, on)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
             SaringTab.APPS -> {
-                item(key = "search") {
+                larasStickyControls(key = "saring_sticky_apps") {
                     LarasSearchBar(
                         query = query,
                         onQueryChange = { query = it },
                         placeholder = stringResource(R.string.visibility_search),
                     )
-                    Spacer(Modifier.height(6.dp))
-                }
-                item(key = "filters") {
                     LarasFilterRow(
                         options = SaringAppFilter.entries,
                         selected = filter,
                         label = { stringResource(it.label) },
+                        leadingIcon = { it.icon },
                         count = { f -> ui.apps.count(f.test) },
                         onSelect = { filter = it },
-                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 if (shown.isEmpty()) {
@@ -373,7 +443,7 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
                         title = app.label,
                         summary = stringResource(if (app.exempt) R.string.saring_app_exempt else R.string.saring_app_filtered),
                         checked = !app.exempt,
-                        leading = { AppIcon(app.packageName) },
+                        leading = { AppIcon(app.packageName, size = 38.dp) },
                         badge = if (app.refused > 0) {
                             { LarasBadge(stringResource(R.string.lelap_app_blocked, app.refused), pill = true) }
                         } else null,
@@ -383,14 +453,14 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
                 }
             }
             SaringTab.ACTIVITY -> {
-                item(key = "log_by") {
+                larasStickyControls(key = "saring_sticky_log") {
                     LarasFilterRow(
                         options = LogBy.entries,
                         selected = logBy,
                         label = { stringResource(it.label) },
+                        leadingIcon = { it.icon },
                         count = { by -> groups(ui.log, by).size },
                         onSelect = { logBy = it; expanded = null },
-                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 if (log.isEmpty()) {
@@ -411,10 +481,27 @@ fun SaringScreen(onBack: () -> Unit, viewModel: SaringViewModel = viewModel()) {
             }
         }
     }
+
+    LelapCatalog.cuts.firstOrNull { it.id == confirmCut }?.let { cut ->
+        AlertDialog(
+            onDismissRequest = { confirmCut = null },
+            icon = { Icon(Icons.Rounded.Warning, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(cut.title)) },
+            text = { Text(stringResource(cut.warning)) },
+            confirmButton = {
+                TextButton({ lelapViewModel.setCut(cut, true); confirmCut = null }) {
+                    Text(stringResource(R.string.lelap_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton({ confirmCut = null }) { Text(stringResource(android.R.string.cancel)) }
+            },
+        )
+    }
 }
 
 @Composable
-private fun SaringMasterHero(ui: SaringUi, viewModel: SaringViewModel) {
+private fun SaringMasterHero(ui: SaringUi, activeCutsCount: Int, viewModel: SaringViewModel) {
     val paused = ui.stats.pausedUntil > System.currentTimeMillis()
     val scheme = MaterialTheme.colorScheme
     val container by animateColorAsState(
@@ -431,67 +518,80 @@ private fun SaringMasterHero(ui: SaringUi, viewModel: SaringViewModel) {
         else -> scheme.onPrimaryContainer
     }
     Surface(Modifier.fillMaxWidth(), shape = LarasShapes.Hero, color = container, contentColor = content) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .toggleable(ui.names, role = Role.Switch, onValueChange = viewModel::setNames),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(R.string.saring_names_title), style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        if (paused) {
-                            stringResource(
-                                R.string.saring_paused_until,
-                                DateUtils.formatDateTime(LocalContext.current, ui.stats.pausedUntil, DateUtils.FORMAT_SHOW_TIME),
-                            )
-                        } else {
-                            stringResource(R.string.saring_names_summary)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = content.copy(alpha = 0.8f),
+        Box(Modifier.fillMaxWidth()) {
+            LarasHeroBackdrop(
+                kind = HeroBackdropKind.SARING_SHIELD,
+                modifier = Modifier.matchParentSize(),
+                color = content,
+                alpha = if (ui.names && !paused) 0.22f else 0.10f,
+                animated = ui.names && !paused,
+            )
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .toggleable(ui.names, role = Role.Switch, onValueChange = viewModel::setNames),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LarasMascotIcon(
+                        modifier = Modifier.size(36.dp),
+                        color = if (ui.names) content else scheme.primary,
                     )
-                }
-                CheckSwitch(ui.names)
-            }
-            if (ui.names) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(
-                        onClick = { viewModel.pause(if (paused) 0 else PAUSE_SECONDS) },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(if (paused) R.string.saring_resume else R.string.saring_pause), maxLines = 1)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(R.string.saring_names_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            if (paused) {
+                                stringResource(
+                                    R.string.saring_paused_until,
+                                    DateUtils.formatDateTime(LocalContext.current, ui.stats.pausedUntil, DateUtils.FORMAT_SHOW_TIME),
+                                )
+                            } else {
+                                "${stringResource(R.string.saring_names_summary)} · $activeCutsCount telemetry cuts"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = content.copy(alpha = 0.82f),
+                        )
                     }
-                    FilledTonalButton(
-                        onClick = viewModel::update,
-                        enabled = !ui.busy,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        if (ui.busy) {
-                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        } else {
-                            Icon(Icons.Rounded.Refresh, null, Modifier.size(18.dp))
+                    CheckSwitch(ui.names)
+                }
+                if (ui.names) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(
+                            onClick = { viewModel.pause(if (paused) 0 else PAUSE_SECONDS) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.saring_update), maxLines = 1)
+                            Text(stringResource(if (paused) R.string.saring_resume else R.string.saring_pause), maxLines = 1)
+                        }
+                        FilledTonalButton(
+                            onClick = viewModel::update,
+                            enabled = !ui.busy,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            if (ui.busy) {
+                                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Rounded.Refresh, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.saring_update), maxLines = 1)
+                            }
                         }
                     }
+                    Text(
+                        when {
+                            ui.busy -> stringResource(R.string.saring_updating)
+                            ui.stats.updated == 0L -> stringResource(R.string.saring_never_updated)
+                            else -> stringResource(
+                                R.string.saring_updated,
+                                DateUtils.getRelativeTimeSpanString(ui.stats.updated).toString(),
+                            )
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = content.copy(alpha = 0.72f),
+                    )
                 }
-                Text(
-                    when {
-                        ui.busy -> stringResource(R.string.saring_updating)
-                        ui.stats.updated == 0L -> stringResource(R.string.saring_never_updated)
-                        else -> stringResource(
-                            R.string.saring_updated,
-                            DateUtils.getRelativeTimeSpanString(ui.stats.updated).toString(),
-                        )
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = content.copy(alpha = 0.72f),
-                )
             }
         }
     }
@@ -524,13 +624,13 @@ private fun AddField(hint: Int, actions: List<Pair<Int, Boolean>>, onAdd: (Strin
 private fun RemovableRow(title: String, summary: String?, shape: Shape, onRemove: () -> Unit) {
     Surface(shape = shape, color = LarasSurfaces.card) {
         Row(
-            Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 summary?.let {
-                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             IconButton(onRemove) { Icon(Icons.Rounded.Close, stringResource(R.string.saring_remove)) }
@@ -553,11 +653,11 @@ private fun LogRow(
     Surface(shape = shape, color = LarasSurfaces.card) {
         Column(Modifier.fillMaxWidth().animateContentSize()) {
             Row(
-                Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 20.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                if (group.packageName.isNotEmpty()) AppIcon(group.packageName)
+                if (group.packageName.isNotEmpty()) AppIcon(group.packageName, size = 38.dp)
                 Column(Modifier.weight(1f)) {
                     Text(
                         when {
@@ -575,7 +675,7 @@ private fun LogRow(
                             group.count,
                             DateUtils.getRelativeTimeSpanString(group.last).toString(),
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -589,15 +689,15 @@ private fun LogRow(
                 }
                 for ((detail, count) in group.details.take(DETAILS_SHOWN)) {
                     Row(
-                        Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp),
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             if (by == LogBy.APP) detail else labels[detail] ?: detail.ifEmpty { system },
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                            modifier = Modifier.weight(1f).padding(vertical = 6.dp),
                         )
                         Text("×$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (by == LogBy.APP) {
@@ -612,7 +712,7 @@ private fun LogRow(
                         stringResource(R.string.saring_log_more, group.details.size - DETAILS_SHOWN),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 20.dp, bottom = 12.dp),
+                        modifier = Modifier.padding(start = 16.dp, bottom = 10.dp),
                     )
                 }
             }

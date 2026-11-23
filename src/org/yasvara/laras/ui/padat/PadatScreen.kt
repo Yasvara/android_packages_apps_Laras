@@ -101,7 +101,13 @@ import org.yasvara.laras.data.padat.PadatScopes
 import org.yasvara.laras.data.padat.PadatStatus
 import org.yasvara.laras.data.padat.ScopeBucket
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.HeroBackdropKind
+import org.yasvara.laras.ui.components.LarasFilterRow
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
+import org.yasvara.laras.ui.components.LarasMascotIcon
+import org.yasvara.laras.ui.components.LarasSearchBar
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.screens.Page
 import java.text.NumberFormat
 import java.util.Locale
@@ -275,9 +281,17 @@ fun PadatScreen(
                     shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 ) {
-                    Column(Modifier.padding(20.dp)) {
+                    Box(Modifier.fillMaxWidth()) {
+                        LarasHeroBackdrop(
+                            kind = HeroBackdropKind.PADAT_STORAGE,
+                            modifier = Modifier.matchParentSize(),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            alpha = 0.20f,
+                            animated = ui.activePackage != null,
+                        )
+                        Column(Modifier.padding(18.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Rounded.Compress,
@@ -358,18 +372,15 @@ fun PadatScreen(
                     }
                 }
             }
+            }
 
-            // 2. Search + filter/sort bar (no off-screen top progress card — progress lives inline in each app row!)
-            item(key = "controls") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        singleLine = true,
-                        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                        placeholder = { Text(stringResource(R.string.padat_search_hint)) },
-                        shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.fillMaxWidth(),
+            // 2. Sticky Search + filter/sort bar
+            larasStickyControls(key = "padat_sticky_controls") {
+                Column(Modifier.fillMaxWidth()) {
+                    LarasSearchBar(
+                        query = query,
+                        onQueryChange = { query = it },
+                        placeholder = stringResource(R.string.padat_search_hint),
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(

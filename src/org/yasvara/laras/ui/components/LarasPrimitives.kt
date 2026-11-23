@@ -5,10 +5,13 @@
 package org.yasvara.laras.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +31,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -38,6 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,6 +72,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -104,7 +110,7 @@ fun LarasSwitchRow(
                 .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
                 .padding(horizontal = LarasSpacing.CardHorizontal, vertical = LarasSpacing.CardVertical),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             leading?.invoke()
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -117,7 +123,7 @@ fun LarasSwitchRow(
                 summary?.let {
                     Text(
                         it,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = summaryColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -155,9 +161,9 @@ fun LarasSplitSwitchRow(
                 Modifier
                     .weight(1f)
                     .clickable(onClick = onClick)
-                    .padding(start = 16.dp, end = 12.dp, top = 16.dp, bottom = 16.dp),
+                    .padding(start = 16.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 leading?.invoke()
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -169,14 +175,14 @@ fun LarasSplitSwitchRow(
                     )
                     Text(
                         summary,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         color = summaryColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            VerticalDivider(Modifier.fillMaxHeight().padding(vertical = 18.dp))
+            VerticalDivider(Modifier.fillMaxHeight().padding(vertical = 14.dp))
             Box(
                 Modifier
                     .fillMaxHeight()
@@ -186,6 +192,122 @@ fun LarasSplitSwitchRow(
             ) {
                 CheckSwitch(checked = checked, enabled = switchEnabled)
             }
+        }
+    }
+}
+
+/**
+ * Reusable collapsible (accordion) card for settings & DSP effects:
+ * - Tapping the header expands or collapses [content] with a rotating chevron;
+ * - Optional [checked] + [onCheckedChange] renders an independent [CheckSwitch] on the right;
+ * - Optional [trailingActions] renders extra icon buttons (e.g. info dialog).
+ */
+@Composable
+fun LarasCollapsibleCard(
+    title: String,
+    expanded: Boolean,
+    onToggleExpand: () -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    summaryColor: Color? = null,
+    leadingIcon: ImageVector? = null,
+    checked: Boolean? = null,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
+    trailingActions: (@Composable RowScope.() -> Unit)? = null,
+    shape: Shape = LarasShapes.Card,
+    containerColor: Color = LarasSurfaces.card,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val turn by animateFloatAsState(if (expanded) 180f else 0f, label = "chevronTurn")
+    Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = containerColor) {
+        Column(Modifier.fillMaxWidth().animateContentSize()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onToggleExpand)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (leadingIcon != null) {
+                    Icon(
+                        leadingIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = if (checked == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    summary?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = summaryColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                trailingActions?.invoke(this)
+                Icon(
+                    Icons.Rounded.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp).rotate(turn),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (checked != null && onCheckedChange != null) {
+                    Box(
+                        Modifier.toggleable(
+                            value = checked,
+                            role = Role.Switch,
+                            onValueChange = onCheckedChange,
+                        ),
+                    ) {
+                        CheckSwitch(checked = checked)
+                    }
+                }
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    content = content,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Sticky search and filter header inside a [LazyColumn] so search bars and filter chips stay
+ * pinned at the top of the viewport while scrolling long app/module lists.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+fun LazyListScope.larasStickyControls(
+    key: String = "sticky_controls",
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    stickyHeader(key = key) {
+        Surface(
+            color = LarasSurfaces.pageCanvas,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                content = content,
+            )
         }
     }
 }
@@ -218,7 +340,7 @@ fun LarasNavRow(
                 .fillMaxWidth()
                 .padding(horizontal = LarasSpacing.CardHorizontal, vertical = LarasSpacing.CardVertical),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             leading?.invoke()
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -233,7 +355,7 @@ fun LarasNavRow(
                 summary?.let {
                     Text(
                         it,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = summaryColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -271,9 +393,9 @@ fun LarasRadioRow(
             Modifier
                 .fillMaxWidth()
                 .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-                .padding(start = LarasSpacing.CardHorizontal, end = 16.dp, top = 14.dp, bottom = 14.dp),
+                .padding(start = LarasSpacing.CardHorizontal, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             leading?.invoke()
             Column(Modifier.weight(1f)) {
@@ -288,7 +410,7 @@ fun LarasRadioRow(
                 summary?.let {
                     Text(
                         it,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -387,7 +509,7 @@ fun LarasSectionHeader(
     Row(
         modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 4.dp, top = 16.dp, bottom = 6.dp),
+            .padding(start = 12.dp, end = 4.dp, top = 14.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -444,7 +566,10 @@ fun <T> LarasTabBar(
     }
 }
 
-/** Horizontal Material 3 [FilterChip] strip with optional item counts and extra trailing chips. */
+/**
+ * Horizontal Material 3 [FilterChip] strip with semantic leading icons, optional item counts,
+ * and extra trailing chips.
+ */
 @Composable
 fun <T> LarasFilterRow(
     options: List<T>,
@@ -452,6 +577,7 @@ fun <T> LarasFilterRow(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    leadingIcon: ((T) -> ImageVector?)? = null,
     count: ((T) -> Int)? = null,
     showCheckmark: Boolean = false,
     trailing: (@Composable RowScope.() -> Unit)? = null,
@@ -466,14 +592,21 @@ fun <T> LarasFilterRow(
         for (option in options) {
             val isSelected = option == selected
             val text = label(option)
-            val suffix = count?.invoke(option)?.let { "  $it" }.orEmpty()
+            val suffix = count?.invoke(option)?.let { " $it" }.orEmpty()
+            val iconVector = leadingIcon?.invoke(option)
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelect(option) },
                 label = { Text(text + suffix, maxLines = 1) },
-                leadingIcon = if (showCheckmark && isSelected) {
-                    { Icon(Icons.Rounded.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
-                } else null,
+                leadingIcon = when {
+                    iconVector != null -> {
+                        { Icon(iconVector, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) }
+                    }
+                    showCheckmark && isSelected -> {
+                        { Icon(Icons.Rounded.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                    }
+                    else -> null
+                },
             )
         }
         trailing?.invoke(this)
@@ -490,15 +623,15 @@ data class StatFigure(
 @Composable
 fun LarasStatBar(figures: List<StatFigure>, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth(), shape = LarasShapes.Hero, color = LarasSurfaces.card) {
-        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
             figures.forEach { figure ->
                 val cellModifier = Modifier
                     .weight(1f)
                     .clip(LarasShapes.Inset)
                     .let { m -> if (figure.onClick != null) m.clickable(onClick = figure.onClick) else m }
-                    .padding(vertical = 10.dp)
+                    .padding(vertical = 8.dp)
                 Column(cellModifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(figure.value, style = MaterialTheme.typography.headlineMedium)
+                    Text(figure.value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
                     Text(
                         figure.label,
                         style = MaterialTheme.typography.labelMedium,
@@ -524,13 +657,13 @@ fun LarasEmptyState(
 ) {
     Surface(modifier = modifier.fillMaxWidth(), shape = LarasShapes.Card, color = LarasSurfaces.card) {
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             icon?.let {
-                Icon(it, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(4.dp))
+                Icon(it, contentDescription = null, modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(2.dp))
             }
             Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
             body?.let {

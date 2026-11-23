@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -36,9 +37,9 @@ import org.yasvara.laras.ui.components.LarasSpacing
 import org.yasvara.laras.ui.components.LarasSurfaces
 
 /**
- * Standard Laras sub-page: collapsing [LargeTopAppBar] over a grouped [LazyColumn], with optional
- * pinned [topContent] (e.g. [org.yasvara.laras.ui.components.LarasTabBar]), [bottomBar],
- * [floatingActionButton], and [snackbarHostState].
+ * Standard Laras sub-page: compact single-line [TopAppBar] by default (or [LargeTopAppBar] when
+ * [compactTopBar] is false) over a grouped [LazyColumn], with properly scoped Scaffold padding so
+ * [org.yasvara.laras.ui.components.larasStickyControls] pins cleanly directly beneath the top bar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,9 +52,14 @@ fun Page(
     topContent: (@Composable () -> Unit)? = null,
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
+    compactTopBar: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scroll = if (compactTopBar) {
+        TopAppBarDefaults.pinnedScrollBehavior()
+    } else {
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    }
     val surface = LarasSurfaces.pageCanvas
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -63,31 +69,50 @@ fun Page(
         floatingActionButton = floatingActionButton,
         topBar = {
             Column {
-                LargeTopAppBar(
-                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
-                        }
-                    },
-                    actions = actions,
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = surface,
-                        scrolledContainerColor = surface,
-                    ),
-                    scrollBehavior = scroll,
-                )
+                if (compactTopBar) {
+                    TopAppBar(
+                        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
+                            }
+                        },
+                        actions = actions,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = surface,
+                            scrolledContainerColor = surface,
+                        ),
+                        scrollBehavior = scroll,
+                    )
+                } else {
+                    LargeTopAppBar(
+                        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
+                            }
+                        },
+                        actions = actions,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = surface,
+                            scrolledContainerColor = surface,
+                        ),
+                        scrollBehavior = scroll,
+                    )
+                }
                 topContent?.invoke()
             }
         },
     ) { padding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding()),
             contentPadding = PaddingValues(
                 start = LarasSpacing.ScreenHorizontal,
                 end = LarasSpacing.ScreenHorizontal,
-                top = padding.calculateTopPadding() + if (topContent != null) 12.dp else 0.dp,
+                top = if (topContent != null) 8.dp else 4.dp,
                 bottom = padding.calculateBottomPadding() + 24.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(LarasSpacing.ItemGap),

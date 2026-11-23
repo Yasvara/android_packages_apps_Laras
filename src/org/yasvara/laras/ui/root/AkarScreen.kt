@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,7 +26,9 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.DeveloperBoard
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Lock
@@ -57,9 +58,9 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -69,6 +70,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -100,10 +102,12 @@ import org.yasvara.laras.data.root.InstalledApp
 import org.yasvara.laras.data.root.RootGrant
 import org.yasvara.laras.data.root.RootRepository
 import org.yasvara.laras.data.root.RootTier
+import org.yasvara.laras.data.sound.NadaShortcuts
 import org.yasvara.laras.ui.components.AppIcon
 import org.yasvara.laras.ui.components.LarasBadge
 import org.yasvara.laras.ui.components.LarasEmptyState
 import org.yasvara.laras.ui.components.LarasFilterRow
+import org.yasvara.laras.ui.components.LarasMascotIcon
 import org.yasvara.laras.ui.components.LarasNavRow
 import org.yasvara.laras.ui.components.LarasSearchBar
 import org.yasvara.laras.ui.components.LarasSectionHeader
@@ -114,6 +118,7 @@ import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.LarasSwitchRow
 import org.yasvara.laras.ui.components.Tone
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.kait.CrashBypassBanner
 import org.yasvara.laras.ui.kait.KaitModulesTab
 import org.yasvara.laras.ui.kait.KaitRepoTab
@@ -131,8 +136,8 @@ private enum class AppFilter { ALL, ENROLLED, DENIED }
 
 /**
  * Unified Akar & Kait Manager:
- * Clean 4-tab Material 3 layout (Info · Root · Modul · Repositori) with Settings promoted to the
- * TopAppBar (`Route.AkarSettings`) so every bar stays uncluttered and strictly M3-compliant.
+ * Compact single-line TopAppBar + 4-tab Material 3 layout (Info · Root · Modul · Repositori)
+ * with sticky search/filter headers and zero redundant bottom-nav badges.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,8 +200,7 @@ fun AkarScreen(
         scope.launch { pagerState.animateScrollToPage(0) }
     }
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.heightOffset = 0f }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val surface = LarasSurfaces.pageCanvas
     val titles = listOf(
@@ -206,7 +210,6 @@ fun AkarScreen(
         stringResource(R.string.kait_tab_repo),
     )
 
-    val activeModulesCount = kaitUi.modules.count { it.enabled && it.problem == null }
     val moduleUpdatesCount = kaitUi.upgradableModulesCount
 
     Scaffold(
@@ -214,7 +217,7 @@ fun AkarScreen(
         containerColor = surface,
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = { Text(titles[pagerState.currentPage], maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -222,7 +225,6 @@ fun AkarScreen(
                     }
                 },
                 actions = {
-                    // Max 3 trailing actions per M3 guidelines: contextual Search + Logs + Settings.
                     AnimatedVisibility(visible = pagerState.currentPage == 1) {
                         IconButton(onClick = { showSearch = !showSearch; if (!showSearch) appQuery = "" }) {
                             Icon(if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search, stringResource(R.string.akar_search_apps))
@@ -265,16 +267,7 @@ fun AkarScreen(
                 NavigationBarItem(
                     selected = pagerState.currentPage == 2,
                     onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
-                    icon = {
-                        BadgedBox(badge = {
-                            if (activeModulesCount > 0) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                ) { Text("$activeModulesCount") }
-                            }
-                        }) { Icon(Icons.Rounded.Extension, null) }
-                    },
+                    icon = { Icon(Icons.Rounded.Extension, null) },
                     label = { Text(stringResource(R.string.kait_tab_modules)) },
                 )
                 NavigationBarItem(
@@ -405,7 +398,7 @@ fun AkarScreen(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Dedicated Settings Page (unified Akar + Kait shortcuts, ADB, safety)       */
+/* Dedicated Settings Page (unified Akar + Kait + Nada shortcuts, ADB, safety)*/
 /* -------------------------------------------------------------------------- */
 
 @Composable
@@ -425,6 +418,8 @@ fun AkarSettingsScreen(
     var showAdbDialog by rememberSaveable { mutableStateOf(false) }
     var showIdleDialog by rememberSaveable { mutableStateOf(false) }
     var confirmRevokeAll by rememberSaveable { mutableStateOf(false) }
+    var nadaDrawerEnabled by remember { mutableStateOf(NadaShortcuts.isDrawerEnabled(context)) }
+    var nadaPinned by remember { mutableStateOf(NadaShortcuts.isPinned(context)) }
 
     val canUse = ui.available && ui.state.daemonInstalled
 
@@ -433,7 +428,7 @@ fun AkarSettingsScreen(
         onBack = onBack,
         snackbarHostState = snackbar,
     ) {
-        // Launcher Shortcuts (both Akar & Kait unified in one clean section)
+        // Launcher Shortcuts (Akar, Kait & Nada Processor Effects unified in one clean section)
         item("shortcuts_hdr") { LarasSectionHeader(stringResource(R.string.akar_pin_shortcut)) }
         item("akar_pin") {
             LarasNavRow(
@@ -441,7 +436,7 @@ fun AkarSettingsScreen(
                 summary = stringResource(if (ui.shortcutPinned) R.string.akar_pin_shortcut_done else R.string.akar_pin_shortcut_hint),
                 leading = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 enabled = ui.pinSupported,
-                shape = groupedShape(0, 4),
+                shape = groupedShape(0, 6),
                 onClick = {
                     val ok = AkarShortcuts.requestPin(context)
                     viewModel.refreshShortcutState()
@@ -459,7 +454,7 @@ fun AkarSettingsScreen(
                 summary = stringResource(R.string.akar_drawer_icon_sub),
                 checked = ui.drawerEnabled,
                 leading = { Icon(Icons.Rounded.Apps, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                shape = groupedShape(1, 4),
+                shape = groupedShape(1, 6),
                 onCheckedChange = viewModel::setDrawerEnabled,
             )
         }
@@ -469,7 +464,7 @@ fun AkarSettingsScreen(
                 summary = stringResource(if (kaitUi.shortcutPinned) R.string.kait_pin_shortcut_done else R.string.kait_pin_shortcut_hint),
                 leading = { Icon(Icons.Rounded.Link, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 enabled = kaitUi.pinSupported,
-                shape = groupedShape(2, 4),
+                shape = groupedShape(2, 6),
                 onClick = {
                     val ok = KaitShortcuts.requestPin(context)
                     kaitViewModel.refreshShortcutState()
@@ -487,8 +482,39 @@ fun AkarSettingsScreen(
                 summary = stringResource(R.string.kait_drawer_icon_sub),
                 checked = kaitUi.drawerEnabled,
                 leading = { Icon(Icons.Rounded.Extension, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                shape = groupedShape(3, 4),
+                shape = groupedShape(3, 6),
                 onCheckedChange = kaitViewModel::setDrawerEnabled,
+            )
+        }
+        item("nada_pin") {
+            LarasNavRow(
+                title = "${stringResource(R.string.nada_title)} · ${stringResource(R.string.kait_pin_shortcut)}",
+                summary = stringResource(if (nadaPinned) R.string.kait_pin_shortcut_done else R.string.kait_pin_shortcut_hint),
+                leading = { Icon(Icons.Rounded.GraphicEq, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                enabled = NadaShortcuts.isPinSupported(context),
+                shape = groupedShape(4, 6),
+                onClick = {
+                    val ok = NadaShortcuts.requestPin(context)
+                    nadaPinned = NadaShortcuts.isPinned(context)
+                    scope.launch {
+                        snackbar.showSnackbar(
+                            context.getString(if (ok) R.string.kait_pin_shortcut_done else R.string.kait_pin_unsupported),
+                        )
+                    }
+                },
+            )
+        }
+        item("nada_drawer") {
+            LarasSwitchRow(
+                title = "${stringResource(R.string.nada_title)} · ${stringResource(R.string.kait_drawer_icon)}",
+                summary = stringResource(R.string.nada_entry_summary),
+                checked = nadaDrawerEnabled,
+                leading = { Icon(Icons.Rounded.GraphicEq, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                shape = groupedShape(5, 6),
+                onCheckedChange = {
+                    NadaShortcuts.setDrawerEnabled(context, it)
+                    nadaDrawerEnabled = it
+                },
             )
         }
 
@@ -691,19 +717,14 @@ private fun InfoTab(
                         },
                     )
                     Column(
-                        Modifier.fillMaxWidth(0.76f).padding(horizontal = 20.dp, vertical = 18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        Modifier.fillMaxWidth(0.78f).padding(horizontal = 18.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Icon(
-                                    imageVector = when {
-                                        !canUse || !ui.state.enabled -> Icons.Rounded.ErrorOutline
-                                        isFrozen -> Icons.Rounded.AcUnit
-                                        else -> Icons.Rounded.CheckCircle
-                                    },
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                LarasMascotIcon(
+                                    modifier = Modifier.size(22.dp),
+                                    color = heroFg,
                                 )
                                 Text(
                                     stringResource(
@@ -739,7 +760,7 @@ private fun InfoTab(
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = heroFg.copy(alpha = 0.82f),
-                                modifier = Modifier.padding(start = 26.dp),
+                                modifier = Modifier.padding(start = 30.dp),
                             )
                         }
                         if (canUse) {
@@ -1005,17 +1026,14 @@ private fun AppsTab(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(LarasSpacing.ItemGap),
         ) {
-            if (showSearch) {
-                item("search") {
+            larasStickyControls(key = "akar_apps_sticky_controls") {
+                AnimatedVisibility(visible = showSearch || query.isNotEmpty()) {
                     LarasSearchBar(
                         query = query,
                         onQueryChange = onQuery,
                         placeholder = stringResource(R.string.akar_search_apps),
-                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
-            }
-            item("filters") {
                 LarasFilterRow(
                     options = AppFilter.entries,
                     selected = filter,
@@ -1026,15 +1044,22 @@ private fun AppsTab(
                             AppFilter.DENIED -> stringResource(R.string.akar_filter_denied, ui.denied.size)
                         }
                     },
+                    leadingIcon = {
+                        when (it) {
+                            AppFilter.ALL -> Icons.Rounded.Apps
+                            AppFilter.ENROLLED -> Icons.Rounded.CheckCircle
+                            AppFilter.DENIED -> Icons.Rounded.Block
+                        }
+                    },
                     onSelect = onFilter,
                     trailing = {
                         FilterChip(
                             selected = showSystem,
                             onClick = onToggleSystem,
                             label = { Text(stringResource(R.string.akar_filter_system)) },
+                            leadingIcon = { Icon(Icons.Rounded.Android, null, Modifier.size(FilterChipDefaults.IconSize)) },
                         )
                     },
-                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
 
@@ -1083,7 +1108,7 @@ private fun EnrolledAppRow(grant: RootGrant, repo: RootRepository, shape: Shape,
     val title = if (isAdb) stringResource(R.string.akar_adb_title) else repo.labelOf(grant.primaryPackage)
     Surface(shape = shape, color = LarasSurfaces.card, onClick = onClick) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -1094,7 +1119,7 @@ private fun EnrolledAppRow(grant: RootGrant, repo: RootRepository, shape: Shape,
                     }
                 }
             } else AppIcon(grant.primaryPackage, size = 38.dp)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     TierChip(grant.tier)
@@ -1120,13 +1145,13 @@ private fun EnrolledAppRow(grant: RootGrant, repo: RootRepository, shape: Shape,
 private fun DeniedAppRow(attempt: DeniedAttempt, repo: RootRepository, shape: Shape, onClick: () -> Unit) {
     Surface(shape = shape, color = LarasSurfaces.card, enabled = attempt.packageName.isNotEmpty(), onClick = onClick) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (attempt.packageName.isNotEmpty()) AppIcon(attempt.packageName, size = 38.dp)
             else Icon(Icons.Rounded.Lock, null, Modifier.size(38.dp))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         if (attempt.packageName.isEmpty()) "uid ${attempt.uid}" else repo.labelOf(attempt.packageName),
@@ -1160,7 +1185,7 @@ private fun DeniedAppRow(attempt: DeniedAttempt, repo: RootRepository, shape: Sh
 private fun InstalledAppRow(app: InstalledApp, shape: Shape, onClick: () -> Unit) {
     Surface(shape = shape, color = LarasSurfaces.card, onClick = onClick) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 11.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {

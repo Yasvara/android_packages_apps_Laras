@@ -9,6 +9,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +17,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Android
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.NotificationsOff
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Restore
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -32,32 +43,37 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.yasvara.laras.R
-import org.yasvara.laras.data.lelap.Cut
 import org.yasvara.laras.data.lelap.CutGroup
 import org.yasvara.laras.data.lelap.LelapCatalog
 import org.yasvara.laras.data.lelap.Risk
 import org.yasvara.laras.data.lelap.SleepApp
 import org.yasvara.laras.data.lelap.WakeEvent
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.HeroBackdropKind
 import org.yasvara.laras.ui.components.LarasBadge
 import org.yasvara.laras.ui.components.LarasEmptyState
 import org.yasvara.laras.ui.components.LarasFilterRow
+import org.yasvara.laras.ui.components.LarasHeroBackdrop
 import org.yasvara.laras.ui.components.LarasSearchBar
 import org.yasvara.laras.ui.components.LarasSectionHeader
-import org.yasvara.laras.ui.components.LarasStatBar
+import org.yasvara.laras.ui.components.LarasShapes
 import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.LarasSwitchRow
 import org.yasvara.laras.ui.components.LarasTabBar
 import org.yasvara.laras.ui.components.StatFigure
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.screens.Page
 
 private const val DETAILS_SHOWN = 6
@@ -67,21 +83,21 @@ private enum class LelapTab(val label: Int) {
     ACTIVITY(R.string.lelap_tab_activity),
 }
 
-private enum class AppFilter(val label: Int, val test: (SleepApp) -> Boolean) {
-    ALL(R.string.lelap_filter_all, { true }),
-    ON(R.string.lelap_filter_on, { it.strict }),
-    SUGGESTED(R.string.lelap_filter_suggested, { !it.strict && !it.notifications }),
-    NOISY(R.string.lelap_filter_noisy, { it.blocked > 0 }),
-    USER(R.string.lelap_filter_user, { !it.system }),
-    SYSTEM(R.string.lelap_filter_system, { it.system }),
+private enum class AppFilter(val label: Int, val icon: ImageVector, val test: (SleepApp) -> Boolean) {
+    ALL(R.string.lelap_filter_all, Icons.Rounded.Apps, { true }),
+    ON(R.string.lelap_filter_on, Icons.Rounded.Bedtime, { it.strict }),
+    SUGGESTED(R.string.lelap_filter_suggested, Icons.Rounded.AutoAwesome, { !it.strict && !it.notifications }),
+    NOISY(R.string.lelap_filter_noisy, Icons.Rounded.NotificationsOff, { it.blocked > 0 }),
+    USER(R.string.lelap_filter_user, Icons.Rounded.Person, { !it.system }),
+    SYSTEM(R.string.lelap_filter_system, Icons.Rounded.Android, { it.system }),
 }
 
-private enum class LogFilter(val label: Int, val kinds: Set<String>) {
-    ALL(R.string.lelap_log_all, emptySet()),
-    START(R.string.lelap_log_start, setOf("start")),
-    JOB(R.string.lelap_log_job, setOf("job")),
-    PUSH(R.string.lelap_log_push, setOf("push")),
-    RESTORE(R.string.lelap_log_restore, setOf("pin", "setting")),
+private enum class LogFilter(val label: Int, val icon: ImageVector, val kinds: Set<String>) {
+    ALL(R.string.lelap_log_all, Icons.Rounded.Apps, emptySet()),
+    START(R.string.lelap_log_start, Icons.Rounded.PlayArrow, setOf("start")),
+    JOB(R.string.lelap_log_job, Icons.Rounded.Schedule, setOf("job")),
+    PUSH(R.string.lelap_log_push, Icons.Rounded.NotificationsActive, setOf("push")),
+    RESTORE(R.string.lelap_log_restore, Icons.Rounded.Restore, setOf("pin", "setting")),
 }
 
 private class LogGroup(
@@ -146,35 +162,62 @@ fun LelapAppsScreen(onBack: () -> Unit, viewModel: LelapViewModel = viewModel())
             return@Page
         }
         item(key = "stats") {
-            LarasStatBar(
-                listOf(
-                    StatFigure(ui.apps.count { it.strict }.toString(), stringResource(R.string.lelap_stat_on)),
-                    StatFigure(ui.apps.count { it.asleep }.toString(), stringResource(R.string.lelap_stat_asleep)),
-                    StatFigure(ui.events.size.toString(), stringResource(R.string.lelap_stat_blocked)) {
-                        tab = LelapTab.ACTIVITY
-                    },
-                ),
+            val figures = listOf(
+                StatFigure(ui.apps.count { it.strict }.toString(), stringResource(R.string.lelap_stat_on)) {
+                    tab = LelapTab.APPS
+                    filter = AppFilter.ON
+                },
+                StatFigure(ui.apps.count { it.asleep }.toString(), stringResource(R.string.lelap_stat_asleep)),
+                StatFigure(ui.events.size.toString(), stringResource(R.string.lelap_stat_blocked)) {
+                    tab = LelapTab.ACTIVITY
+                },
             )
-            Spacer(Modifier.height(10.dp))
+            Surface(modifier = Modifier.fillMaxWidth(), shape = LarasShapes.Hero, color = LarasSurfaces.card) {
+                Box(Modifier.fillMaxWidth()) {
+                    LarasHeroBackdrop(
+                        kind = HeroBackdropKind.LELAP_SLEEP,
+                        modifier = Modifier.matchParentSize(),
+                        color = MaterialTheme.colorScheme.primary,
+                        alpha = 0.16f,
+                    )
+                    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                        figures.forEach { figure ->
+                            val cellModifier = Modifier
+                                .weight(1f)
+                                .clip(LarasShapes.Inset)
+                                .let { m -> if (figure.onClick != null) m.clickable(onClick = figure.onClick) else m }
+                                .padding(vertical = 8.dp)
+                            Column(cellModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(figure.value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    figure.label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(6.dp))
         }
         when (tab) {
             LelapTab.APPS -> {
-                item(key = "search") {
+                larasStickyControls(key = "lelap_sticky_controls") {
                     LarasSearchBar(
                         query = query,
                         onQueryChange = { query = it },
                         placeholder = stringResource(R.string.visibility_search),
                     )
-                    Spacer(Modifier.height(6.dp))
-                }
-                item(key = "filters") {
                     LarasFilterRow(
                         options = AppFilter.entries,
                         selected = filter,
                         label = { stringResource(it.label) },
+                        leadingIcon = { it.icon },
                         count = { f -> ui.apps.count(f.test) },
                         onSelect = { filter = it },
-                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 if (shown.isEmpty()) {
@@ -194,7 +237,7 @@ fun LelapAppsScreen(onBack: () -> Unit, viewModel: LelapViewModel = viewModel())
                             },
                         ),
                         checked = app.strict,
-                        leading = { AppIcon(app.packageName) },
+                        leading = { AppIcon(app.packageName, size = 38.dp) },
                         badge = if (app.blocked > 0) {
                             { LarasBadge(stringResource(R.string.lelap_app_blocked, app.blocked), pill = true) }
                         } else null,
@@ -207,14 +250,14 @@ fun LelapAppsScreen(onBack: () -> Unit, viewModel: LelapViewModel = viewModel())
                 }
             }
             LelapTab.ACTIVITY -> {
-                item(key = "log_filters") {
+                larasStickyControls(key = "lelap_sticky_log_filters") {
                     LarasFilterRow(
                         options = LogFilter.entries,
                         selected = logFilter,
                         label = { stringResource(it.label) },
+                        leadingIcon = { it.icon },
                         count = { f -> ui.events.count { f.kinds.isEmpty() || it.kind in f.kinds } },
                         onSelect = { logFilter = it },
-                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 if (log.isEmpty()) {
@@ -259,7 +302,7 @@ fun LelapCutsScreen(onBack: () -> Unit, viewModel: LelapViewModel = viewModel())
         item(key = "intro") {
             Text(
                 stringResource(R.string.lelap_cuts_intro),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             )
@@ -319,11 +362,11 @@ private fun LogRow(group: LogGroup, label: String?, open: Boolean, shape: Shape,
     Surface(shape = shape, color = LarasSurfaces.card) {
         Column(Modifier.fillMaxWidth().animateContentSize()) {
             Row(
-                Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 20.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                if (group.packageName.isNotEmpty()) AppIcon(group.packageName)
+                if (group.packageName.isNotEmpty()) AppIcon(group.packageName, size = 38.dp)
                 Column(Modifier.weight(1f)) {
                     Text(
                         label ?: group.packageName.ifEmpty { stringResource(R.string.lelap_log_system) },
@@ -337,7 +380,7 @@ private fun LogRow(group: LogGroup, label: String?, open: Boolean, shape: Shape,
                             group.count,
                             DateUtils.getRelativeTimeSpanString(group.last).toString(),
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -349,9 +392,9 @@ private fun LogRow(group: LogGroup, label: String?, open: Boolean, shape: Shape,
                 )
             }
             if (open) {
-                Column(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 14.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
                     for ((kind, detail, count) in group.details.take(DETAILS_SHOWN)) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                             Text(
                                 if (detail.isEmpty()) kindLabel(kind) else "$detail · ${kindLabel(kind)}",
                                 style = MaterialTheme.typography.bodySmall,

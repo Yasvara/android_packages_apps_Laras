@@ -537,17 +537,17 @@ Yasvara turns a feature off by itself if it keeps failing, and a safe-mode resta
     <string name="kait_arch_stealth_val">Scoped processes only · Tabir-aligned</string>
     <string name="kait_search_modules">Search installed modules…</string>
     <string name="kait_search_repo">Search 800+ modules in Xposed Repository…</string>
-    <string name="kait_filter_all">All (%1$d)</string>
-    <string name="kait_filter_enabled">Active (%1$d)</string>
-    <string name="kait_filter_disabled">Off (%1$d)</string>
-    <string name="kait_filter_updates">Updates (%1$d)</string>
-    <string name="kait_filter_installed">Installed (%1$d)</string>
+    <string name="kait_filter_all">All %1$d</string>
+    <string name="kait_filter_enabled">Active %1$d</string>
+    <string name="kait_filter_disabled">Off %1$d</string>
+    <string name="kait_filter_updates">Updates %1$d</string>
+    <string name="kait_filter_installed">Installed %1$d</string>
     <string name="kait_sort_updated">Recently updated</string>
     <string name="kait_sort_stars">Most stars</string>
     <string name="kait_sort_name">Name (A–Z)</string>
     <string name="kait_btn_scope">Hook apps (%1$d)</string>
     <string name="kait_btn_scope_empty">Select apps to hook</string>
-    <string name="kait_btn_open_ui">Open UI</string>
+    <string name="kait_btn_open_ui">UI</string>
     <string name="kait_btn_restart_targets">Restart targets</string>
     <string name="kait_restarted_targets">Restarted %1$d target app(s)</string>
     <string name="kait_action_app_info">App info</string>
@@ -579,12 +579,12 @@ Yasvara turns a feature off by itself if it keeps failing, and a safe-mode resta
     <string name="kait_off">Off</string>
     <string name="kait_no_scope">On, but no target apps selected yet</string>
     <plurals name="kait_scope_count">
-        <item quantity="one">Hooked into %1$d app</item>
-        <item quantity="other">Hooked into %1$d apps</item>
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
     </plurals>
     <plurals name="kait_scope_running">
-        <item quantity="one">Hooked into %1$d app · running</item>
-        <item quantity="other">Hooked into %1$d apps · running</item>
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
     </plurals>
     <string name="kait_scope_title">Apps to hook (Scope)</string>
     <string name="kait_scope_module_off">The module is off; its scope applies once it is enabled</string>

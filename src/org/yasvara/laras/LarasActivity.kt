@@ -45,6 +45,7 @@ class LarasActivity : ComponentActivity() {
         // A refused root request's notification opens Akar on that app.
         ACTION_AKAR -> Route.Akar(intent.getStringExtra(EXTRA_PACKAGE)?.takeIf { it.isNotEmpty() })
         ACTION_KAIT -> Route.Kait(intent.getStringExtra(EXTRA_PACKAGE)?.takeIf { it.isNotEmpty() })
+        ACTION_NADA -> Route.Nada
         // The Volume Panel's "Manage" line.
         ACTION_SOUND_APPS -> Route.SoundApps
         ACTION_WIFI_REGION -> Route.WifiRegion
@@ -56,6 +57,7 @@ class LarasActivity : ComponentActivity() {
         const val ACTION_APP_UPDATES = "org.yasvara.laras.action.APP_UPDATES"
         const val ACTION_AKAR = "org.yasvara.laras.action.AKAR"
         const val ACTION_KAIT = "org.yasvara.laras.action.KAIT"
+        const val ACTION_NADA = "org.yasvara.laras.action.NADA"
         const val ACTION_SOUND_APPS = "org.yasvara.laras.action.SOUND_APPS"
         const val ACTION_WIFI_REGION = "org.yasvara.laras.action.WIFI_REGION"
         const val ACTION_PADAT = "org.yasvara.laras.action.PADAT"

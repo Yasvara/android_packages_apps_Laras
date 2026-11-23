@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.util.Log
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,9 +21,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -40,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -55,6 +61,7 @@ import org.yasvara.laras.ui.components.LarasSearchBar
 import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.SwitchRow
 import org.yasvara.laras.ui.components.groupedShape
+import org.yasvara.laras.ui.components.larasStickyControls
 import org.yasvara.laras.ui.screens.Page
 
 private const val TAG = "LarasSwara"
@@ -108,18 +115,17 @@ fun SoundAppsScreen(onBack: () -> Unit) {
         item(key = "intro") {
             Text(
                 stringResource(R.string.swara_intro),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
         }
-        item(key = "search") {
+        larasStickyControls(key = "swara_sticky_search") {
             LarasSearchBar(
                 query = query,
                 onQueryChange = { query = it },
                 placeholder = stringResource(R.string.swara_search),
-                modifier = Modifier.padding(bottom = 10.dp),
             )
         }
         if (service == null) {
@@ -148,6 +154,7 @@ private fun AppCard(
     var volume by remember(app.pkg, r) { mutableFloatStateOf(r.getFloat(Swara.KEY_VOLUME, 1f)) }
     var micGain by remember(app.pkg, r) { mutableFloatStateOf(r.getFloat(Swara.KEY_MIC_GAIN, 1f)) }
     var outputMenu by remember { mutableStateOf(false) }
+    val turn by animateFloatAsState(if (expanded) 180f else 0f, label = "swaraTurn")
 
     fun send(build: Bundle.() -> Unit) {
         runCatching { Swara.get()?.setRules(app.pkg, userId, Bundle().apply(build)) }
@@ -164,22 +171,27 @@ private fun AppCard(
         if (r.getInt(Swara.KEY_OUTPUT_TYPE) != 0) add(outputName(context, r.getInt(Swara.KEY_OUTPUT_TYPE)))
     }.joinToString(" · ")
 
-    // No extra padding(bottom = 2.dp): Page already provides Arrangement.spacedBy(2.dp).
     Surface(shape = shape, color = LarasSurfaces.card, onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.animateContentSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
+        Column(Modifier.animateContentSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AppIcon(app.pkg)
-                Spacer(Modifier.width(16.dp))
+                AppIcon(app.pkg, size = 38.dp)
+                Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (status.isNotEmpty()) {
                         Text(
                             status,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = if (app.hasRule) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
+                Icon(
+                    Icons.Rounded.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp).rotate(turn),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (!expanded) return@Column
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

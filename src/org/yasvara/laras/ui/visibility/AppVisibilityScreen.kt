@@ -66,6 +66,8 @@ import org.yasvara.laras.data.visibility.ObserverConfig
 import org.yasvara.laras.data.visibility.TabirTemplate
 import org.yasvara.laras.data.visibility.UserApp
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.LarasSearchBar
+import org.yasvara.laras.ui.components.LarasTabBar
 import org.yasvara.laras.ui.components.SectionCard
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.SwitchRow
@@ -162,39 +164,26 @@ fun AppVisibilityScreen(onBack: () -> Unit, viewModel: AppVisibilityViewModel = 
                 }
             }
         },
+        topContent = {
+            LarasTabBar(
+                tabs = TabirTab.entries,
+                selected = tab,
+                label = { t ->
+                    when (t) {
+                        TabirTab.RULES -> stringResource(R.string.tabir_tab_rules)
+                        TabirTab.TEMPLATES -> "${stringResource(R.string.tabir_tab_templates)} (${ui.templates.size})"
+                        TabirTab.SIMULATE -> stringResource(R.string.tabir_tab_simulate)
+                    }
+                },
+                onSelect = { tab = it },
+            )
+        },
     ) {
         if (!ui.loading && !ui.available) {
             item("unavailable") {
                 Text(stringResource(R.string.visibility_unavailable), Modifier.padding(16.dp))
             }
             return@Page
-        }
-
-        item("tabs") {
-            Row(
-                Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilterChip(
-                    selected = tab == TabirTab.RULES,
-                    onClick = { tab = TabirTab.RULES },
-                    label = { Text(stringResource(R.string.tabir_tab_rules)) },
-                )
-                FilterChip(
-                    selected = tab == TabirTab.TEMPLATES,
-                    onClick = { tab = TabirTab.TEMPLATES },
-                    label = {
-                        Text(
-                            "${stringResource(R.string.tabir_tab_templates)} (${ui.templates.size})",
-                        )
-                    },
-                )
-                FilterChip(
-                    selected = tab == TabirTab.SIMULATE,
-                    onClick = { tab = TabirTab.SIMULATE },
-                    label = { Text(stringResource(R.string.tabir_tab_simulate)) },
-                )
-            }
         }
 
         when (tab) {
@@ -672,14 +661,11 @@ private fun PickerSheet(
         query.isBlank() || it.label.contains(query, true) || it.packageName.contains(query, true)
     }
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = { Text(stringResource(R.string.visibility_search)) },
-            leadingIcon = { Icon(Icons.Rounded.Search, null) },
-            singleLine = true,
-            shape = RoundedCornerShape(28.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        LarasSearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = stringResource(R.string.visibility_search),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
         LazyColumn {
             items(visible, key = { it.packageName }) { app ->

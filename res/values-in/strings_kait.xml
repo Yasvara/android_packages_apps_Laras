@@ -38,17 +38,17 @@
     <string name="kait_arch_stealth_val">Hanya aplikasi terpilih · Selaras Tabir</string>
     <string name="kait_search_modules">Cari modul terpasang…</string>
     <string name="kait_search_repo">Cari 800+ modul di Repositori Xposed…</string>
-    <string name="kait_filter_all">Semua (%1$d)</string>
-    <string name="kait_filter_enabled">Aktif (%1$d)</string>
-    <string name="kait_filter_disabled">Mati (%1$d)</string>
-    <string name="kait_filter_updates">Update (%1$d)</string>
-    <string name="kait_filter_installed">Terpasang (%1$d)</string>
+    <string name="kait_filter_all">Semua %1$d</string>
+    <string name="kait_filter_enabled">Aktif %1$d</string>
+    <string name="kait_filter_disabled">Mati %1$d</string>
+    <string name="kait_filter_updates">Update %1$d</string>
+    <string name="kait_filter_installed">Terpasang %1$d</string>
     <string name="kait_sort_updated">Terbaru diperbarui</string>
     <string name="kait_sort_stars">Populer (★)</string>
     <string name="kait_sort_name">Nama (A–Z)</string>
     <string name="kait_btn_scope">Kaitkan aplikasi (%1$d)</string>
     <string name="kait_btn_scope_empty">Pilih aplikasi untuk dikaitkan</string>
-    <string name="kait_btn_open_ui">Buka modul</string>
+    <string name="kait_btn_open_ui">UI</string>
     <string name="kait_btn_restart_targets">Restart target</string>
     <string name="kait_restarted_targets">%1$d aplikasi target dimulai ulang</string>
     <string name="kait_action_app_info">Info aplikasi</string>
@@ -80,12 +80,12 @@
     <string name="kait_off">Nonaktif</string>
     <string name="kait_no_scope">Aktif, belum ada aplikasi yang dikaitkan</string>
     <plurals name="kait_scope_count">
-        <item quantity="one">Dikaitkan ke %1$d aplikasi</item>
-        <item quantity="other">Dikaitkan ke %1$d aplikasi</item>
+        <item quantity="one">%1$d aplikasi</item>
+        <item quantity="other">%1$d aplikasi</item>
     </plurals>
     <plurals name="kait_scope_running">
-        <item quantity="one">Dikaitkan ke %1$d aplikasi · berjalan</item>
-        <item quantity="other">Dikaitkan ke %1$d aplikasi · berjalan</item>
+        <item quantity="one">%1$d aplikasi</item>
+        <item quantity="other">%1$d aplikasi</item>
     </plurals>
     <string name="kait_scope_title">Aplikasi yang dikaitkan (Scope)</string>
     <string name="kait_scope_module_off">Modul sedang nonaktif; daftar kaitan berlaku saat modul diaktifkan</string>
