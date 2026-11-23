@@ -2,18 +2,16 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.yasvara.laras.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Restore
@@ -36,9 +33,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -58,35 +55,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.yasvara.laras.R
 import org.yasvara.laras.catalog.Entry
+import org.yasvara.laras.catalog.Prefs
 import org.yasvara.laras.data.ChoiceOption
 import org.yasvara.laras.data.ChoicePref
-import org.yasvara.laras.data.PrefEditor
-import org.yasvara.laras.data.PrefSnapshot
-import org.yasvara.laras.data.SwitchPref
 import org.yasvara.laras.data.FloatPref
+import org.yasvara.laras.data.IntSliderPref
 import org.yasvara.laras.data.JsonFieldPref
 import org.yasvara.laras.data.JsonPref
 import org.yasvara.laras.data.OptionsPref
+import org.yasvara.laras.data.PrefEditor
+import org.yasvara.laras.data.PrefSnapshot
 import org.yasvara.laras.data.StringPref
-import org.yasvara.laras.data.IntSliderPref
-import org.yasvara.laras.catalog.Prefs
-import org.yasvara.laras.ui.clock.ClockFaceEditor
+import org.yasvara.laras.data.SwitchPref
 import org.yasvara.laras.data.setAny
+import org.yasvara.laras.ui.clock.ClockFaceEditor
 import org.yasvara.laras.ui.preview.LocalStatusBarSamples
 import org.yasvara.laras.ui.preview.SampleChooser
 import org.yasvara.laras.ui.theme.emphasized
 
 /** Corner shape for item [index] of [count] in a grouped list: round outside, tight inside. */
-fun groupedShape(index: Int, count: Int): Shape {
-    val outer = 24.dp
-    val inner = 6.dp
-    return RoundedCornerShape(
-        topStart = if (index == 0) outer else inner,
-        topEnd = if (index == 0) outer else inner,
-        bottomStart = if (index == count - 1) outer else inner,
-        bottomEnd = if (index == count - 1) outer else inner,
-    )
-}
+fun groupedShape(index: Int, count: Int): Shape = LarasShapes.grouped(index, count)
 
 /**
  * Entries as one grouped card list. [onReset], when given, adds a per-entry reset action. An
@@ -105,7 +93,6 @@ fun EntryList(
     val motion = MaterialTheme.motionScheme
     Column(modifier) {
         entries.forEach { entry ->
-            // A folding row keeps the shape it had while it leaves.
             val index = shown.indexOf(entry)
             val lastShape = remember(entry) { arrayOf(groupedShape(0, 1)) }
             if (index >= 0) lastShape[0] = groupedShape(index, shown.size)
@@ -115,7 +102,7 @@ fun EntryList(
                 enter = expandVertically(motion.defaultSpatialSpec()) + fadeIn(motion.defaultEffectsSpec()),
                 exit = shrinkVertically(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
             ) {
-                Box(Modifier.padding(bottom = 2.dp)) {
+                Box(Modifier.padding(bottom = LarasSpacing.ItemGap)) {
                     EntryRow(entry, prefs, editor, shape, onReset?.let { { it(entry) } })
                 }
             }
@@ -124,9 +111,8 @@ fun EntryList(
 }
 
 /**
- * Display-only M3 switch with an animated check thumb. Pair it with a `toggleable` parent so the
- * whole row is the touch target. Kept receiver-free so the thumb's AnimatedVisibility never binds
- * to an enclosing RowScope/ColumnScope (Kotlin DSL-marker rules reject that from nested scopes).
+ * Display-only M3 Expressive switch with an animated check thumb.
+ * Pair with a `toggleable` parent so the entire row is the touch target.
  */
 @Composable
 fun CheckSwitch(checked: Boolean, modifier: Modifier = Modifier, enabled: Boolean = true) {
@@ -142,7 +128,7 @@ fun CheckSwitch(checked: Boolean, modifier: Modifier = Modifier, enabled: Boolea
 @Composable
 private fun CheckThumb(checked: Boolean) {
     AnimatedVisibility(checked, enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
-        Icon(Icons.Rounded.Check, null, Modifier.size(SwitchDefaults.IconSize))
+        Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(SwitchDefaults.IconSize))
     }
 }
 
@@ -154,12 +140,13 @@ fun EntryRow(
     shape: Shape,
     onReset: (() -> Unit)? = null,
 ) {
-    Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(shape = shape, color = LarasSurfaces.card) {
         when (val pref = entry.pref) {
             is SwitchPref -> {
                 val checked = prefs[pref]
                 Row(
-                    Modifier.fillMaxWidth()
+                    Modifier
+                        .fillMaxWidth()
                         .toggleable(checked, role = Role.Switch) { editor.set(pref, it) }
                         .padding(start = 20.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -169,7 +156,9 @@ fun EntryRow(
                     CheckSwitch(checked)
                 }
             }
-            is ChoicePref<*>, is JsonFieldPref<*> -> Column(Modifier.padding(start = 20.dp, end = 16.dp, top = 14.dp, bottom = 16.dp)) {
+            is ChoicePref<*>, is JsonFieldPref<*> -> Column(
+                Modifier.padding(start = 20.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     EntryText(entry, prefs.isChanged(pref), Modifier.weight(1f))
                     onReset?.let { ResetButton(it) }
@@ -178,7 +167,6 @@ fun EntryRow(
                 val selected = prefs[pref] as ChoiceOption
                 val samples = LocalStatusBarSamples.current
                 val kind = entry.sample
-                // Drawn options once SystemUI has drawn any, names until then.
                 if (kind != null && samples != null && samples.has(kind)) {
                     SampleChooser(
                         kind, samples, options, selected,
@@ -199,7 +187,6 @@ fun EntryRow(
                     EntryText(entry, prefs.isChanged(pref), Modifier.weight(1f))
                     onReset?.let { ResetButton(it) }
                 }
-                // Follows the finger locally and stores the value once, when the drag ends.
                 var dragging by remember(pref) { mutableStateOf<Float?>(null) }
                 Slider(
                     value = dragging ?: prefs[pref],
@@ -213,7 +200,6 @@ fun EntryRow(
                 )
             }
             is IntSliderPref -> Column(Modifier.padding(start = 20.dp, end = 16.dp, top = 14.dp, bottom = 8.dp)) {
-                // Follows the finger locally and stores the value once, when the drag ends.
                 var dragging by remember(pref) { mutableStateOf<Int?>(null) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     EntryText(entry, prefs.isChanged(pref), Modifier.weight(1f))
@@ -234,12 +220,10 @@ fun EntryRow(
                     valueRange = pref.range.first.toFloat()..pref.range.last.toFloat(),
                 )
             }
-            // Structured values have editors of their own.
             is JsonPref<*> -> when (pref) {
                 Prefs.clockFace -> ClockFaceEditor(prefs[Prefs.clockFace], { editor.set(Prefs.clockFace, it) })
                 else -> Unit
             }
-            // Raw text is never edited as a row; its owners have screens of their own.
             is StringPref -> Unit
         }
     }
@@ -267,8 +251,11 @@ private fun EntryText(entry: Entry, changed: Boolean, modifier: Modifier) {
 fun ChangedDot(visible: Boolean, modifier: Modifier = Modifier) {
     val scale by animateFloatAsState(if (visible) 1f else 0f, emphasized(), label = "dot")
     Box(
-        modifier.size(6.dp).graphicsLayer { scaleX = scale; scaleY = scale; alpha = scale }
-            .clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+        modifier
+            .size(6.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale; alpha = scale }
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
     )
 }
 
@@ -279,22 +266,41 @@ private fun ResetButton(onClick: () -> Unit) {
     }
 }
 
-/**
- * Connected button groups choosing one option; the chosen one widens its corners. More than
- * [MAX_PER_ROW] options wrap into even rows, each a group of its own, so labels never shrink to
- * an ellipsis.
- */
+/** Connected M3 Expressive button group for [ChoiceOption] enums. */
 @Composable
 fun ChoiceButtons(
     options: List<ChoiceOption>,
     selected: ChoiceOption,
     onSelect: (ChoiceOption) -> Unit,
     modifier: Modifier = Modifier,
+) = ChoiceGroup(
+    options = options,
+    selected = selected,
+    label = { stringResource(it.label) },
+    onSelect = onSelect,
+    modifier = modifier,
+)
+
+/**
+ * Generic M3 Expressive Connected Button Group replacing legacy `SingleChoiceSegmentedButtonRow`
+ * everywhere in Laras. Wraps into balanced rows when options exceed [MAX_PER_ROW].
+ */
+@Composable
+fun <T> ChoiceGroup(
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
+    if (options.isEmpty()) return
     val rows = (options.size + MAX_PER_ROW - 1) / MAX_PER_ROW
     val perRow = (options.size + rows - 1) / rows
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        options.chunked(perRow).forEach { row -> ChoiceRow(row, selected, onSelect) }
+        options.chunked(perRow).forEach { row ->
+            ChoiceRow(row, selected, label, onSelect, enabled)
+        }
     }
 }
 
@@ -302,10 +308,12 @@ private const val MAX_PER_ROW = 4
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ChoiceRow(
-    options: List<ChoiceOption>,
-    selected: ChoiceOption,
-    onSelect: (ChoiceOption) -> Unit,
+private fun <T> ChoiceRow(
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    onSelect: (T) -> Unit,
+    enabled: Boolean,
 ) {
     Row(
         Modifier.fillMaxWidth(),
@@ -315,8 +323,10 @@ private fun ChoiceRow(
             ToggleButton(
                 checked = option == selected,
                 onCheckedChange = { onSelect(option) },
+                enabled = enabled,
                 modifier = Modifier.weight(1f),
                 shapes = when {
+                    options.size == 1 -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     i == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                     i == options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
@@ -324,7 +334,7 @@ private fun ChoiceRow(
                 contentPadding = PaddingValues(horizontal = 6.dp),
             ) {
                 Text(
-                    stringResource(option.label),
+                    label(option),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelLarge,

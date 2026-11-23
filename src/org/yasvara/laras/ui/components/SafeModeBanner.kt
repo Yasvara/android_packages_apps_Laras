@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.yasvara.laras.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material3.FilledTonalButton
@@ -30,10 +28,7 @@ import org.yasvara.laras.data.PrefEditor
 import org.yasvara.laras.data.PrefSnapshot
 import org.yasvara.laras.data.SwitchPref
 
-/**
- * Says which customization families SystemUI has paused after repeated failures, and lets the
- * user try them again. Their settings were kept, so trying again brings the same look back.
- */
+/** Reports customization families paused by SystemUI and offers one-tap recovery. */
 @Composable
 fun SafeModeBanner(
     prefs: PrefSnapshot,
@@ -45,32 +40,27 @@ fun SafeModeBanner(
     if (paused.isEmpty()) return
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = LarasShapes.Card,
         color = MaterialTheme.colorScheme.errorContainer,
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             paused.forEach { (pref, message) ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Shape as well as colour, so the warning reads without colour vision.
-                    Icon(Icons.Rounded.ReportProblem, null, Modifier.padding(end = 12.dp))
-                    Text(
-                        stringResource(message),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(Icons.Rounded.ReportProblem, contentDescription = null)
+                    Text(stringResource(message), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 }
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 ) {
                     if (pref == Prefs.colorSafeMode) {
-                        TextButton({
+                        TextButton(onClick = {
                             onRestoreColors()
                             editor.set(pref, false)
                         }) { Text(stringResource(R.string.safe_mode_restore_colors)) }
                     }
-                    FilledTonalButton({ editor.set(pref, false) }) {
+                    FilledTonalButton(onClick = { editor.set(pref, false) }) {
                         Text(stringResource(R.string.safe_mode_try_again))
                     }
                 }

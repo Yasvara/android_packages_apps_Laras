@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,7 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
-/** A titled card on the list surface; the building block of every Integrity and Apps section. */
+/** A titled card on the list surface; unified on [LarasShapes.Card] and [LarasSurfaces.card]. */
 @Composable
 fun SectionCard(
     title: String,
@@ -33,14 +31,12 @@ fun SectionCard(
     subtitle: String? = null,
     content: @Composable () -> Unit,
 ) {
-    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(modifier.fillMaxWidth(), shape = LarasShapes.Card, color = LarasSurfaces.card) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 subtitle?.let {
-                    Text(it, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             content()
@@ -48,6 +44,7 @@ fun SectionCard(
     }
 }
 
+/** Inline switch row inside cards; upgraded to M3 Expressive [CheckSwitch]. */
 @Composable
 fun SwitchRow(
     title: String,
@@ -58,23 +55,24 @@ fun SwitchRow(
     enabled: Boolean = true,
 ) {
     Row(
-        modifier.fillMaxWidth()
+        modifier
+            .fillMaxWidth()
             .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall)
             summary?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
+        CheckSwitch(checked = checked, enabled = enabled)
     }
 }
 
-/** How a status reads at a glance; always paired with an icon so it is never colour-only. */
+/** Semantic status tone; always paired with an icon so status is never colour-only. */
 enum class Tone { GOOD, WARN, BAD, NEUTRAL }
 
 @Composable
@@ -86,15 +84,39 @@ fun Tone.color(): Color = when (this) {
 }
 
 @Composable
-fun StatusLine(icon: ImageVector, tone: Tone, text: String, modifier: Modifier = Modifier, detail: String? = null) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, Modifier.size(20.dp).padding(top = 2.dp), tint = tone.color())
+fun Tone.containerColor(): Color = when (this) {
+    Tone.GOOD -> MaterialTheme.colorScheme.primaryContainer
+    Tone.WARN -> MaterialTheme.colorScheme.tertiaryContainer
+    Tone.BAD -> MaterialTheme.colorScheme.errorContainer
+    Tone.NEUTRAL -> MaterialTheme.colorScheme.surfaceContainerHighest
+}
+
+@Composable
+fun Tone.onContainerColor(): Color = when (this) {
+    Tone.GOOD -> MaterialTheme.colorScheme.onPrimaryContainer
+    Tone.WARN -> MaterialTheme.colorScheme.onTertiaryContainer
+    Tone.BAD -> MaterialTheme.colorScheme.onErrorContainer
+    Tone.NEUTRAL -> MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+@Composable
+fun StatusLine(
+    icon: ImageVector,
+    tone: Tone,
+    text: String,
+    modifier: Modifier = Modifier,
+    detail: String? = null,
+) {
+    Row(
+        modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp).padding(top = 2.dp), tint = tone.color())
         Column {
             Text(text, style = MaterialTheme.typography.bodyMedium, color = tone.color())
             detail?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

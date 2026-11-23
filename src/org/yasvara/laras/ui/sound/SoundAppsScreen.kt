@@ -18,12 +18,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,13 +50,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.yasvara.laras.R
 import org.yasvara.laras.ui.components.AppIcon
+import org.yasvara.laras.ui.components.LarasEmptyState
+import org.yasvara.laras.ui.components.LarasSearchBar
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.SwitchRow
 import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.screens.Page
 
 private const val TAG = "LarasSwara"
 
-/** One app on the page: what Swara knows about it, or the defaults. */
 private data class SoundApp(
     val pkg: String,
     val label: String,
@@ -66,15 +69,10 @@ private data class SoundApp(
     val hasRule get() = rules.getBoolean(Swara.KEY_HAS_RULE)
 }
 
-/**
- * Sound › Apps: every launchable app, searchable, with the full Swara rule.
- * Apps that play, record or have a rule come first.
- */
 @Composable
 fun SoundAppsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val service = remember { Swara.get() }
-    // Laras runs as the user it serves; getCurrentUser() needs INTERACT_ACROSS_USERS.
     val userId = remember { context.userId }
     var generation by remember { mutableIntStateOf(0) }
     var apps by remember { mutableStateOf<List<SoundApp>>(emptyList()) }
@@ -83,27 +81,27 @@ fun SoundAppsScreen(onBack: () -> Unit) {
 
     DisposableEffect(service) {
         val listener = object : ISwaraListener.Stub() {
-            override fun onAppsChanged(user: Int) {
-                generation++
-            }
+            override fun onAppsChanged(user: Int) { generation++ }
         }
         runCatching { service?.registerListener(listener) }
         onDispose { runCatching { service?.unregisterListener(listener) } }
     }
     LaunchedEffect(generation) { apps = withContext(Dispatchers.IO) { load(context, userId) } }
 
-    val shown = apps.filter {
-        query.isBlank() || it.label.contains(query, ignoreCase = true) ||
-            it.pkg.contains(query, ignoreCase = true)
+    val shown = remember(apps, query) {
+        apps.filter {
+            query.isBlank() || it.label.contains(query, true) || it.pkg.contains(query, true)
+        }
     }
+
     Page(
-        stringResource(R.string.swara_title),
-        onBack,
+        title = stringResource(R.string.swara_title),
+        onBack = onBack,
         actions = {
             if (apps.any { it.hasRule }) {
-                TextButton(onClick = {
-                    runCatching { service?.resetAll(userId) }
-                }) { Text(stringResource(R.string.swara_reset_all)) }
+                TextButton(onClick = { runCatching { service?.resetAll(userId) } }) {
+                    Text(stringResource(R.string.swara_reset_all))
+                }
             }
         },
     ) {
@@ -112,20 +110,21 @@ fun SoundAppsScreen(onBack: () -> Unit) {
                 stringResource(R.string.swara_intro),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             )
+            Spacer(Modifier.height(8.dp))
         }
         item(key = "search") {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                label = { Text(stringResource(R.string.swara_search)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            LarasSearchBar(
+                query = query,
+                onQueryChange = { query = it },
+                placeholder = stringResource(R.string.swara_search),
+                modifier = Modifier.padding(bottom = 10.dp),
             )
         }
         if (service == null) {
-            item(key = "missing") { Text(stringResource(R.string.swara_unavailable)) }
+            item(key = "missing") { LarasEmptyState(title = stringResource(R.string.swara_unavailable)) }
+            return@Page
         }
         items(shown.size, key = { shown[it].pkg }) { i ->
             val app = shown[i]
@@ -140,7 +139,7 @@ fun SoundAppsScreen(onBack: () -> Unit) {
 private fun AppCard(
     app: SoundApp,
     expanded: Boolean,
-    shape: androidx.compose.ui.graphics.Shape,
+    shape: Shape,
     userId: Int,
     onToggle: () -> Unit,
 ) {
@@ -165,59 +164,53 @@ private fun AppCard(
         if (r.getInt(Swara.KEY_OUTPUT_TYPE) != 0) add(outputName(context, r.getInt(Swara.KEY_OUTPUT_TYPE)))
     }.joinToString(" · ")
 
-    Surface(
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceBright,
-        onClick = onToggle,
-        modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
-    ) {
+    // No extra padding(bottom = 2.dp): Page already provides Arrangement.spacedBy(2.dp).
+    Surface(shape = shape, color = LarasSurfaces.card, onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.animateContentSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIcon(app.pkg)
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1,
-                        overflow = TextOverflow.Ellipsis)
+                    Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (status.isNotEmpty()) {
-                        Text(status, style = MaterialTheme.typography.bodyMedium,
-                            color = if (app.hasRule) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            status,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (app.hasRule) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
             if (!expanded) return@Column
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.swara_volume, (volume * 100).roundToInt()),
-                    style = MaterialTheme.typography.labelLarge)
-                Slider(
-                    value = volume,
-                    onValueChange = { volume = it },
-                    onValueChangeFinished = { send { putFloat(Swara.KEY_VOLUME, volume) } },
+                Text(stringResource(R.string.swara_volume, (volume * 100).roundToInt()), style = MaterialTheme.typography.labelLarge)
+                Slider(value = volume, onValueChange = { volume = it }, onValueChangeFinished = { send { putFloat(Swara.KEY_VOLUME, volume) } })
+                SwitchRow(stringResource(R.string.swara_mute), muted, { v -> send { putBoolean(Swara.KEY_MUTED, v) } })
+                SwitchRow(
+                    stringResource(R.string.swara_mic_mute),
+                    r.getBoolean(Swara.KEY_MIC_MUTED),
+                    { v -> send { putBoolean(Swara.KEY_MIC_MUTED, v) } },
+                    summary = stringResource(R.string.swara_mic_mute_summary),
                 )
-                SwitchRow(stringResource(R.string.swara_mute), muted, { v ->
-                    send { putBoolean(Swara.KEY_MUTED, v) }
-                })
-                SwitchRow(stringResource(R.string.swara_mic_mute), r.getBoolean(Swara.KEY_MIC_MUTED), { v ->
-                    send { putBoolean(Swara.KEY_MIC_MUTED, v) }
-                }, summary = stringResource(R.string.swara_mic_mute_summary))
-                Text(stringResource(R.string.swara_mic_gain, (micGain * 100).roundToInt()),
-                    style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+                Text(stringResource(R.string.swara_mic_gain, (micGain * 100).roundToInt()), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
                 Slider(
                     value = micGain,
                     onValueChange = { micGain = it },
                     onValueChangeFinished = { send { putFloat(Swara.KEY_MIC_GAIN, micGain) } },
                     valueRange = 0f..Swara.MAX_MIC_GAIN,
                 )
-                SwitchRow(stringResource(R.string.swara_share_mic), r.getBoolean(Swara.KEY_SHARE_MIC), { v ->
-                    send { putBoolean(Swara.KEY_SHARE_MIC, v) }
-                }, summary = stringResource(R.string.swara_share_mic_warning))
+                SwitchRow(
+                    stringResource(R.string.swara_share_mic),
+                    r.getBoolean(Swara.KEY_SHARE_MIC),
+                    { v -> send { putBoolean(Swara.KEY_SHARE_MIC, v) } },
+                    summary = stringResource(R.string.swara_share_mic_warning),
+                )
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.swara_output), style = MaterialTheme.typography.bodyLarge)
                         Text(
                             outputName(context, r.getInt(Swara.KEY_OUTPUT_TYPE)) +
-                                if (!r.getBoolean(Swara.KEY_OUTPUT_AVAILABLE, true))
-                                    " · " + stringResource(R.string.swara_output_unavailable) else "",
+                                if (!r.getBoolean(Swara.KEY_OUTPUT_AVAILABLE, true)) " · " + stringResource(R.string.swara_output_unavailable) else "",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -229,22 +222,22 @@ private fun AppCard(
                                 text = { Text(outputName(context, type)) },
                                 onClick = {
                                     outputMenu = false
-                                    send {
-                                        putInt(Swara.KEY_OUTPUT_TYPE, type)
-                                        putString(Swara.KEY_OUTPUT_ADDRESS, address)
-                                    }
+                                    send { putInt(Swara.KEY_OUTPUT_TYPE, type); putString(Swara.KEY_OUTPUT_ADDRESS, address) }
                                 },
                             )
                         }
                     }
                 }
-                SwitchRow(stringResource(R.string.swara_reset_on_close), r.getBoolean(Swara.KEY_RESET_ON_CLOSE), { v ->
-                    send { putBoolean(Swara.KEY_RESET_ON_CLOSE, v) }
-                }, summary = stringResource(R.string.swara_reset_on_close_summary))
+                SwitchRow(
+                    stringResource(R.string.swara_reset_on_close),
+                    r.getBoolean(Swara.KEY_RESET_ON_CLOSE),
+                    { v -> send { putBoolean(Swara.KEY_RESET_ON_CLOSE, v) } },
+                    summary = stringResource(R.string.swara_reset_on_close_summary),
+                )
                 if (app.hasRule) {
-                    TextButton(onClick = {
-                        runCatching { Swara.get()?.resetRules(app.pkg, userId) }
-                    }) { Text(stringResource(R.string.swara_reset)) }
+                    TextButton(onClick = { runCatching { Swara.get()?.resetRules(app.pkg, userId) } }) {
+                        Text(stringResource(R.string.swara_reset))
+                    }
                 }
             }
         }
@@ -292,8 +285,7 @@ private fun load(context: Context, userId: Int): List<SoundApp> {
         val rules = b ?: runCatching { service.getRules(pkg, userId) }.getOrNull() ?: Bundle()
         SoundApp(
             pkg = pkg,
-            label = runCatching { pm.getApplicationInfo(pkg, 0).loadLabel(pm).toString() }
-                .getOrDefault(pkg),
+            label = runCatching { pm.getApplicationInfo(pkg, 0).loadLabel(pm).toString() }.getOrDefault(pkg),
             playing = b?.getBoolean(Swara.KEY_PLAYING) == true,
             recording = b?.getBoolean(Swara.KEY_RECORDING) == true,
             rules = rules,

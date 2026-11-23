@@ -2,10 +2,12 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.yasvara.laras.ui.screens
 
 import android.animation.ValueAnimator
+import android.content.Context
+import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -43,9 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,8 +56,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,7 +70,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -96,12 +93,20 @@ import org.yasvara.laras.data.PrefSnapshot
 import org.yasvara.laras.ui.Route
 import org.yasvara.laras.ui.components.ChoiceButtons
 import org.yasvara.laras.ui.components.EntryList
+import org.yasvara.laras.ui.components.LarasEmptyState
+import org.yasvara.laras.ui.components.LarasNavRow
+import org.yasvara.laras.ui.components.LarasSearchBar
+import org.yasvara.laras.ui.components.LarasSectionHeader
+import org.yasvara.laras.ui.components.LarasSpacing
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.SafeModeBanner
+import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.components.rememberInteraction
 import org.yasvara.laras.ui.components.rememberPressScale
 import org.yasvara.laras.ui.components.tone
 import org.yasvara.laras.ui.glyph.GroupArt
 import org.yasvara.laras.ui.glyph.HomeFacts
+import org.yasvara.laras.ui.glyph.PENTAS_PACKAGE
 import org.yasvara.laras.ui.glyph.artKey
 import org.yasvara.laras.ui.glyph.labelStart
 import org.yasvara.laras.ui.glyph.relaxedGuards
@@ -114,6 +119,35 @@ import org.yasvara.laras.ui.sharedCanvas
 import org.yasvara.laras.ui.theme.EmphasizedDecelerate
 import org.yasvara.laras.ui.theme.EmphasizedEasing
 import org.yasvara.laras.ui.theme.emphasized
+
+private data class FeatureDestination(
+    @StringRes val title: Int,
+    @StringRes val summary: Int,
+    val route: Route,
+    val aliases: List<String> = emptyList(),
+)
+
+/** Standalone feature routes indexed for Home global search alongside Catalog preferences. */
+private val SEARCH_DESTINATIONS = listOf(
+    FeatureDestination(R.string.color_title, R.string.color_entry_summary, Route.Color, listOf("monet", "palette", "theme")),
+    FeatureDestination(R.string.group_integrity, R.string.group_integrity_summary, Route.Group(SystemGroup.INTEGRITY), listOf("pif", "keybox", "play integrity", "strong", "attestation")),
+    FeatureDestination(R.string.targets_title, R.string.targets_manage, Route.TargetApps, listOf("trickystore", "keybox")),
+    FeatureDestination(R.string.akar_title, R.string.akar_entry_summary, Route.Akar(), listOf("root", "su", "superuser", "shell", "adb")),
+    FeatureDestination(R.string.group_modules, R.string.kait_hero_title, Route.Kait(), listOf("kait", "xposed", "lsposed", "module", "repo")),
+    FeatureDestination(R.string.visibility_title, R.string.visibility_entry_summary, Route.AppVisibility, listOf("tabir", "hide", "hma", "applist")),
+    FeatureDestination(R.string.updates_title, R.string.updates_entry_summary, Route.AppUpdates(), listOf("play store", "rollback", "vault", "pause")),
+    FeatureDestination(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, Route.LelapApps, listOf("lelap", "sleep", "battery", "freeze")),
+    FeatureDestination(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts, listOf("lelap", "telemetry", "tracking", "gms")),
+    FeatureDestination(R.string.padat_title, R.string.padat_entry_summary, Route.Padat(), listOf("compress", "f2fs", "zstd", "lz4", "storage")),
+    FeatureDestination(R.string.saring_title, R.string.saring_entry_summary, Route.Saring, listOf("adblock", "dns", "tracker", "doh", "safesearch")),
+    FeatureDestination(R.string.wifi_region_title, R.string.group_connectivity_summary, Route.WifiRegion, listOf("country", "channel", "5ghz", "6ghz")),
+    FeatureDestination(R.string.nada_title, R.string.nada_entry_summary, Route.Nada, listOf("dsp", "eq", "equalizer", "dolby", "bass", "viper")),
+    FeatureDestination(R.string.swara_title, R.string.swara_entry_summary, Route.SoundApps, listOf("audio", "volume", "mic", "per-app")),
+    FeatureDestination(R.string.raba_title, R.string.raba_entry_summary, Route.Haptics, listOf("haptic", "vibration", "touch")),
+    FeatureDestination(R.string.group_apps, R.string.group_apps_summary, Route.Group(SystemGroup.APPS), listOf("spoof", "photos", "snapchat", "netflix")),
+    FeatureDestination(R.string.group_keyboard, R.string.group_keyboard_summary, Route.Group(SystemGroup.KEYBOARD), listOf("ketik", "gboard", "writing tools")),
+    FeatureDestination(R.string.group_lab, R.string.group_lab_summary, Route.Group(SystemGroup.LAB), listOf("advanced", "experimental")),
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,19 +170,19 @@ fun HomeScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = LarasSurfaces.pageCanvas,
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 navigationIcon = {
-                    IconButton({ activity?.finish() }) {
+                    IconButton(onClick = { activity?.finish() }) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
                     }
                 },
                 actions = { ChangedAction(changed) { onOpen(Route.Changed) } },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    containerColor = LarasSurfaces.pageCanvas,
+                    scrolledContainerColor = LarasSurfaces.pageCanvas,
                 ),
                 scrollBehavior = scroll,
             )
@@ -165,37 +199,42 @@ fun HomeScreen(
                 SafeModeBanner(
                     prefs,
                     editor,
-                    // Restoring the colour defaults drops the Yasvara colour spec entirely.
                     onRestoreColors = { editor.set(Prefs.colorSpec, null) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = LarasSpacing.ScreenHorizontal),
                 )
             }
-            item(key = "surfaces") {
-                SurfaceCarousel(surface, onSurface, prefs, device, lockView, onLockView) { s, element ->
-                    onOpen(Route.Editor(s, element))
+            if (query.isBlank()) {
+                item(key = "surfaces") {
+                    SurfaceCarousel(surface, onSurface, prefs, device, lockView, onLockView) { s, element ->
+                        onOpen(Route.Editor(s, element))
+                    }
                 }
             }
-            item(key = "search") { SearchField(query) { query = it } }
+            item(key = "search") {
+                LarasSearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    placeholder = stringResource(R.string.home_search),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.padding(horizontal = LarasSpacing.ScreenHorizontal, vertical = 4.dp),
+                )
+            }
 
             if (query.isBlank()) {
                 item(key = "system") {
                     SectionLabel(stringResource(R.string.home_system), Modifier.padding(horizontal = 16.dp))
                 }
-                // A group still on the roadmap stays off the home page until it has something in it.
-                // Kait (MODULES) is unified into Akar (5-tab Info · Root · Modul · Repositori · Setelan).
-                // Style and navigation span the width; the rest pair up beneath them.
                 val shown = SystemGroup.entries.filterNot { it.planned || it == SystemGroup.MODULES }
                 val rows = shown.filter { it.wide }.map { listOf(it) } + shown.filterNot { it.wide }.chunked(2)
                 items(rows.size, key = { "groups-$it" }) { row ->
                     Row(
-                        Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                        Modifier.padding(horizontal = LarasSpacing.ScreenHorizontal).fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         rows[row].forEachIndexed { column, group ->
                             GroupCard(group, row * 2 + column, facts, prefs, Modifier.weight(1f)) {
                                 when (group) {
                                     SystemGroup.PENTAS -> openPentas(context)
-                                    SystemGroup.MODULES -> onOpen(Route.Kait())
                                     else -> onOpen(Route.Group(group))
                                 }
                             }
@@ -204,7 +243,7 @@ fun HomeScreen(
                     }
                 }
             } else {
-                item(key = "results") { SearchResults(query, prefs, editor) }
+                item(key = "results") { SearchResults(query, prefs, editor, onOpen) }
             }
         }
     }
@@ -227,12 +266,6 @@ private fun ChangedAction(count: Int, onClick: () -> Unit) {
     }
 }
 
-/**
- * The screen states side by side, like pages of the real phone: swipe to change state, tap a
- * part of the centred canvas to edit it. A neighbour's canvas scrolls into place when tapped.
- * Each canvas keeps its natural shape: a screen is a phone, while a bar surface (the shade)
- * takes the width, where its parts are big enough to tap.
- */
 @Composable
 private fun SurfaceCarousel(
     surface: Surface,
@@ -249,12 +282,11 @@ private fun SurfaceCarousel(
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val fullWidth = maxWidth
-        val phoneWidth = fullWidth * 0.54f
+        // Balanced height so the Search bar and System Groups peek comfortably above the fold.
+        val phoneWidth = fullWidth * 0.46f
         val canvasHeight = phoneWidth / device.aspectRatio
         val spacing = 16.dp
         fun widthOf(s: Surface) = if (s.canvas.isBar) fullWidth - 32.dp else phoneWidth
-        // With the first canvas centred by the start padding, scrolling item k to the start with
-        // this offset centres k as well.
         fun centring(k: Int) =
             with(density) { ((widthOf(surfaces[k]) - widthOf(surfaces.first())) / 2).roundToPx() }
         val list = rememberLazyListState(surface.ordinal, centring(surface.ordinal))
@@ -281,7 +313,7 @@ private fun SurfaceCarousel(
                     )
                 }
             }
-            PageDots(surfaces.size, centred.first, centred.second, Modifier.padding(vertical = 12.dp))
+            PageDots(surfaces.size, centred.first, centred.second, Modifier.padding(vertical = 10.dp))
             LazyRow(
                 state = list,
                 flingBehavior = rememberSnapFlingBehavior(list, SnapPosition.Center),
@@ -320,23 +352,19 @@ private fun SurfaceCarousel(
                     options = LockView.entries,
                     selected = lockView,
                     onSelect = { onLockView(it as LockView) },
-                    modifier = Modifier.padding(start = 48.dp, end = 48.dp, top = 16.dp),
+                    modifier = Modifier.padding(start = 48.dp, end = 48.dp, top = 12.dp),
                 )
             }
             Text(
                 stringResource(R.string.home_hint),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
 }
 
-/**
- * The item nearest the middle of the viewport, and how far the list is from centring it, in
- * items (positive once it has moved past the middle toward the next item).
- */
 private fun LazyListState.centredItem(spacing: Int): Pair<Int, Float> {
     val info = layoutInfo
     val middle = (info.viewportStartOffset + info.viewportEndOffset) / 2f
@@ -345,71 +373,34 @@ private fun LazyListState.centredItem(spacing: Int): Pair<Int, Float> {
     return item.index to (middle - (item.offset + item.size / 2f)) / (item.size + spacing)
 }
 
-/** Page dots whose active pill slides with the carousel. */
 @Composable
 private fun PageDots(count: Int, page: Int, offset: Float, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         repeat(count) { i ->
-            // 1 at the page in view, easing to 0 one page away.
-            val nearness = (1f - kotlin.math.abs(i - (page + offset))).coerceIn(0f, 1f)
+            val nearness = (1f - abs(i - (page + offset))).coerceIn(0f, 1f)
             Box(
                 Modifier.height(6.dp).width(6.dp + 12.dp * nearness)
-                    .background(lerp(colors.outlineVariant, colors.primary, nearness), CircleShape)
+                    .background(lerp(colors.outlineVariant, colors.primary, nearness), CircleShape),
             )
         }
     }
 }
 
-@Composable
-private fun SearchField(query: String, onQuery: (String) -> Unit) {
-    TextField(
-        value = query,
-        onValueChange = onQuery,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        placeholder = { Text(stringResource(R.string.home_search)) },
-        leadingIcon = { Icon(Icons.Rounded.Search, null) },
-        trailingIcon = {
-            AnimatedVisibility(query.isNotEmpty(), enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
-                IconButton({ onQuery("") }) {
-                    Icon(Icons.Rounded.Close, stringResource(R.string.clear_search))
-                }
-            }
-        },
-        singleLine = true,
-        shape = CircleShape,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
-    )
-}
-
+/** Kept as public alias so callers across screens stay source-compatible. */
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-    )
+    LarasSectionHeader(title = text, modifier = modifier)
 }
 
-/** Pentas is its own app; its settings open there. */
-private fun openPentas(context: android.content.Context) {
+private fun openPentas(context: Context) {
     runCatching {
         context.startActivity(
-            android.content.Intent().setClassName(
-                org.yasvara.laras.ui.glyph.PENTAS_PACKAGE,
-                "${org.yasvara.laras.ui.glyph.PENTAS_PACKAGE}.hub.HubSettingsActivity",
-            ),
+            Intent().setClassName(PENTAS_PACKAGE, "$PENTAS_PACKAGE.hub.HubSettingsActivity"),
         )
     }
 }
 
-/** Groups whose card spans the width, for art that needs the room. */
 private val SystemGroup.wide: Boolean
     get() = this == SystemGroup.STYLE || this == SystemGroup.GESTURES
 
@@ -420,11 +411,6 @@ private val SystemGroup.cardHeight: Dp
         else -> 164.dp
     }
 
-/**
- * A group's card: its title over a picture of the group as set now (see [GroupArt]). The
- * picture plays once as the card rises in, again when it is pressed, and again whenever what
- * it shows changes; with animations off it simply shows the result.
- */
 @Composable
 private fun GroupCard(
     group: SystemGroup,
@@ -436,7 +422,6 @@ private fun GroupCard(
 ) {
     val interaction = rememberInteraction()
     val press = rememberPressScale(interaction)
-    // Cards rise in one after another the first time the page is shown.
     val enter = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         enter.animateTo(1f, tween(500, delayMillis = 40 * index, easing = EmphasizedDecelerate))
@@ -445,7 +430,6 @@ private fun GroupCard(
     LaunchedEffect(interaction) {
         interaction.interactions.collect { if (it is PressInteraction.Press) replay++ }
     }
-    val context = LocalContext.current
     val play = remember { Animatable(0f) }
     LaunchedEffect(replay, group.artKey(facts, prefs)) {
         if (!ValueAnimator.areAnimatorsEnabled()) {
@@ -469,8 +453,7 @@ private fun GroupCard(
             scaleY = press
         },
         shape = RoundedCornerShape(if (group.wide) 32.dp else 28.dp),
-        // Each card carries its group's tone, faintly, so the page reads as a set of places.
-        color = tone.container.copy(alpha = 0.32f).compositeOver(MaterialTheme.colorScheme.surfaceBright),
+        color = tone.container.copy(alpha = 0.32f).compositeOver(LarasSurfaces.card),
         interactionSource = interaction,
     ) {
         Box(Modifier.fillMaxWidth().height(group.cardHeight)) {
@@ -480,11 +463,7 @@ private fun GroupCard(
                     .padding(start = group.labelStart, end = 16.dp, bottom = 16.dp),
             ) {
                 if (group == SystemGroup.PENTAS) {
-                    Text(
-                        "${facts.pentasGames}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = tone.content,
-                    )
+                    Text("${facts.pentasGames}", style = MaterialTheme.typography.headlineMedium, color = tone.content)
                 }
                 if (group == SystemGroup.SUPERUSER) {
                     val (relaxed, total) = relaxedGuards(prefs)
@@ -508,10 +487,22 @@ private fun GroupCard(
 }
 
 @Composable
-private fun SearchResults(query: String, prefs: PrefSnapshot, editor: PrefEditor) {
+private fun SearchResults(
+    query: String,
+    prefs: PrefSnapshot,
+    editor: PrefEditor,
+    onOpen: (Route) -> Unit,
+) {
     val context = LocalContext.current
-    val matches = remember(query) {
-        val needle = query.trim()
+    val needle = query.trim()
+    val features = remember(needle) {
+        SEARCH_DESTINATIONS.filter { dest ->
+            context.getString(dest.title).contains(needle, ignoreCase = true) ||
+                context.getString(dest.summary).contains(needle, ignoreCase = true) ||
+                dest.aliases.any { it.contains(needle, ignoreCase = true) }
+        }
+    }
+    val entries = remember(needle) {
         Catalog.sections.flatMap { section ->
             val names = listOfNotNull(section.title, (section as? Element)?.surface?.title)
             section.entries.filter { entry ->
@@ -519,14 +510,29 @@ private fun SearchResults(query: String, prefs: PrefSnapshot, editor: PrefEditor
             }
         }
     }
-    if (matches.isEmpty()) {
-        Text(
-            stringResource(R.string.home_no_results, query.trim()),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(32.dp),
-        )
-    } else {
-        EntryList(matches, prefs, editor, Modifier.padding(horizontal = 16.dp))
+
+    Column(
+        Modifier.padding(horizontal = LarasSpacing.ScreenHorizontal),
+        verticalArrangement = Arrangement.spacedBy(LarasSpacing.GroupGap),
+    ) {
+        if (features.isEmpty() && entries.isEmpty()) {
+            LarasEmptyState(title = stringResource(R.string.home_no_results, needle))
+        } else {
+            if (features.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(LarasSpacing.ItemGap)) {
+                    features.forEachIndexed { idx, dest ->
+                        LarasNavRow(
+                            title = stringResource(dest.title),
+                            summary = stringResource(dest.summary),
+                            shape = groupedShape(idx, features.size),
+                            onClick = { onOpen(dest.route) },
+                        )
+                    }
+                }
+            }
+            if (entries.isNotEmpty()) {
+                EntryList(entries, prefs, editor)
+            }
+        }
     }
 }

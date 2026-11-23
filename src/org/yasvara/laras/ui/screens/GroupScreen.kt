@@ -2,38 +2,42 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.yasvara.laras.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.yasvara.laras.R
 import org.yasvara.laras.catalog.SystemGroup
 import org.yasvara.laras.data.PrefSnapshot
-import org.yasvara.laras.ui.components.EntryRow
-import org.yasvara.laras.ui.components.GroupBadge
-import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.LarasViewModel
 import org.yasvara.laras.ui.Route
-import org.yasvara.laras.ui.keyboard.KeyboardSection
-import org.yasvara.laras.ui.lab.LabSection
-import org.yasvara.laras.ui.superuser.SuperuserSection
 import org.yasvara.laras.ui.apps.AppsSection
+import org.yasvara.laras.ui.components.EntryRow
+import org.yasvara.laras.ui.components.GroupBadge
+import org.yasvara.laras.ui.components.LarasEmptyState
+import org.yasvara.laras.ui.components.LarasNavRow
+import org.yasvara.laras.ui.components.LarasSpacing
+import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.connectivity.ConnectivityExperiments
 import org.yasvara.laras.ui.connectivity.ConnectivitySection
 import org.yasvara.laras.ui.integrity.IntegritySection
-import org.yasvara.laras.ui.kait.ModulesSection
+import org.yasvara.laras.ui.keyboard.KeyboardSection
+import org.yasvara.laras.ui.lab.LabSection
+import org.yasvara.laras.ui.superuser.SuperuserSection
+
+private data class NavLink(val title: Int, val summary: Int, val route: Route)
 
 @Composable
 fun GroupScreen(
@@ -43,152 +47,105 @@ fun GroupScreen(
     onOpen: (Route) -> Unit,
     onBack: () -> Unit,
 ) {
+    val links = navLinksFor(group)
+    // INTEGRITY leads directly with its own expressive Hero card; skip redundant tall badge header.
+    val hasOwnHero = group == SystemGroup.INTEGRITY
+
     Page(stringResource(group.title), onBack) {
-        item(key = "header") {
-            Column(
-                Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                GroupBadge(group, 96.dp)
-                Text(
-                    stringResource(group.summary),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
+        if (!hasOwnHero) {
+            item(key = "header") {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    GroupBadge(group, 56.dp)
+                    Text(
+                        stringResource(group.summary),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
         if (group.planned) {
-            item(key = "planned") { Planned() }
-        }
-        if (group == SystemGroup.INTEGRITY) {
-            item(key = "integrity") {
-                Column(Modifier.fillMaxWidth()) { IntegritySection(onOpenTargets = { onOpen(Route.TargetApps) }) }
-            }
-        }
-        if (group == SystemGroup.APPS) {
-            item(key = "updates") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.updates_title, R.string.updates_entry_summary, groupedShape(0, 1)) {
-                        onOpen(Route.AppUpdates())
-                    }
-                }
-            }
-            item(key = "apps") {
-                Column(Modifier.fillMaxWidth()) { AppsSection() }
-            }
-        }
-        if (group == SystemGroup.POWER) {
-            item(key = "lelap") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, groupedShape(0, 3)) {
-                        onOpen(Route.LelapApps)
-                    }
-                    NavRow(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, groupedShape(1, 3)) {
-                        onOpen(Route.LelapCuts)
-                    }
-                    NavRow(R.string.padat_title, R.string.padat_entry_summary, groupedShape(2, 3)) {
-                        onOpen(Route.Padat())
-                    }
-                }
-            }
-        }
-        if (group == SystemGroup.SOUND) {
-            item(key = "sound_apps") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.nada_title, R.string.nada_entry_summary, groupedShape(0, 3)) {
-                        onOpen(Route.Nada)
-                    }
-                    NavRow(R.string.swara_title, R.string.swara_entry_summary, groupedShape(1, 3)) {
-                        onOpen(Route.SoundApps)
-                    }
-                    NavRow(R.string.raba_title, R.string.raba_entry_summary, groupedShape(2, 3)) {
-                        onOpen(Route.Haptics)
-                    }
-                }
-            }
-        }
-        if (group == SystemGroup.CONNECTIVITY) {
-            item(key = "saring") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.saring_title, R.string.saring_entry_summary, groupedShape(0, 1)) {
-                        onOpen(Route.Saring)
-                    }
-                }
-            }
-            item(key = "wifi_region") {
-                ConnectivitySection(prefs, onOpenRegion = { onOpen(Route.WifiRegion) })
-            }
-        }
-        if (group == SystemGroup.STYLE) {
-            item(key = "color") {
-                NavRow(R.string.color_title, R.string.color_entry_summary, groupedShape(0, 1)) {
-                    onOpen(Route.Color)
-                }
-            }
-        }
-        if (group == SystemGroup.KEYBOARD) {
-            item(key = "keyboard") { KeyboardSection() }
-        }
-        if (group == SystemGroup.MODULES) {
-            item(key = "modules") {
-                ModulesSection(
-                    onOpenScope = { onOpen(Route.XposedScope(it)) },
-                    onOpenKait = { onOpen(Route.Kait()) },
+            item(key = "planned") {
+                LarasEmptyState(
+                    title = stringResource(R.string.group_planned),
+                    body = stringResource(R.string.group_planned_body),
                 )
             }
         }
-        if (group == SystemGroup.LAB) {
-            item(key = "lab") { LabSection(prefs, viewModel, viewModel) }
-        }
-        if (group == SystemGroup.SUPERUSER) {
-            item(key = "akar") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                    NavRow(R.string.akar_title, R.string.akar_entry_summary, groupedShape(0, 2)) {
-                        onOpen(Route.Akar())
-                    }
-                    NavRow(R.string.visibility_title, R.string.visibility_entry_summary, groupedShape(1, 2)) {
-                        onOpen(Route.AppVisibility)
+        if (links.isNotEmpty()) {
+            item(key = "links") {
+                Column(
+                    Modifier.fillMaxWidth().padding(bottom = LarasSpacing.GroupGap),
+                    verticalArrangement = Arrangement.spacedBy(LarasSpacing.ItemGap),
+                ) {
+                    links.forEachIndexed { i, link ->
+                        LarasNavRow(
+                            title = stringResource(link.title),
+                            summary = stringResource(link.summary),
+                            shape = groupedShape(i, links.size),
+                            onClick = { onOpen(link.route) },
+                        )
                     }
                 }
             }
-            item(key = "superuser") { SuperuserSection(prefs, viewModel) }
-        } else items(group.entries.size, key = { group.entries[it].pref.toString() }) { i ->
-            EntryRow(group.entries[i], prefs, viewModel, groupedShape(i, group.entries.size))
+        }
+        when (group) {
+            SystemGroup.INTEGRITY -> item(key = "integrity") {
+                IntegritySection(onOpenTargets = { onOpen(Route.TargetApps) })
+            }
+            SystemGroup.APPS -> item(key = "apps") { AppsSection() }
+            SystemGroup.CONNECTIVITY -> item(key = "wifi_region") {
+                ConnectivitySection(prefs, onOpenRegion = { onOpen(Route.WifiRegion) })
+            }
+            SystemGroup.KEYBOARD -> item(key = "keyboard") { KeyboardSection() }
+            SystemGroup.LAB -> item(key = "lab") { LabSection(prefs, viewModel, viewModel) }
+            SystemGroup.SUPERUSER -> item(key = "superuser") { SuperuserSection(prefs, viewModel) }
+            else -> Unit
+        }
+        if (group != SystemGroup.SUPERUSER && group.entries.isNotEmpty()) {
+            items(group.entries.size, key = { group.entries[it].pref.toString() }) { i ->
+                EntryRow(group.entries[i], prefs, viewModel, groupedShape(i, group.entries.size))
+            }
         }
         if (group == SystemGroup.CONNECTIVITY) {
-            item(key = "experiments") { ConnectivityExperiments(prefs) }
+            item(key = "experiments") {
+                Spacer(Modifier.height(4.dp))
+                ConnectivityExperiments(prefs)
+            }
         }
     }
 }
 
-/** A row that opens a screen of its own. */
-@Composable
-private fun NavRow(title: Int, summary: Int, shape: androidx.compose.ui.graphics.Shape, onClick: () -> Unit) {
-    Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceBright, onClick = onClick) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
-            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-            Text(
-                stringResource(summary),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun Planned() {
-    Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceBright) {
-        Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(R.string.group_planned), style = MaterialTheme.typography.titleMedium)
-            Text(
-                stringResource(R.string.group_planned_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-        }
-    }
+private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
+    SystemGroup.STYLE -> listOf(
+        NavLink(R.string.color_title, R.string.color_entry_summary, Route.Color),
+    )
+    SystemGroup.APPS -> listOf(
+        NavLink(R.string.updates_title, R.string.updates_entry_summary, Route.AppUpdates()),
+    )
+    SystemGroup.POWER -> listOf(
+        NavLink(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, Route.LelapApps),
+        NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
+        NavLink(R.string.padat_title, R.string.padat_entry_summary, Route.Padat()),
+    )
+    SystemGroup.SOUND -> listOf(
+        NavLink(R.string.nada_title, R.string.nada_entry_summary, Route.Nada),
+        NavLink(R.string.swara_title, R.string.swara_entry_summary, Route.SoundApps),
+        NavLink(R.string.raba_title, R.string.raba_entry_summary, Route.Haptics),
+    )
+    SystemGroup.CONNECTIVITY -> listOf(
+        NavLink(R.string.saring_title, R.string.saring_entry_summary, Route.Saring),
+    )
+    SystemGroup.SUPERUSER -> listOf(
+        NavLink(R.string.akar_title, R.string.akar_entry_summary, Route.Akar()),
+        NavLink(R.string.visibility_title, R.string.visibility_entry_summary, Route.AppVisibility),
+    )
+    else -> emptyList()
 }

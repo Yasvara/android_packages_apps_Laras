@@ -2,12 +2,14 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.yasvara.laras.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -18,18 +20,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.yasvara.laras.R
+import org.yasvara.laras.ui.components.LarasSpacing
+import org.yasvara.laras.ui.components.LarasSurfaces
 
-/** A sub-page: a large collapsing title over a list, on the same surface as the home page. */
+/**
+ * Standard Laras sub-page: collapsing [LargeTopAppBar] over a grouped [LazyColumn], with optional
+ * pinned [topContent] (e.g. [org.yasvara.laras.ui.components.LarasTabBar]), [bottomBar],
+ * [floatingActionButton], and [snackbarHostState].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Page(
@@ -37,39 +47,50 @@ fun Page(
     onBack: () -> Unit,
     actions: @Composable RowScope.() -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
+    snackbarHostState: SnackbarHostState? = null,
+    topContent: (@Composable () -> Unit)? = null,
+    bottomBar: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val surface = MaterialTheme.colorScheme.surfaceContainer
+    val surface = LarasSurfaces.pageCanvas
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         containerColor = surface,
+        snackbarHost = { snackbarHostState?.let { SnackbarHost(it) } },
+        bottomBar = bottomBar,
+        floatingActionButton = floatingActionButton,
         topBar = {
-            LargeTopAppBar(
-                title = { Text(title) },
-                navigationIcon = {
-                    IconButton(onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
-                    }
-                },
-                actions = actions,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = surface,
-                    scrolledContainerColor = surface,
-                ),
-                scrollBehavior = scroll,
-            )
+            Column {
+                LargeTopAppBar(
+                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_up))
+                        }
+                    },
+                    actions = actions,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = surface,
+                        scrolledContainerColor = surface,
+                    ),
+                    scrollBehavior = scroll,
+                )
+                topContent?.invoke()
+            }
         },
     ) { padding ->
         LazyColumn(
             state = listState,
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = padding.calculateTopPadding(),
+                start = LarasSpacing.ScreenHorizontal,
+                end = LarasSpacing.ScreenHorizontal,
+                top = padding.calculateTopPadding() + if (topContent != null) 12.dp else 0.dp,
                 bottom = padding.calculateBottomPadding() + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(LarasSpacing.ItemGap),
             content = content,
         )
     }

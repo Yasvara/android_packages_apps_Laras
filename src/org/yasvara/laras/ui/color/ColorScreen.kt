@@ -2,40 +2,43 @@
  * SPDX-FileCopyrightText: The Yasvara Project
  * SPDX-License-Identifier: Apache-2.0
  */
-
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
 package org.yasvara.laras.ui.color
 
 import android.view.HapticFeedbackConstants
-import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -81,23 +85,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.yasvara.laras.R
-import org.yasvara.laras.data.theme.CommitResult
 import org.yasvara.laras.data.ChoiceOption
-import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.data.theme.CommitResult
 import org.yasvara.laras.ui.components.ChoiceButtons
+import org.yasvara.laras.ui.components.LarasSectionHeader
+import org.yasvara.laras.ui.components.LarasShapes
+import org.yasvara.laras.ui.components.LarasSwitchRow
 import org.yasvara.laras.ui.screens.Page
 import org.yasvara.monet.YasColorSpec
 import org.yasvara.monet.YasPresets
 import org.yasvara.monet.YasResolvedScheme
 import org.yasvara.monet.YasStyle
 
-/**
- * Colour, the simple surface: where the colours come from, the style, how vivid,
- * how much contrast, and pure black. Everything is a draft, shown at once in this screen's own
- * colours; Apply recolours the system behind SystemUI's reveal from the Apply button.
- */
 @Composable
 fun ColorScreen(onBack: () -> Unit, viewModel: ColorViewModel = viewModel()) {
     val resolved by viewModel.resolved.collectAsStateWithLifecycle()
@@ -107,8 +109,9 @@ fun ColorScreen(onBack: () -> Unit, viewModel: ColorViewModel = viewModel()) {
     val changed by viewModel.changed.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val view = LocalView.current
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    // An applied theme reaches this screen as a configuration change, handled in place.
     val configuration = LocalConfiguration.current
     val configVersion = remember { mutableIntStateOf(0) }
     LaunchedEffect(configuration) { configVersion.intValue++ }
@@ -121,46 +124,106 @@ fun ColorScreen(onBack: () -> Unit, viewModel: ColorViewModel = viewModel()) {
         withFrameNanos {}
     }
 
+    fun onScreen(centre: Offset): Offset {
+        val window = IntArray(2).also(view::getLocationOnScreen)
+        return centre + Offset(window[0].toFloat(), window[1].toFloat())
+    }
+    var resetAt by remember { mutableStateOf(Offset.Zero) }
+    var applyAt by remember { mutableStateOf(Offset.Zero) }
+
     DraftTheme(resolved?.scheme) {
-        Page(stringResource(R.string.color_title), onBack) {
-            item(key = "palette") { PaletteHero(resolved?.scheme) }
-            item(key = "source") {
-                Section(R.string.color_source) {
-                    SourcePicker(
-                        spec = draft.spec,
-                        candidates = candidates,
-                        presets = viewModel.presets,
-                        presetSchemes = presetSchemes,
-                        onSeed = viewModel::setSeedIndex,
-                        onPreset = viewModel::setPreset,
-                    )
-                }
-            }
-            item(key = "style") {
-                Section(R.string.color_style) {
-                    StyleCarousel(draft.spec.style, resolved?.styles.orEmpty(), viewModel::setStyle)
-                }
-            }
-            item(key = "vividness") {
-                Vividness(draft.spec, viewModel::setVividness)
-            }
-            item(key = "contrast") {
-                Section(R.string.color_contrast) { ContrastChips(draft.spec.contrast, viewModel::setContrast) }
-            }
-            item(key = "black") { PureBlack(draft.pureBlack, viewModel::setPureBlack) }
-            item(key = "actions") {
-                Actions(
-                    canApply = changed && resolved != null,
-                    onReset = { at -> viewModel.resetToWallpaper(at.x, at.y, awaitRedraw) },
-                    onApply = { at ->
-                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                        viewModel.apply(at.x, at.y, awaitRedraw) { result ->
-                            if (result !is CommitResult.Applied) {
-                                Toast.makeText(context, R.string.color_apply_failed, Toast.LENGTH_SHORT).show()
+        Page(
+            title = stringResource(R.string.color_title),
+            onBack = onBack,
+            snackbarHostState = snackbar,
+            actions = {
+                TextButton(
+                    onClick = {
+                        val at = onScreen(resetAt)
+                        viewModel.resetToWallpaper(at.x, at.y, awaitRedraw)
+                    },
+                    modifier = Modifier.onGloballyPositioned { resetAt = it.boundsInWindow().center },
+                ) { Text(stringResource(R.string.color_reset)) }
+            },
+            bottomBar = {
+                val motion = MaterialTheme.motionScheme
+                AnimatedVisibility(
+                    visible = changed && resolved != null,
+                    enter = slideInVertically(motion.defaultSpatialSpec()) { it } + fadeIn(motion.defaultEffectsSpec()),
+                    exit = slideOutVertically(motion.fastSpatialSpec()) { it } + fadeOut(motion.fastEffectsSpec()),
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Surface(
+                            shape = LarasShapes.Pill,
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shadowElevation = 6.dp,
+                        ) {
+                            Row(
+                                Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(onClick = viewModel::discard) {
+                                    Text(stringResource(android.R.string.cancel))
+                                }
+                                Button(
+                                    onClick = {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                        val at = onScreen(applyAt)
+                                        viewModel.apply(at.x, at.y, awaitRedraw) { result ->
+                                            if (result !is CommitResult.Applied) {
+                                                scope.launch {
+                                                    snackbar.showSnackbar(context.getString(R.string.color_apply_failed))
+                                                }
+                                            }
+                                        }
+                                    },
+                                    shape = LarasShapes.Pill,
+                                    modifier = Modifier.onGloballyPositioned { applyAt = it.boundsInWindow().center },
+                                ) {
+                                    Text(stringResource(R.string.color_apply), Modifier.padding(horizontal = 12.dp))
+                                }
                             }
                         }
-                    },
+                    }
+                }
+            },
+        ) {
+            item(key = "palette") { PaletteHero(resolved?.scheme) }
+            item(key = "source") {
+                LarasSectionHeader(stringResource(R.string.color_source))
+                SourcePicker(
+                    spec = draft.spec,
+                    candidates = candidates,
+                    presets = viewModel.presets,
+                    presetSchemes = presetSchemes,
+                    onSeed = viewModel::setSeedIndex,
+                    onPreset = viewModel::setPreset,
                 )
+            }
+            item(key = "style") {
+                LarasSectionHeader(stringResource(R.string.color_style))
+                StyleCarousel(draft.spec.style, resolved?.styles.orEmpty(), viewModel::setStyle)
+            }
+            item(key = "vividness") { Vividness(draft.spec, viewModel::setVividness) }
+            item(key = "contrast") {
+                LarasSectionHeader(stringResource(R.string.color_contrast))
+                ContrastChips(draft.spec.contrast, viewModel::setContrast)
+                Spacer(Modifier.height(16.dp))
+            }
+            item(key = "black") {
+                LarasSwitchRow(
+                    title = stringResource(R.string.pref_pure_black),
+                    summary = stringResource(R.string.pref_pure_black_summary),
+                    checked = draft.pureBlack,
+                    onCheckedChange = viewModel::setPureBlack,
+                )
+            }
+            if (changed) {
+                item(key = "bottom_pad") { Spacer(Modifier.height(72.dp)) }
             }
         }
     }
@@ -168,20 +231,6 @@ fun ColorScreen(onBack: () -> Unit, viewModel: ColorViewModel = viewModel()) {
 
 private const val REDRAW_TIMEOUT_MS = 1500L
 
-@Composable
-private fun Section(title: Int, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        Text(
-            stringResource(title),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-        )
-        content()
-    }
-}
-
-/** The draft's main roles as bands, so the colours read before the details. */
 @Composable
 private fun PaletteHero(scheme: YasResolvedScheme?) {
     val dark = isSystemInDarkTheme()
@@ -193,8 +242,7 @@ private fun PaletteHero(scheme: YasResolvedScheme?) {
         "surface_container_high" to R.string.color_role_surface,
     )
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 8.dp).aspectRatio(3.2f)
-            .clip(RoundedCornerShape(28.dp)),
+        Modifier.fillMaxWidth().padding(vertical = 8.dp).aspectRatio(3.2f).clip(LarasShapes.Hero),
     ) {
         roles.forEach { (role, label) ->
             val color = scheme?.color(role, dark, MaterialTheme.colorScheme.surfaceVariant)
@@ -204,7 +252,7 @@ private fun PaletteHero(scheme: YasResolvedScheme?) {
             }
             Box(
                 Modifier.weight(1f).fillMaxWidth().aspectRatio(0.8f).background(color)
-                    .semantics { description?.let { contentDescription = it } }
+                    .semantics { description?.let { contentDescription = it } },
             )
         }
     }
@@ -221,14 +269,13 @@ private fun SourcePicker(
 ) {
     var tab by rememberSaveable {
         mutableStateOf(
-            if (spec.source == YasColorSpec.Source.WALLPAPER) SourceTab.WALLPAPER else SourceTab.PRESETS
+            if (spec.source == YasColorSpec.Source.WALLPAPER) SourceTab.WALLPAPER else SourceTab.PRESETS,
         )
     }
-    val showPresets = tab == SourceTab.PRESETS
     val dark = isSystemInDarkTheme()
-    ChoiceButtons(SourceTab.entries, tab, { tab = it as SourceTab })
     val context = LocalContext.current
-    if (!showPresets) {
+    ChoiceButtons(SourceTab.entries, tab, { tab = it as SourceTab })
+    if (tab == SourceTab.WALLPAPER) {
         if (candidates.isEmpty()) {
             Text(
                 stringResource(R.string.color_no_wallpaper_colors),
@@ -242,10 +289,9 @@ private fun SourcePicker(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(candidates.size) { i ->
-                val selected = spec.source == YasColorSpec.Source.WALLPAPER && spec.sourceIndex == i
                 SeedDot(
                     color = Color(candidates[i]),
-                    selected = selected,
+                    selected = spec.source == YasColorSpec.Source.WALLPAPER && spec.sourceIndex == i,
                     description = ColorNames.describe(context, stringResource(R.string.color_role_seed), candidates[i]),
                 ) { onSeed(i) }
             }
@@ -257,7 +303,6 @@ private fun SourcePicker(
         ) {
             items(presets, key = { it.id }) { preset ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // The preset as it applies, not its seed: a style can move far from it.
                     val scheme = presetSchemes[preset.id]
                     val fallback = Color(preset.spec.primary ?: 0)
                     SeedDot(
@@ -268,11 +313,7 @@ private fun SourcePicker(
                             it.color("secondary", dark, fallback) to it.color("tertiary", dark, fallback)
                         },
                     ) { onPreset(preset) }
-                    Text(
-                        preset.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
+                    Text(preset.name, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 4.dp))
                 }
             }
         }
@@ -284,7 +325,6 @@ private fun SeedDot(
     color: Color,
     selected: Boolean,
     description: String,
-    /** When given, the lower half shows these two, left and right, under [color]. */
     lower: Pair<Color, Color>? = null,
     onClick: () -> Unit,
 ) {
@@ -293,10 +333,10 @@ private fun SeedDot(
         MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "seed ring",
     )
-    // The spring overshoots past both ends; a ring cannot be thinner than nothing.
     val shown = ring.coerceIn(0f, 1f)
     Box(
-        Modifier.size(56.dp)
+        Modifier
+            .size(56.dp)
             .border(BorderStroke((3 * shown).dp, MaterialTheme.colorScheme.onSurface), CircleShape)
             .padding((6 * shown).dp)
             .clip(CircleShape)
@@ -308,11 +348,10 @@ private fun SeedDot(
                 drawRect(lower.second, Offset(size.width / 2, size.height / 2), half)
             }
             .selectable(selected, role = Role.RadioButton, onClick = onClick)
-            .semantics { contentDescription = description }
+            .semantics { contentDescription = description },
     )
 }
 
-/** The six simple styles, each drawn with the swatches it would give. */
 @Composable
 private fun StyleCarousel(
     selected: YasStyle,
@@ -323,11 +362,7 @@ private fun StyleCarousel(
         items(SimpleStyles) { style ->
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 StyleCard(style == selected, schemes[style]) { onSelect(style) }
-                Text(
-                    stringResource(style.label),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
+                Text(stringResource(style.label), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
             }
         }
     }
@@ -351,20 +386,15 @@ private val CardMorph by lazy {
     )
 }
 
-/** A shape between a rounded square (0) and the M3 Expressive nine-sided cookie (1). */
 private class MorphShape(private val progress: Float) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val cubics = CardMorph.asCubics(progress)
-        val path = Path()
-        path.moveTo(cubics.first().anchor0X, cubics.first().anchor0Y)
-        for (cubic in cubics) {
-            path.cubicTo(
-                cubic.control0X, cubic.control0Y, cubic.control1X, cubic.control1Y,
-                cubic.anchor1X, cubic.anchor1Y,
-            )
+        val path = Path().apply {
+            moveTo(cubics.first().anchor0X, cubics.first().anchor0Y)
+            for (c in cubics) cubicTo(c.control0X, c.control0Y, c.control1X, c.control1Y, c.anchor1X, c.anchor1Y)
+            close()
+            transform(Matrix().apply { scale(size.width, size.height) })
         }
-        path.close()
-        path.transform(Matrix().apply { scale(size.width, size.height) })
         return Outline.Generic(path)
     }
 }
@@ -401,20 +431,19 @@ private fun Vividness(spec: YasColorSpec, onChange: (Double) -> Unit) {
     var dragging by remember(spec) { mutableStateOf<Float?>(null) }
     val value = dragging ?: spec.chroma(YasColorSpec.A1).toFloat()
     val percent = (value * 100).roundToInt()
-    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(R.string.color_vividness),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f).padding(start = 4.dp),
+                modifier = Modifier.weight(1f),
             )
             Text(stringResource(R.string.color_percent, percent), style = MaterialTheme.typography.labelLarge)
         }
         Slider(
             value = value,
             onValueChange = { new ->
-                // A tick at each tenth, felt rather than seen.
                 if ((new * 10).roundToInt() != (value * 10).roundToInt()) {
                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 }
@@ -437,66 +466,16 @@ private fun ContrastChips(level: Double?, onSelect: (Double?) -> Unit) {
     ChoiceButtons(ContrastChoice.entries, selected, { onSelect((it as ContrastChoice).level) })
 }
 
-/** Where the colours come from, on the simple surface. */
 private enum class SourceTab(override val value: Int, override val label: Int) : ChoiceOption {
     WALLPAPER(0, R.string.color_source_wallpaper),
     PRESETS(1, R.string.color_source_presets),
 }
 
-/** The simple surface's contrast chips; null follows the system. */
 private enum class ContrastChoice(val level: Double?, override val label: Int) : ChoiceOption {
     SYSTEM(null, R.string.color_contrast_system),
     STANDARD(0.0, R.string.color_contrast_standard),
     MEDIUM(0.5, R.string.color_contrast_medium),
     HIGH(1.0, R.string.color_contrast_high);
 
-    override val value: Int
-        get() = ordinal
-}
-
-@Composable
-private fun PureBlack(on: Boolean, onChange: (Boolean) -> Unit) {
-    Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceBright) {
-        Row(
-            Modifier.fillMaxWidth().toggleable(on, role = Role.Switch, onValueChange = onChange)
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.pref_pure_black), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.pref_pure_black_summary),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            CheckSwitch(on)
-        }
-    }
-}
-
-@Composable
-private fun Actions(canApply: Boolean, onReset: (Offset) -> Unit, onApply: (Offset) -> Unit) {
-    val view = LocalView.current
-    fun onScreen(centre: Offset): Offset {
-        val window = IntArray(2).also(view::getLocationOnScreen)
-        return centre + Offset(window[0].toFloat(), window[1].toFloat())
-    }
-    var resetAt by remember { mutableStateOf(Offset.Zero) }
-    var applyAt by remember { mutableStateOf(Offset.Zero) }
-    Row(
-        Modifier.fillMaxWidth().padding(top = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TextButton(
-            { onReset(onScreen(resetAt)) },
-            Modifier.onGloballyPositioned { resetAt = it.boundsInWindow().center },
-        ) { Text(stringResource(R.string.color_reset)) }
-        Button(
-            { onApply(onScreen(applyAt)) },
-            Modifier.width(140.dp).onGloballyPositioned { applyAt = it.boundsInWindow().center },
-            enabled = canApply,
-        ) { Text(stringResource(R.string.color_apply)) }
-    }
+    override val value: Int get() = ordinal
 }
