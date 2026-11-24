@@ -8,14 +8,32 @@
     <string name="group_keyboard_summary">Fitur tersembunyi Gboard</string>
     <string name="ketik_title">Keyboard</string>
 
+    <string name="ketik_section_ai">Fitur AI</string>
+    <string name="ketik_section_ai_summary">Alat tulis dan suara berbasis server</string>
+    <string name="ketik_section_core">Fitur utama</string>
+    <string name="ketik_section_lab">Lab eksperimental</string>
+    <string name="ketik_section_lab_summary">UI pratinjau Gboard, keyboard melayang, dan clipboard</string>
+    <string name="ketik_section_tools">Alat dinamis</string>
+
     <string name="ketik_writing_tools">AI Writing Tools</string>
-    <string name="ketik_writing_tools_summary">Koreksi dan tulis ulang teks, memakai server Google</string>
+    <string name="ketik_writing_tools_summary">Koreksi dan tulis ulang dengan gaya lewat server Google (pakai Ketik Hook di 18.8+)</string>
+    <string name="ketik_proofread_only">AI Proofread (tanpa hook)</string>
+    <string name="ketik_proofread_only_summary">Koreksi tata bahasa &amp; ejaan lewat server Google; jalan tanpa Kait hook</string>
+    <string name="ketik_writing_tools_v2">Writing Tools V2 (Prompt Kustom)</string>
+    <string name="ketik_writing_tools_v2_summary">Prompt bebas, saran instruksi, dan panel balasan pintar</string>
+    <string name="ketik_agentic_dictation">Agentic Dictation (Edit Suara AI)</string>
+    <string name="ketik_agentic_dictation_summary">Edit teks lewat suara berbantuan AI dan alternatif ucapan via Google S3</string>
+    <string name="ketik_modeless_smartedit">Modeless Voice SmartEdit</string>
+    <string name="ketik_modeless_smartedit_summary">Eksperimen edit suara NGA tanpa pindah mode</string>
+    <string name="ketik_llm_grammar">Pemeriksa Tata Bahasa LLM</string>
+    <string name="ketik_llm_grammar_summary">Mesin grammar post-correct v2 (butuh Ketik Hook untuk membuka flag permanen)</string>
+
     <string name="ketik_key_shape">Bentuk tombol</string>
     <string name="ketik_key_shape_summary">Menambah pilihan bentuk tombol di setelan tema Gboard</string>
     <string name="ketik_quick_insert">Quick Insert</string>
     <string name="ketik_quick_insert_summary">Panel dan tombol toolbar untuk menyisipkan konten</string>
-    <string name="ketik_trackpad">Trackpad kursor</string>
-    <string name="ketik_trackpad_summary">Tahan spasi untuk menggerakkan kursor, dengan mode kunci</string>
+    <string name="ketik_trackpad">Trackpad kursor V2</string>
+    <string name="ketik_trackpad_summary">Tahan spasi untuk kontrol kursor ala trackpad, mode kunci, dan geser hapus</string>
     <string name="ketik_bluetooth_mic">Mikrofon Bluetooth</string>
     <string name="ketik_bluetooth_mic_summary">Menambah setelan untuk memakainya saat mengetik dengan suara</string>
     <string name="ketik_dismiss_proactive">Tutup saran</string>
@@ -29,14 +47,60 @@
     <string name="ketik_scan_text">Pindai teks</string>
     <string name="ketik_scan_text_summary">Ketik teks dari kamera</string>
 
-    <string name="ketik_state_active">Aktif di Gboard</string>
-    <string name="ketik_state_waiting">Gboard menerapkannya saat keyboard dibuka lagi</string>
-    <string name="ketik_state_missing">Tidak tersedia di versi Gboard ini</string>
-    <string name="ketik_state_not_applied">Belum diterapkan Gboard</string>
-    <string name="ketik_note">Ini mengaktifkan fitur yang sudah ada di dalam Gboard. Google bisa mengubah atau menghapusnya kapan saja, dan Gboard tetap update seperti biasa.</string>
+    <string name="ketik_lab_gm3_expressive">Material 3 Expressive &amp; font Flex</string>
+    <string name="ketik_lab_gm3_expressive_summary">Mengaktifkan gaya M3 Expressive dan tipografi Google Sans Flex</string>
+    <string name="ketik_lab_top_rounded">Sudut atas keyboard membulat</string>
+    <string name="ketik_lab_top_rounded_summary">Membulatkan sudut atas panel keyboard</string>
+    <string name="ketik_lab_render_blur">Blur GPU RenderEffect</string>
+    <string name="ketik_lab_render_blur_summary">Memakai blur RenderEffect hardware alih-alih RenderScript lama</string>
+    <string name="ketik_lab_floating_freeform">Auto-melayang di freeform &amp; Layang</string>
+    <string name="ketik_lab_floating_freeform_summary">Melayang otomatis di jendela bebas, hindari kursor, nav bar transparan &amp; resize rapi</string>
+    <string name="ketik_lab_floating_landscape">Auto-melayang di lanskap</string>
+    <string name="ketik_lab_floating_landscape_summary">Otomatis beralih ke keyboard melayang saat mode lanskap</string>
+    <string name="ketik_lab_clipboard_paste">Lab tempel cepat clipboard</string>
+    <string name="ketik_lab_clipboard_paste_summary">Tempel langsung clipboard sistem dan chip teks polos</string>
+    <string name="ketik_lab_emoji_ux">Emoji 2.0 &amp; ekstra Quick Insert</string>
+    <string name="ketik_lab_emoji_ux_summary">Mesin Emoji 2, multi-tampilan Quick Insert, Caps Lock, dan hapus saran v2</string>
+
+    <string name="ketik_hook_active">Ketik Hook dinamis aktif di Gboard</string>
+    <string name="ketik_hook_pending_restart">Ketik Hook aktif — restart Gboard agar menempel</string>
+    <string name="ketik_hook_disabled">Ketik Hook mati — dibutuhkan untuk AI Writing Tools penuh di 18.8+</string>
+    <string name="ketik_hook_missing">Modul Ketik Hook belum terpasang</string>
+    <string name="ketik_hook_unavailable">Runtime Kait tidak tersedia</string>
+    <string name="ketik_hook_enable_action">Aktifkan hook</string>
+    <string name="ketik_restart_gboard">Restart Gboard</string>
+    <string name="ketik_version_unknown">Versi tidak diketahui</string>
+    <string name="ketik_handler_none">Belum ada handler AI aktif</string>
+    <string name="ketik_runtime_detail">Gboard %1$s · %2$s</string>
+
+    <string name="ketik_flag_editor_title">Penjelajah Flag Langsung</string>
+    <string name="ketik_flag_editor_summary">Cari dan ubah flag Gboard aktif secara dinamis</string>
+    <string name="ketik_flag_editor_summary_count">Jelajahi dan ubah %1$d flag Gboard aktif</string>
+    <string name="ketik_flags_search">Cari flag…</string>
+    <string name="ketik_filter_all">Semua</string>
+    <string name="ketik_filter_modified">Diubah</string>
+    <string name="ketik_filter_ai_lab">AI &amp; Lab</string>
+    <string name="ketik_filter_off">Mati</string>
+    <string name="ketik_flags_export">Ekspor JSON</string>
+    <string name="ketik_flags_exported">JSON override disalin ke clipboard</string>
+    <string name="ketik_flags_import">Impor JSON</string>
+    <string name="ketik_flags_clear_all">Hapus semua override</string>
+    <string name="ketik_flags_clear_all_body">Hapus semua override flag Ketik dan kembalikan Gboard ke bawaan?</string>
+    <string name="ketik_flags_clear_confirm">Hapus</string>
+    <string name="ketik_flags_refresh">Muat ulang</string>
+    <string name="ketik_flags_reset">Reset flag</string>
+    <string name="ketik_flags_empty">Tidak ada flag cocok</string>
+    <string name="ketik_flags_empty_body">Buka kolom ketik agar Gboard berjalan, atau ubah filter pencarian.</string>
+
+    <string name="ketik_state_active">Aktif</string>
+    <string name="ketik_state_blocked">Terblokir</string>
+    <string name="ketik_state_waiting">Menunggu</string>
+    <string name="ketik_state_missing">Tidak ada</string>
+    <string name="ketik_state_not_applied">Belum diterapkan</string>
+    <string name="ketik_note">Ini mengaktifkan fitur di dalam Gboard. Dengan Ketik Hook aktif, target obfuscated otomatis dideteksi ulang setiap Gboard update lewat Play.</string>
 
     <string name="ketik_cloud_title">Kirim teks ke Google?</string>
-    <string name="ketik_cloud_body">HP ini tidak bisa menjalankan Writing Tools di perangkat. Saat kamu memakainya, teks yang kamu pilih dikirim ke server Google. Tidak ada yang dikirim sampai kamu membuka Writing Tools.</string>
+    <string name="ketik_cloud_body">HP ini tidak bisa menjalankan Writing Tools di perangkat. Saat kamu memakainya, teks yang kamu pilih dikirim ke server Google. Tidak ada yang dikirim sampai kamu membukanya.</string>
     <string name="ketik_cloud_confirm">Aktifkan</string>
 
     <string name="ketik_reverted_title">Perubahan keyboard dibatalkan</string>

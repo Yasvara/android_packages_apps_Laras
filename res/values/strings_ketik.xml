@@ -8,14 +8,32 @@
     <string name="group_keyboard_summary">Hidden Gboard features</string>
     <string name="ketik_title">Keyboard</string>
 
+    <string name="ketik_section_ai">AI features</string>
+    <string name="ketik_section_ai_summary">Server-backed writing and voice tools</string>
+    <string name="ketik_section_core">Core features</string>
+    <string name="ketik_section_lab">Experimental lab</string>
+    <string name="ketik_section_lab_summary">Gboard preview UI, floating, and clipboard flags</string>
+    <string name="ketik_section_tools">Dynamic tools</string>
+
     <string name="ketik_writing_tools">AI Writing Tools</string>
-    <string name="ketik_writing_tools_summary">Proofread and rewrite your text, using Google\'s servers</string>
+    <string name="ketik_writing_tools_summary">Proofread and rewrite with styles, using Google\'s servers (uses Ketik Hook on 18.8+)</string>
+    <string name="ketik_proofread_only">AI Proofread (no hook)</string>
+    <string name="ketik_proofread_only_summary">Grammar &amp; spelling proofread via Google\'s servers; works without Kait hook</string>
+    <string name="ketik_writing_tools_v2">Writing Tools V2 (Custom Prompts)</string>
+    <string name="ketik_writing_tools_v2_summary">Free-form prompts, suggested instructions, and smart reply panel</string>
+    <string name="ketik_agentic_dictation">Agentic Dictation (AI Voice Edit)</string>
+    <string name="ketik_agentic_dictation_summary">AI-assisted voice editing and speech alternatives over Google S3</string>
+    <string name="ketik_modeless_smartedit">Modeless Voice SmartEdit</string>
+    <string name="ketik_modeless_smartedit_summary">Experimental NGA lab voice editing without switching modes</string>
+    <string name="ketik_llm_grammar">LLM Grammar Checker</string>
+    <string name="ketik_llm_grammar_summary">Post-correct v2 grammar engine (requires Ketik Hook to unlock immutable flag)</string>
+
     <string name="ketik_key_shape">Key shape</string>
     <string name="ketik_key_shape_summary">Adds a key shape choice to Gboard\'s theme settings</string>
     <string name="ketik_quick_insert">Quick Insert</string>
     <string name="ketik_quick_insert_summary">A panel and toolbar button for inserting content</string>
-    <string name="ketik_trackpad">Cursor trackpad</string>
-    <string name="ketik_trackpad_summary">Long-press the spacebar to move the cursor, with lock mode</string>
+    <string name="ketik_trackpad">Cursor trackpad V2</string>
+    <string name="ketik_trackpad_summary">Long-press spacebar for trackpad cursor control, lock mode, and swipe-delete</string>
     <string name="ketik_bluetooth_mic">Bluetooth microphone</string>
     <string name="ketik_bluetooth_mic_summary">Adds the setting to use it for voice typing</string>
     <string name="ketik_dismiss_proactive">Dismiss suggestions</string>
@@ -29,14 +47,60 @@
     <string name="ketik_scan_text">Scan text</string>
     <string name="ketik_scan_text_summary">Type text from the camera</string>
 
-    <string name="ketik_state_active">Active in Gboard</string>
-    <string name="ketik_state_waiting">Gboard will apply this next time the keyboard opens</string>
-    <string name="ketik_state_missing">Not available in this Gboard version</string>
-    <string name="ketik_state_not_applied">Gboard has not applied this</string>
-    <string name="ketik_note">These turn on features already inside Gboard. Google can change or remove them at any time, and Gboard keeps updating as usual.</string>
+    <string name="ketik_lab_gm3_expressive">Material 3 Expressive &amp; Flex font</string>
+    <string name="ketik_lab_gm3_expressive_summary">Enables M3 Expressive styling and Google Sans Flex typography</string>
+    <string name="ketik_lab_top_rounded">Top rounded keyboard</string>
+    <string name="ketik_lab_top_rounded_summary">Rounds the top corners of the keyboard panel</string>
+    <string name="ketik_lab_render_blur">GPU RenderEffect blur</string>
+    <string name="ketik_lab_render_blur_summary">Hardware RenderEffect blur instead of legacy RenderScript</string>
+    <string name="ketik_lab_floating_freeform">Auto-float in freeform &amp; Layang</string>
+    <string name="ketik_lab_floating_freeform_summary">Floats keyboard in freeform windows, avoids cursor, transparent nav bar &amp; clean resize</string>
+    <string name="ketik_lab_floating_landscape">Auto-float in landscape</string>
+    <string name="ketik_lab_floating_landscape_summary">Automatically switches to floating keyboard in landscape</string>
+    <string name="ketik_lab_clipboard_paste">Clipboard quick-paste lab</string>
+    <string name="ketik_lab_clipboard_paste_summary">Direct system clipboard paste and plain-text quick paste chip</string>
+    <string name="ketik_lab_emoji_ux">Emoji 2.0 &amp; Quick Insert extras</string>
+    <string name="ketik_lab_emoji_ux_summary">Emoji 2 engine, multi-view Quick Insert, Caps Lock insert, and suggestion removal v2</string>
+
+    <string name="ketik_hook_active">Dynamic Ketik Hook active in Gboard</string>
+    <string name="ketik_hook_pending_restart">Ketik Hook enabled — restart Gboard to attach</string>
+    <string name="ketik_hook_disabled">Ketik Hook disabled — needed for full AI Writing Tools on 18.8+</string>
+    <string name="ketik_hook_missing">Ketik Hook module not installed</string>
+    <string name="ketik_hook_unavailable">Kait runtime unavailable</string>
+    <string name="ketik_hook_enable_action">Enable hook</string>
+    <string name="ketik_restart_gboard">Restart Gboard</string>
+    <string name="ketik_version_unknown">Unknown version</string>
+    <string name="ketik_handler_none">No AI handler active</string>
+    <string name="ketik_runtime_detail">Gboard %1$s · %2$s</string>
+
+    <string name="ketik_flag_editor_title">Live Flag Explorer</string>
+    <string name="ketik_flag_editor_summary">Search and override any live Gboard flag dynamically</string>
+    <string name="ketik_flag_editor_summary_count">Browse and override %1$d live Gboard flags</string>
+    <string name="ketik_flags_search">Search flags…</string>
+    <string name="ketik_filter_all">All</string>
+    <string name="ketik_filter_modified">Modified</string>
+    <string name="ketik_filter_ai_lab">AI &amp; Lab</string>
+    <string name="ketik_filter_off">Off</string>
+    <string name="ketik_flags_export">Export JSON</string>
+    <string name="ketik_flags_exported">Copied overrides JSON to clipboard</string>
+    <string name="ketik_flags_import">Import JSON</string>
+    <string name="ketik_flags_clear_all">Clear all overrides</string>
+    <string name="ketik_flags_clear_all_body">Remove every Ketik flag override and return Gboard to stock defaults?</string>
+    <string name="ketik_flags_clear_confirm">Clear</string>
+    <string name="ketik_flags_refresh">Refresh</string>
+    <string name="ketik_flags_reset">Reset flag</string>
+    <string name="ketik_flags_empty">No matching flags</string>
+    <string name="ketik_flags_empty_body">Open any text field so Gboard is running, or adjust your search filter.</string>
+
+    <string name="ketik_state_active">Active</string>
+    <string name="ketik_state_blocked">Blocked</string>
+    <string name="ketik_state_waiting">Waiting</string>
+    <string name="ketik_state_missing">Missing</string>
+    <string name="ketik_state_not_applied">Not applied</string>
+    <string name="ketik_note">These turn on features already inside Gboard. With Ketik Hook enabled, obfuscated targets re-resolve automatically after Play updates.</string>
 
     <string name="ketik_cloud_title">Send text to Google?</string>
-    <string name="ketik_cloud_body">This phone can\'t run Writing Tools on the device. When you use them, the text you choose goes to Google\'s servers. Nothing is sent until you open Writing Tools.</string>
+    <string name="ketik_cloud_body">This phone can\'t run Writing Tools on the device. When you use them, the text you choose goes to Google\'s servers. Nothing is sent until you open them.</string>
     <string name="ketik_cloud_confirm">Turn on</string>
 
     <string name="ketik_reverted_title">Keyboard change undone</string>

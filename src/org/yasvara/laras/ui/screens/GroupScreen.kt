@@ -104,7 +104,12 @@ fun GroupScreen(
             SystemGroup.CONNECTIVITY -> item(key = "wifi_region") {
                 ConnectivitySection(prefs, onOpenRegion = { onOpen(Route.WifiRegion) })
             }
-            SystemGroup.KEYBOARD -> item(key = "keyboard") { KeyboardSection() }
+            SystemGroup.KEYBOARD -> item(key = "keyboard") {
+                KeyboardSection(
+                    advanced = prefs[org.yasvara.laras.catalog.Prefs.larasAdvanced],
+                    onOpenFlags = { onOpen(Route.KetikFlags) },
+                )
+            }
             SystemGroup.LAB -> item(key = "lab") { LabSection(prefs, viewModel, viewModel) }
             SystemGroup.SUPERUSER -> item(key = "superuser") { SuperuserSection(prefs, viewModel) }
             else -> Unit

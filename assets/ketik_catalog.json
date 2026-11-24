@@ -1,0 +1,302 @@
+{
+  "schema": 1,
+  "serverModel": "202504090000_writing_tools_config",
+  "features": [
+    {
+      "id": "writing_tools",
+      "category": "AI",
+      "titleKey": "ketik_writing_tools",
+      "title": "AI Writing Tools",
+      "summaryKey": "ketik_writing_tools_summary",
+      "summary": "Proofread and rewrite your text with styles, using Google's servers",
+      "cloud": true,
+      "requiresHook": true,
+      "exclusiveGroup": "ai_writing_mode",
+      "requiredTags": ["CurrentHandlerModelReadyTag", "HandlerEverProvisionedTag"],
+      "flags": [
+        {"key": "writing_helper", "type": "b", "value": true},
+        {"key": "writing_tools", "type": "b", "value": true},
+        {"key": "writing_helper_on_selected_text", "type": "b", "value": true},
+        {"key": "enable_writing_tools_cooperative_mode", "type": "b", "value": true},
+        {"key": "writing_tools_v2_backend_type", "type": "i", "value": 1},
+        {"key": "writing_helper_supported_language_tags", "type": "s", "value": "*"},
+        {"key": "writing_helper_model_version", "type": "s", "value": "202504090000_writing_tools_config"},
+        {"key": "writing_helper_voice_input_model_version", "type": "s", "value": "202504090000_writing_tools_config"},
+        {"key": "writing_helper_text_stylization_model_version", "type": "s", "value": "202504090000_writing_tools_config"}
+      ]
+    },
+    {
+      "id": "proofread_only",
+      "category": "AI",
+      "titleKey": "ketik_proofread_only",
+      "title": "AI Proofread (no hook)",
+      "summaryKey": "ketik_proofread_only_summary",
+      "summary": "Grammar & spelling proofread via Google's servers; works without Kait hook",
+      "cloud": true,
+      "requiresHook": false,
+      "exclusiveGroup": "ai_writing_mode",
+      "requiredTags": ["CurrentHandlerModelReadyTag", "HandlerEverProvisionedTag"],
+      "flags": [
+        {"key": "writing_helper", "type": "b", "value": true},
+        {"key": "writing_tools", "type": "b", "value": false},
+        {"key": "writing_helper_on_selected_text", "type": "b", "value": true},
+        {"key": "enable_writing_tools_cooperative_mode", "type": "b", "value": true},
+        {"key": "writing_tools_v2_backend_type", "type": "i", "value": 1},
+        {"key": "writing_helper_supported_language_tags", "type": "s", "value": "*"},
+        {"key": "writing_helper_model_version", "type": "s", "value": "202504090000_writing_tools_config"},
+        {"key": "writing_helper_voice_input_model_version", "type": "s", "value": "202504090000_writing_tools_config"}
+      ]
+    },
+    {
+      "id": "writing_tools_v2",
+      "category": "AI",
+      "titleKey": "ketik_writing_tools_v2",
+      "title": "Writing Tools V2 (Custom Prompts)",
+      "summaryKey": "ketik_writing_tools_v2_summary",
+      "summary": "Free-form AI prompts, suggested instructions, and smart reply panel (pair with AI Writing Tools)",
+      "cloud": true,
+      "requiresHook": true,
+      "requiredTags": ["CurrentHandlerModelReadyTag"],
+      "flags": [
+        {"key": "enable_writing_tools_v2", "type": "b", "value": true},
+        {"key": "enable_writing_tools_v2_on_toolbar", "type": "b", "value": true},
+        {"key": "writing_tools_v2_enable_suggested_instructions", "type": "b", "value": true},
+        {"key": "writing_tools_v2_enable_smart_reply_panel", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "agentic_dictation",
+      "category": "AI",
+      "titleKey": "ketik_agentic_dictation",
+      "title": "Agentic Dictation (AI Voice Edit)",
+      "summaryKey": "ketik_agentic_dictation_summary",
+      "summary": "AI-assisted voice editing and speech alternatives over Google S3",
+      "cloud": true,
+      "requiresHook": false,
+      "flags": [
+        {"key": "enable_agentic_dictation", "type": "b", "value": true},
+        {"key": "enable_jetson_in_toolbar", "type": "b", "value": true},
+        {"key": "ad_activation_type", "type": "i", "value": 2},
+        {"key": "agentic_dictation_backend_type", "type": "i", "value": 1},
+        {"key": "enable_speech_alternatives", "type": "b", "value": true},
+        {"key": "enable_rambler_al_toolbar", "type": "b", "value": true},
+        {"key": "enable_rambler_voice_correction_list_setting", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "modeless_smartedit",
+      "category": "AI",
+      "titleKey": "ketik_modeless_smartedit",
+      "title": "Modeless Voice SmartEdit",
+      "summaryKey": "ketik_modeless_smartedit_summary",
+      "summary": "Experimental NGA lab voice editing without switching modes",
+      "cloud": false,
+      "requiresHook": false,
+      "flags": [
+        {"key": "enable_nga_lab_modeless_smartedit", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "llm_grammar",
+      "category": "AI",
+      "titleKey": "ketik_llm_grammar",
+      "title": "LLM Grammar Checker",
+      "summaryKey": "ketik_llm_grammar_summary",
+      "summary": "Uses post-correct v2 model for grammar checks (requires Ketik Hook to unlock immutable flag)",
+      "cloud": false,
+      "requiresHook": true,
+      "flags": [
+        {"key": "enable_llm_based_grammar_checker", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "key_shape",
+      "category": "CORE",
+      "titleKey": "ketik_key_shape",
+      "title": "Key shape",
+      "summaryKey": "ketik_key_shape_summary",
+      "summary": "Adds a key shape choice to Gboard's theme settings",
+      "flags": [
+        {"key": "more_pill_keys", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "quick_insert",
+      "category": "CORE",
+      "titleKey": "ketik_quick_insert",
+      "title": "Quick Insert",
+      "summaryKey": "ketik_quick_insert_summary",
+      "summary": "A panel and toolbar button for inserting content",
+      "flags": [
+        {"key": "super_insert", "type": "b", "value": true},
+        {"key": "super_insert_vk", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "trackpad",
+      "category": "CORE",
+      "titleKey": "ketik_trackpad",
+      "title": "Cursor trackpad V2",
+      "summaryKey": "ketik_trackpad_summary",
+      "summary": "Long-press spacebar for trackpad cursor control, lock mode, and swipe-delete",
+      "flags": [
+        {"key": "free_cursor", "type": "b", "value": true},
+        {"key": "free_cursor_lock_mode", "type": "b", "value": true},
+        {"key": "free_cursor_trackpadlike", "type": "b", "value": true},
+        {"key": "free_cursor_del_swipe_delete", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "bluetooth_mic",
+      "category": "CORE",
+      "titleKey": "ketik_bluetooth_mic",
+      "title": "Bluetooth microphone",
+      "summaryKey": "ketik_bluetooth_mic_summary",
+      "summary": "Adds the setting to use it for voice typing",
+      "flags": [
+        {"key": "enable_use_bluetooth_setting", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "dismiss_proactive",
+      "category": "CORE",
+      "titleKey": "ketik_dismiss_proactive",
+      "title": "Dismiss suggestions",
+      "summaryKey": "ketik_dismiss_proactive_summary",
+      "summary": "Adds a close button to the proactive suggestions bar",
+      "flags": [
+        {"key": "enable_close_proactive_suggestions_access_point", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "smart_compose",
+      "category": "CORE",
+      "titleKey": "ketik_smart_compose",
+      "title": "Smart Compose",
+      "summaryKey": "ketik_smart_compose_summary",
+      "summary": "Adds the setting for inline suggestions. They may not appear in every app",
+      "flags": [
+        {"key": "enable_inline_suggestions_on_client_side", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "accessibility_layout",
+      "category": "CORE",
+      "titleKey": "ketik_accessibility",
+      "title": "Accessibility layout",
+      "summaryKey": "ketik_accessibility_summary",
+      "summary": "Gboard's simulated physical keyboard layout",
+      "flags": [
+        {"key": "enable_pk_simulator", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "clipboard_limit",
+      "category": "CORE",
+      "titleKey": "ketik_clipboard_limit",
+      "title": "Longer clipboard items",
+      "summaryKey": "ketik_clipboard_limit_summary",
+      "summary": "Keeps up to 100,000 characters per text item, instead of 20,000",
+      "flags": [
+        {"key": "text_clip_item_char_limit", "type": "i", "value": 100000}
+      ]
+    },
+    {
+      "id": "scan_text",
+      "category": "CORE",
+      "titleKey": "ketik_scan_text",
+      "title": "Scan text",
+      "summaryKey": "ketik_scan_text_summary",
+      "summary": "Type text from the camera",
+      "flags": [
+        {"key": "enable_ocr", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "gm3_expressive",
+      "category": "LAB",
+      "titleKey": "ketik_lab_gm3_expressive",
+      "title": "Material 3 Expressive & Flex font",
+      "summaryKey": "ketik_lab_gm3_expressive_summary",
+      "summary": "Enables Gboard's M3 Expressive visual styling and Google Sans Flex typography",
+      "flags": [
+        {"key": "gm3_expressive", "type": "b", "value": true},
+        {"key": "google_sans_flex", "type": "b", "value": true},
+        {"key": "platform_google_sans_flex", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "top_rounded",
+      "category": "LAB",
+      "titleKey": "ketik_lab_top_rounded",
+      "title": "Top rounded keyboard",
+      "summaryKey": "ketik_lab_top_rounded_summary",
+      "summary": "Rounds the top corners of the keyboard panel",
+      "flags": [
+        {"key": "top_rounded_keyboard", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "render_effect_blur",
+      "category": "LAB",
+      "titleKey": "ketik_lab_render_blur",
+      "title": "GPU RenderEffect blur",
+      "summaryKey": "ketik_lab_render_blur_summary",
+      "summary": "Replaces legacy RenderScript background blur with hardware RenderEffect",
+      "flags": [
+        {"key": "render_effect_blur", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "floating_freeform",
+      "category": "LAB",
+      "titleKey": "ketik_lab_floating_freeform",
+      "title": "Auto-float in freeform & Layang",
+      "summaryKey": "ketik_lab_floating_freeform_summary",
+      "summary": "Floats keyboard in freeform windows, avoids cursor, transparent nav bar & clean resize",
+      "flags": [
+        {"key": "enable_auto_float_keyboard_in_freeform", "type": "b", "value": true},
+        {"key": "floating_avoid_cursor", "type": "b", "value": true},
+        {"key": "transparent_nav_bar_in_floating", "type": "b", "value": true},
+        {"key": "enable_invisible_floating_resizing", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "floating_landscape",
+      "category": "LAB",
+      "titleKey": "ketik_lab_floating_landscape",
+      "title": "Auto-float in landscape",
+      "summaryKey": "ketik_lab_floating_landscape_summary",
+      "summary": "Automatically switches to floating keyboard in landscape apps",
+      "flags": [
+        {"key": "enable_auto_float_keyboard_in_landscape", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "clipboard_quick_paste",
+      "category": "LAB",
+      "titleKey": "ketik_lab_clipboard_paste",
+      "title": "Clipboard quick-paste lab",
+      "summaryKey": "ketik_lab_clipboard_paste_summary",
+      "summary": "Direct system clipboard paste and plain-text quick paste chip",
+      "flags": [
+        {"key": "enable_system_clipboard_direct_paste_for_quick_paste", "type": "b", "value": true},
+        {"key": "enable_plain_text_chip_for_quick_paste", "type": "b", "value": true}
+      ]
+    },
+    {
+      "id": "emoji_and_ux_lab",
+      "category": "LAB",
+      "titleKey": "ketik_lab_emoji_ux",
+      "title": "Emoji 2.0 & Quick Insert extras",
+      "summaryKey": "ketik_lab_emoji_ux_summary",
+      "summary": "Enables Emoji 2 engine, multi-view Quick Insert, Caps Lock insert, and suggestion removal v2",
+      "flags": [
+        {"key": "enable_emoji2", "type": "b", "value": true},
+        {"key": "super_insert_enable_dynamic_multi_view", "type": "b", "value": true},
+        {"key": "super_insert_caps_lock", "type": "b", "value": true},
+        {"key": "enable_remove_suggestion_v2", "type": "b", "value": true}
+      ]
+    }
+  ]
+}

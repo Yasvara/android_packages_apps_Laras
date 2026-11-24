@@ -43,6 +43,7 @@ import org.yasvara.laras.ui.connectivity.WifiRegionScreen
 import org.yasvara.laras.ui.haptics.HapticsScreen
 import org.yasvara.laras.ui.integrity.TargetAppsScreen
 import org.yasvara.laras.ui.kait.ScopeScreen
+import org.yasvara.laras.ui.keyboard.KetikFlagEditorScreen
 import org.yasvara.laras.ui.lelap.LelapAppsScreen
 import org.yasvara.laras.ui.padat.PadatScreen
 import org.yasvara.laras.ui.preview.LocalKeyguardRenderer
@@ -95,6 +96,7 @@ sealed interface Route {
     data object Nada : Route { override val id = "nada" }
     data object Haptics : Route { override val id = "haptics" }
     data object WifiRegion : Route { override val id = "wifi_region" }
+    data object KetikFlags : Route { override val id = "ketik_flags" }
     data class Padat(val focus: String? = null) : Route { override val id = "padat:${focus.orEmpty()}" }
 
     companion object {
@@ -118,6 +120,7 @@ sealed interface Route {
                 "nada" -> Nada
                 "haptics" -> Haptics
                 "wifi_region" -> WifiRegion
+                "ketik_flags" -> KetikFlags
                 "padat" -> Padat(arg.takeIf { it.isNotEmpty() && it != id })
                 "updates" -> AppUpdates(arg.takeIf { it.isNotEmpty() && it != id })
                 "akar" -> Akar(arg.takeIf { it.isNotEmpty() && it != id })
@@ -266,6 +269,7 @@ fun LarasApp(
                     entry<Route.Nada> { NadaScreen(onBack = back) }
                     entry<Route.Haptics> { HapticsScreen(onBack = back) }
                     entry<Route.WifiRegion> { WifiRegionScreen(prefs, onBack = back) }
+                    entry<Route.KetikFlags> { KetikFlagEditorScreen(onBack = back) }
                     entry<Route.Padat> { route -> PadatScreen(onBack = back, focus = route.focus) }
                     entry<Route.Changed> {
                         ChangedScreen(prefs, viewModel, onResetAll = viewModel::resetAll, onBack = back)
