@@ -38,6 +38,7 @@ import org.yasvara.laras.catalog.Element
 import org.yasvara.laras.catalog.Prefs
 import org.yasvara.laras.catalog.Surface
 import org.yasvara.laras.catalog.SystemGroup
+import org.yasvara.laras.ui.brightness.BrightnessScreen
 import org.yasvara.laras.ui.color.ColorScreen
 import org.yasvara.laras.ui.connectivity.WifiRegionScreen
 import org.yasvara.laras.ui.haptics.HapticsScreen
@@ -95,6 +96,7 @@ sealed interface Route {
     data object SoundApps : Route { override val id = "sound_apps" }
     data object Nada : Route { override val id = "nada" }
     data object Haptics : Route { override val id = "haptics" }
+    data object Brightness : Route { override val id = "brightness" }
     data object WifiRegion : Route { override val id = "wifi_region" }
     data object KetikFlags : Route { override val id = "ketik_flags" }
     data class Padat(val focus: String? = null) : Route { override val id = "padat:${focus.orEmpty()}" }
@@ -119,6 +121,7 @@ sealed interface Route {
                 "sound_apps" -> SoundApps
                 "nada" -> Nada
                 "haptics" -> Haptics
+                "brightness" -> Brightness
                 "wifi_region" -> WifiRegion
                 "ketik_flags" -> KetikFlags
                 "padat" -> Padat(arg.takeIf { it.isNotEmpty() && it != id })
@@ -268,6 +271,7 @@ fun LarasApp(
                     entry<Route.SoundApps> { SoundAppsScreen(onBack = back) }
                     entry<Route.Nada> { NadaScreen(onBack = back) }
                     entry<Route.Haptics> { HapticsScreen(onBack = back) }
+                    entry<Route.Brightness> { BrightnessScreen(onBack = back) }
                     entry<Route.WifiRegion> { WifiRegionScreen(prefs, onBack = back) }
                     entry<Route.KetikFlags> { KetikFlagEditorScreen(onBack = back) }
                     entry<Route.Padat> { route -> PadatScreen(onBack = back, focus = route.focus) }

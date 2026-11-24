@@ -144,6 +144,7 @@ private val SEARCH_DESTINATIONS = listOf(
     FeatureDestination(R.string.nada_title, R.string.nada_entry_summary, Route.Nada, listOf("dsp", "eq", "equalizer", "dolby", "bass", "viper")),
     FeatureDestination(R.string.swara_title, R.string.swara_entry_summary, Route.SoundApps, listOf("audio", "volume", "mic", "per-app")),
     FeatureDestination(R.string.raba_title, R.string.raba_entry_summary, Route.Haptics, listOf("haptic", "vibration", "touch")),
+    FeatureDestination(R.string.pijar_title, R.string.pijar_entry_summary, Route.Brightness, listOf("brightness", "kecerahan", "hbm", "sunlight", "nits")),
     FeatureDestination(R.string.group_apps, R.string.group_apps_summary, Route.Group(SystemGroup.APPS), listOf("spoof", "photos", "snapchat", "netflix")),
     FeatureDestination(R.string.group_keyboard, R.string.group_keyboard_summary, Route.Group(SystemGroup.KEYBOARD), listOf("ketik", "gboard", "writing tools")),
     FeatureDestination(R.string.group_lab, R.string.group_lab_summary, Route.Group(SystemGroup.LAB), listOf("advanced", "experimental")),

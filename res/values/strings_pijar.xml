@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pijar_title">Brightness</string>
+    <string name="pijar_entry_summary">Auto curve, speed, sunlight and limits</string>
+    <string name="pijar_reset_all">Reset</string>
+    <string name="pijar_nits"><xliff:g id="nits" example="250">%1$s</xliff:g> nits</string>
+    <string name="pijar_lux"><xliff:g id="lux" example="320">%1$s</xliff:g> lux</string>
+    <string name="pijar_zone_dark">Dark</string>
+    <string name="pijar_zone_room">Indoors</string>
+    <string name="pijar_zone_shade">Shade</string>
+    <string name="pijar_zone_sun">Sun</string>
+    <string name="pijar_response">Response</string>
+    <string name="pijar_profile_gentle">Gentle</string>
+    <string name="pijar_profile_balanced">Balanced</string>
+    <string name="pijar_profile_responsive">Responsive</string>
+    <string name="pijar_profile_custom">Custom</string>
+    <string name="pijar_speed_up">Brighten</string>
+    <string name="pijar_speed_down">Darken</string>
+    <string name="pijar_speed_value"><xliff:g id="factor" example="1.6">%1$s</xliff:g>×</string>
+    <string name="pijar_speed_slow">Relaxed</string>
+    <string name="pijar_speed_fast">Instant</string>
+    <string name="pijar_limits">Auto limits</string>
+    <string name="pijar_limits_value"><xliff:g id="floor" example="4">%1$s</xliff:g>–<xliff:g id="ceiling" example="3200">%2$s</xliff:g> nits</string>
+    <string name="pijar_sun">Sunlight in manual</string>
+    <string name="pijar_sun_summary">Manual brightness goes past the slider top outdoors</string>
+    <string name="pijar_sun_curve">Follow curve</string>
+    <string name="pijar_sun_max">Maximum</string>
+    <string name="pijar_sun_lux">Starts at</string>
+    <string name="pijar_thermal">Heat guard</string>
+    <string name="pijar_thermal_summary">Dims when the phone is hot, like stock</string>
+</resources>

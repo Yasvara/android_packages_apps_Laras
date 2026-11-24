@@ -407,7 +407,8 @@ enum class SystemGroup(
 ) : Section {
     /** Colours (and later themes) have screens of their own; see GroupScreen. */
     STYLE(R.string.group_style, R.string.group_style_summary, section = true),
-    DISPLAY(R.string.group_display, R.string.group_display_summary),
+    /** Pijar brightness tuning; see GroupScreen. */
+    DISPLAY(R.string.group_display, R.string.group_display_summary, section = true),
     SOUND(
         R.string.group_sound, R.string.group_sound_summary,
         listOf(Entry(Prefs.volumePanelLeft, R.string.pref_volume_left)),

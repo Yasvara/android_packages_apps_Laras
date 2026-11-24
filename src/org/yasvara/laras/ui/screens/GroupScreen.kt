@@ -135,6 +135,9 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
     SystemGroup.APPS -> listOf(
         NavLink(R.string.updates_title, R.string.updates_entry_summary, Route.AppUpdates()),
     )
+    SystemGroup.DISPLAY -> listOf(
+        NavLink(R.string.pijar_title, R.string.pijar_entry_summary, Route.Brightness),
+    )
     SystemGroup.POWER -> listOf(
         NavLink(R.string.lelap_apps_title, R.string.lelap_apps_entry_summary, Route.LelapApps),
         NavLink(R.string.padat_title, R.string.padat_entry_summary, Route.Padat()),

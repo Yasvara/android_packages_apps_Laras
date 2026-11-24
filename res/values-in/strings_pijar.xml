@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pijar_title">Kecerahan</string>
+    <string name="pijar_entry_summary">Kurva otomatis, kecepatan, matahari, dan batas</string>
+    <string name="pijar_reset_all">Atur ulang</string>
+    <string name="pijar_nits"><xliff:g id="nits" example="250">%1$s</xliff:g> nit</string>
+    <string name="pijar_lux"><xliff:g id="lux" example="320">%1$s</xliff:g> lux</string>
+    <string name="pijar_zone_dark">Gelap</string>
+    <string name="pijar_zone_room">Ruangan</string>
+    <string name="pijar_zone_shade">Teduh</string>
+    <string name="pijar_zone_sun">Matahari</string>
+    <string name="pijar_response">Respons</string>
+    <string name="pijar_profile_gentle">Lembut</string>
+    <string name="pijar_profile_balanced">Seimbang</string>
+    <string name="pijar_profile_responsive">Responsif</string>
+    <string name="pijar_profile_custom">Kustom</string>
+    <string name="pijar_speed_up">Naik</string>
+    <string name="pijar_speed_down">Turun</string>
+    <string name="pijar_speed_value"><xliff:g id="factor" example="1.6">%1$s</xliff:g>×</string>
+    <string name="pijar_speed_slow">Santai</string>
+    <string name="pijar_speed_fast">Kilat</string>
+    <string name="pijar_limits">Batas otomatis</string>
+    <string name="pijar_limits_value"><xliff:g id="floor" example="4">%1$s</xliff:g>–<xliff:g id="ceiling" example="3200">%2$s</xliff:g> nit</string>
+    <string name="pijar_sun">Matahari saat manual</string>
+    <string name="pijar_sun_summary">Kecerahan manual melewati puncak slider di luar ruangan</string>
+    <string name="pijar_sun_curve">Ikuti kurva</string>
+    <string name="pijar_sun_max">Maksimal</string>
+    <string name="pijar_sun_lux">Mulai pada</string>
+    <string name="pijar_thermal">Pengaman suhu</string>
+    <string name="pijar_thermal_summary">Meredup saat HP panas, seperti stock</string>
+</resources>
