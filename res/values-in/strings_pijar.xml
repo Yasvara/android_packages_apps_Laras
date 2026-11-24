@@ -32,4 +32,15 @@
     <string name="pijar_sun_lux">Mulai pada</string>
     <string name="pijar_thermal">Pengaman suhu</string>
     <string name="pijar_thermal_summary">Meredup saat HP panas, seperti stock</string>
+    <string name="pijar_edit_curve">Ubah kurva</string>
+    <string name="pijar_done">Selesai</string>
+    <string name="pijar_curve_reset">Kurva panel</string>
+    <string name="pijar_curve_hint">Geser titik · ketuk dua kali untuk tambah · tahan untuk hapus</string>
+    <string name="pijar_curve_restored">Kurva panel dipulihkan</string>
+    <string name="pijar_point_removed">Titik dihapus</string>
+    <string name="pijar_undo">Urungkan</string>
+    <string name="pijar_advanced">Lanjutan</string>
+    <string name="pijar_debounce_up">Jeda sebelum naik</string>
+    <string name="pijar_debounce_down">Jeda sebelum turun</string>
+    <string name="pijar_ms"><xliff:g id="ms" example="500">%1$s</xliff:g> ms</string>
 </resources>

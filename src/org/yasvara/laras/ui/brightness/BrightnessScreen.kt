@@ -5,23 +5,17 @@
 package org.yasvara.laras.ui.brightness
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,20 +23,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,9 +38,14 @@ import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import org.yasvara.laras.R
 import org.yasvara.laras.data.brightness.BrightnessProfile
 import org.yasvara.laras.data.brightness.BrightnessSettings
+import org.yasvara.laras.data.brightness.DEBOUNCE_DOWN_DEFAULT
+import org.yasvara.laras.data.brightness.DEBOUNCE_MAX
+import org.yasvara.laras.data.brightness.DEBOUNCE_MIN
+import org.yasvara.laras.data.brightness.DEBOUNCE_UP_DEFAULT
 import org.yasvara.laras.data.brightness.LIMIT_GAP_NITS
 import org.yasvara.laras.data.brightness.SUN_LUX_DEFAULT
 import org.yasvara.laras.data.brightness.SUN_LUX_MAX
@@ -67,15 +59,8 @@ import org.yasvara.laras.ui.components.SwitchRow
 import org.yasvara.laras.ui.components.groupedShape
 import org.yasvara.laras.ui.screens.Page
 
-private const val LUX_MAX = 100000f
+internal const val LUX_MAX = 100000f
 private val SPEEDS = floatArrayOf(0.5f, 0.6f, 0.8f, 1f, 1.3f, 1.6f, 2f, 2.5f, 3f, 4f)
-// Where each zone label sits on the lux axis.
-private val ZONES = listOf(
-    1f to R.string.pijar_zone_dark,
-    300f to R.string.pijar_zone_room,
-    5000f to R.string.pijar_zone_shade,
-    50000f to R.string.pijar_zone_sun,
-)
 
 /**
  * Display › Brightness: the auto curve with the live light level on it, the response profile and
@@ -86,26 +71,60 @@ fun BrightnessScreen(onBack: () -> Unit, viewModel: BrightnessViewModel = viewMo
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val lux by viewModel.lux.collectAsStateWithLifecycle()
     val s = ui.settings
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val undoLabel = stringResource(R.string.pijar_undo)
+    val resetText = stringResource(R.string.pijar_curve_restored)
+    val removedText = stringResource(R.string.pijar_point_removed)
+
+    // The curve is stored as it changes; an undo puts the one before back.
+    fun offerUndo(message: String, before: BrightnessCurve?) {
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            val result = snackbar.showSnackbar(message, undoLabel, duration = SnackbarDuration.Short)
+            if (result == SnackbarResult.ActionPerformed) viewModel.setCurve(before)
+        }
+    }
 
     Page(
         stringResource(R.string.pijar_title),
         onBack,
+        snackbarHostState = snackbar,
         actions = {
-            if (ui.loaded && !s.isDefault) {
-                TextButton(onClick = viewModel::resetAll) { Text(stringResource(R.string.pijar_reset_all)) }
+            if (ui.loaded && (!s.isDefault || ui.curveEdited)) {
+                TextButton(onClick = {
+                    viewModel.resetAll()
+                    if (ui.curveEdited) viewModel.setCurve(null)
+                }) { Text(stringResource(R.string.pijar_reset_all)) }
             }
         },
     ) {
         if (!ui.loaded) return@Page
         val curve = ui.curve
         if (curve != null) {
-            item(key = "hero") { CurveHero(curve, s, lux) }
+            item(key = "hero") {
+                CurveHero(
+                    curve = curve,
+                    defaultCurve = ui.defaultCurve,
+                    edited = ui.curveEdited,
+                    s = s,
+                    lux = lux,
+                    onCommit = viewModel::setCurve,
+                    onReset = {
+                        val before = curve
+                        viewModel.setCurve(null)
+                        offerUndo(resetText, before)
+                    },
+                    onRemoved = { before -> offerUndo(removedText, before) },
+                )
+            }
         }
         item(key = "response") {
             ResponseCard(s, groupedShape(0, if (curve != null) 3 else 2), viewModel::setProfile)
         }
         item(key = "speed") {
-            SpeedCard(s, groupedShape(1, if (curve != null) 3 else 2), viewModel::setSpeed)
+            SpeedCard(s, groupedShape(1, if (curve != null) 3 else 2), viewModel::setSpeed,
+                viewModel::setDebounce)
         }
         if (curve != null) {
             item(key = "limits") { LimitsCard(curve, s, groupedShape(2, 3), viewModel::setLimits) }
@@ -129,112 +148,25 @@ fun BrightnessScreen(onBack: () -> Unit, viewModel: BrightnessViewModel = viewMo
     }
 }
 
-private fun luxPos(lux: Float) = log10(lux.coerceIn(0f, LUX_MAX) + 1f) / log10(LUX_MAX + 1f)
+internal fun luxPos(lux: Float) = log10(lux.coerceIn(0f, LUX_MAX) + 1f) / log10(LUX_MAX + 1f)
 
-private fun nitsPos(nits: Float, min: Float, max: Float): Float =
+internal fun nitsPos(nits: Float, min: Float, max: Float): Float =
     ((log10(nits.coerceIn(min, max)) - log10(min)) / (log10(max) - log10(min))).coerceIn(0f, 1f)
 
-private fun nitsAtPos(pos: Float, min: Float, max: Float): Float =
+internal fun nitsAtPos(pos: Float, min: Float, max: Float): Float =
     10f.pow(log10(min) + pos * (log10(max) - log10(min)))
 
-private fun limited(nits: Float, s: BrightnessSettings): Float {
+internal fun limited(nits: Float, s: BrightnessSettings): Float {
     var n = nits
     s.floorNits?.let { n = maxOf(n, it) }
     s.ceilingNits?.let { n = minOf(n, it) }
     return n
 }
 
-private fun formatNits(nits: Float): String =
+internal fun formatNits(nits: Float): String =
     if (nits < 10f) "%.1f".format(nits) else NumberFormat.getIntegerInstance().format(nits.roundToInt())
 
-private fun formatLux(lux: Float): String = NumberFormat.getIntegerInstance().format(lux.roundToInt())
-
-/** The curve on log axes, the auto limits as shaded bands, and a dot at the light right now. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun CurveHero(curve: BrightnessCurve, s: BrightnessSettings, lux: Float?) {
-    val c = MaterialTheme.colorScheme
-    val measurer = rememberTextMeasurer()
-    val labelStyle = MaterialTheme.typography.labelSmall.copy(color = c.onSurfaceVariant)
-    val zoneLabels = ZONES.map { (l, res) -> l to stringResource(res) }
-    val min = curve.minNits
-    val max = curve.maxNits
-    val target = lux?.let { limited(curve.nitsAt(it), s) }
-    val dotX by animateFloatAsState(luxPos(lux ?: 0f), MaterialTheme.motionScheme.slowSpatialSpec(),
-        label = "dotX")
-    val dotY by animateFloatAsState(nitsPos(target ?: min, min, max),
-        MaterialTheme.motionScheme.slowSpatialSpec(), label = "dotY")
-    val pulse by rememberInfiniteTransition(label = "pulse").animateFloat(
-        0f, 1f, infiniteRepeatable(tween(1600), RepeatMode.Restart), label = "pulse",
-    )
-
-    Surface(shape = LarasShapes.Hero, color = LarasSurfaces.card,
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 14.dp)) {
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    target?.let { stringResource(R.string.pijar_nits, formatNits(it)) } ?: "—",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = c.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                lux?.let {
-                    Text(stringResource(R.string.pijar_lux, formatLux(it)),
-                        style = MaterialTheme.typography.titleMedium, color = c.primary)
-                }
-            }
-            Canvas(Modifier.fillMaxWidth().height(200.dp).padding(top = 12.dp)) {
-                val labelH = 18.dp.toPx()
-                val w = size.width
-                val h = size.height - labelH
-                fun x(l: Float) = luxPos(l) * w
-                fun y(n: Float) = h - nitsPos(n, min, max) * h
-
-                s.ceilingNits?.let { ceil ->
-                    drawRect(c.primary.copy(alpha = 0.08f), Offset.Zero, Size(w, y(ceil)))
-                    drawLine(c.primary.copy(alpha = 0.5f), Offset(0f, y(ceil)), Offset(w, y(ceil)),
-                        1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
-                }
-                s.floorNits?.let { floor ->
-                    drawRect(c.primary.copy(alpha = 0.08f), Offset(0f, y(floor)), Size(w, h - y(floor)))
-                    drawLine(c.primary.copy(alpha = 0.5f), Offset(0f, y(floor)), Offset(w, y(floor)),
-                        1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
-                }
-                for ((l, _) in zoneLabels) {
-                    drawLine(c.outlineVariant.copy(alpha = 0.6f), Offset(x(l), 0f), Offset(x(l), h), 1.dp.toPx())
-                }
-
-                val samples = 96
-                fun path(limit: Boolean) = Path().apply {
-                    for (i in 0..samples) {
-                        val p = i / samples.toFloat()
-                        val l = 10f.pow(p * log10(LUX_MAX + 1f)) - 1f
-                        val n = curve.nitsAt(l).let { if (limit) limited(it, s) else it }
-                        if (i == 0) moveTo(p * w, y(n)) else lineTo(p * w, y(n))
-                    }
-                }
-                val stroke = Stroke(4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                if (s.floorNits != null || s.ceilingNits != null) {
-                    drawPath(path(false), c.outlineVariant, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-                }
-                drawPath(path(true), c.primary, style = stroke)
-
-                if (lux != null) {
-                    val center = Offset(dotX * w, h - dotY * h)
-                    drawCircle(c.primary.copy(alpha = 0.3f * (1f - pulse)), 7.dp.toPx() + pulse * 14.dp.toPx(), center)
-                    drawCircle(c.surfaceBright, 9.dp.toPx(), center)
-                    drawCircle(c.primary, 6.dp.toPx(), center)
-                }
-
-                for ((l, text) in zoneLabels) {
-                    val layout = measurer.measure(text, labelStyle)
-                    val left = (x(l) - layout.size.width / 2f).coerceIn(0f, w - layout.size.width)
-                    drawText(layout, topLeft = Offset(left, h + 4.dp.toPx()))
-                }
-            }
-        }
-    }
-}
+internal fun formatLux(lux: Float): String = NumberFormat.getIntegerInstance().format(lux.roundToInt())
 
 @Composable
 private fun ResponseCard(s: BrightnessSettings, shape: Shape, onProfile: (BrightnessProfile) -> Unit) {
@@ -254,9 +186,15 @@ private fun ResponseCard(s: BrightnessSettings, shape: Shape, onProfile: (Bright
 }
 
 @Composable
-private fun SpeedCard(s: BrightnessSettings, shape: Shape, onSpeed: (Float, Float) -> Unit) {
+private fun SpeedCard(
+    s: BrightnessSettings,
+    shape: Shape,
+    onSpeed: (Float, Float) -> Unit,
+    onDebounce: (Int?, Int?) -> Unit,
+) {
+    var advanced by rememberSaveable { mutableStateOf(false) }
     Surface(shape = shape, color = LarasSurfaces.card, modifier = Modifier.padding(bottom = 2.dp)) {
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+        Column(Modifier.animateContentSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
             SpeedSlider(R.string.pijar_speed_up, s.speedUp) { onSpeed(it, s.speedDown) }
             SpeedSlider(R.string.pijar_speed_down, s.speedDown) { onSpeed(s.speedUp, it) }
             Row(Modifier.fillMaxWidth()) {
@@ -265,8 +203,37 @@ private fun SpeedCard(s: BrightnessSettings, shape: Shape, onSpeed: (Float, Floa
                 Text(stringResource(R.string.pijar_speed_fast), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            TextButton(onClick = { advanced = !advanced }, modifier = Modifier.padding(top = 4.dp)) {
+                Text(stringResource(R.string.pijar_advanced))
+            }
+            if (advanced) {
+                val up = s.debounceUp ?: DEBOUNCE_UP_DEFAULT
+                val down = s.debounceDown ?: DEBOUNCE_DOWN_DEFAULT
+                DebounceSlider(R.string.pijar_debounce_up, up) { onDebounce(it, s.debounceDown) }
+                DebounceSlider(R.string.pijar_debounce_down, down) { onDebounce(s.debounceUp, it) }
+            }
         }
     }
+}
+
+@Composable
+private fun DebounceSlider(title: Int, value: Int, onChange: (Int) -> Unit) {
+    var dragging by remember { mutableStateOf<Float?>(null) }
+    val shown = ((dragging ?: value.toFloat()) / 50f).roundToInt() * 50
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(title), style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.pijar_ms, NumberFormat.getIntegerInstance().format(shown)),
+            style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+    }
+    Slider(
+        value = dragging ?: value.toFloat(),
+        onValueChange = { dragging = it },
+        onValueChangeFinished = {
+            dragging?.let { onChange((it / 50f).roundToInt() * 50) }
+            dragging = null
+        },
+        valueRange = DEBOUNCE_MIN.toFloat()..DEBOUNCE_MAX.toFloat(),
+    )
 }
 
 @Composable
@@ -338,7 +305,7 @@ private fun LimitsCard(
     }
 }
 
-private fun roundNits(nits: Float): Float = when {
+internal fun roundNits(nits: Float): Float = when {
     nits < 10f -> (nits * 10).roundToInt() / 10f
     nits < 100f -> nits.roundToInt().toFloat()
     else -> (nits / 10).roundToInt() * 10f

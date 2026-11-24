@@ -10,6 +10,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.hardware.display.BrightnessConfiguration
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
@@ -48,6 +49,10 @@ import org.yasvara.laras.data.brightness.SunMode
 class BrightnessCurve(val lux: FloatArray, val nits: FloatArray) {
     val minNits: Float get() = nits.first()
     val maxNits: Float get() = nits.last()
+    val size: Int get() = lux.size
+
+    fun sameAs(other: BrightnessCurve?): Boolean =
+        other != null && lux.contentEquals(other.lux) && nits.contentEquals(other.nits)
 
     fun nitsAt(l: Float): Float {
         if (l <= lux.first()) return nits.first()
@@ -65,7 +70,10 @@ data class BrightnessUi(
     val loaded: Boolean = false,
     val settings: BrightnessSettings = BrightnessSettings(),
     val curve: BrightnessCurve? = null,
-)
+    val defaultCurve: BrightnessCurve? = null,
+) {
+    val curveEdited: Boolean get() = curve != null && defaultCurve != null && !curve.sameAs(defaultCurve)
+}
 
 /** Pijar's keys, kept in step with whoever else writes them, plus the curve and live lux. */
 class BrightnessViewModel(app: Application) : AndroidViewModel(app) {
@@ -113,22 +121,32 @@ class BrightnessViewModel(app: Application) : AndroidViewModel(app) {
     fun refresh() {
         viewModelScope.launch {
             val ui = withContext(Dispatchers.IO) {
-                BrightnessUi(loaded = true, settings = BrightnessSettings.read(resolver), curve = readCurve())
+                BrightnessUi(
+                    loaded = true,
+                    settings = BrightnessSettings.read(resolver),
+                    curve = readCurve(default = false),
+                    defaultCurve = readCurve(default = true),
+                )
             }
             // A write still in flight wins over what was read before it landed.
             if (!writes.isLocked) _state.value = ui
         }
     }
 
-    private fun readCurve(): BrightnessCurve? = runCatching {
-        val config = getApplication<Application>().getSystemService(DisplayManager::class.java)
-            ?.brightnessConfiguration ?: return null
+    private val displays: DisplayManager? get() =
+        getApplication<Application>().getSystemService(DisplayManager::class.java)
+
+    private fun readCurve(default: Boolean): BrightnessCurve? = runCatching {
+        val dm = displays ?: return null
+        val config = (if (default) dm.defaultBrightnessConfiguration else dm.brightnessConfiguration)
+            ?: return null
         val curve = config.curve
         if (curve.first.size < 2) null else BrightnessCurve(curve.first, curve.second)
     }.getOrNull()
 
     fun setProfile(profile: BrightnessProfile) = write({ it.copy(
-        profile = profile, speedUp = profile.speedUp, speedDown = profile.speedDown) }) {
+        profile = profile, speedUp = profile.speedUp, speedDown = profile.speedDown,
+        debounceUp = profile.debounceUp, debounceDown = profile.debounceDown) }) {
         put(KEY_PROFILE, if (profile == BrightnessProfile.BALANCED) null else profile.value.toString())
         put(KEY_SPEED_UP, null)
         put(KEY_SPEED_DOWN, null)
@@ -139,7 +157,9 @@ class BrightnessViewModel(app: Application) : AndroidViewModel(app) {
     /** Any speed edit makes the profile Custom, keeping the preset it came from as the debounce. */
     fun setSpeed(up: Float, down: Float) {
         val from = _state.value.settings.profile
-        write({ it.copy(profile = BrightnessProfile.CUSTOM, speedUp = up, speedDown = down) }) {
+        write({ it.copy(profile = BrightnessProfile.CUSTOM, speedUp = up, speedDown = down,
+            debounceUp = if (from == BrightnessProfile.CUSTOM) it.debounceUp else from.debounceUp,
+            debounceDown = if (from == BrightnessProfile.CUSTOM) it.debounceDown else from.debounceDown) }) {
             put(KEY_PROFILE, BrightnessProfile.CUSTOM.value.toString())
             put(KEY_SPEED_UP, up.toString())
             put(KEY_SPEED_DOWN, down.toString())
@@ -147,6 +167,36 @@ class BrightnessViewModel(app: Application) : AndroidViewModel(app) {
                 put(KEY_DEBOUNCE_UP, from.debounceUp?.toString())
                 put(KEY_DEBOUNCE_DOWN, from.debounceDown?.toString())
             }
+        }
+    }
+
+    /** Stores the curve for this user; null goes back to the panel's own curve. */
+    fun setCurve(curve: BrightnessCurve?) {
+        viewModelScope.launch {
+            writes.withLock {
+                _state.update { it.copy(curve = curve ?: it.defaultCurve) }
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        displays?.setBrightnessConfiguration(curve?.let {
+                            BrightnessConfiguration.Builder(it.lux, it.nits)
+                                .setDescription("Laras")
+                                .build()
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    /** Like a speed edit: the profile becomes Custom and keeps its speeds. */
+    fun setDebounce(up: Int?, down: Int?) {
+        val s = _state.value.settings
+        write({ it.copy(profile = BrightnessProfile.CUSTOM, debounceUp = up, debounceDown = down) }) {
+            put(KEY_PROFILE, BrightnessProfile.CUSTOM.value.toString())
+            put(KEY_SPEED_UP, s.speedUp.toString())
+            put(KEY_SPEED_DOWN, s.speedDown.toString())
+            put(KEY_DEBOUNCE_UP, up?.toString())
+            put(KEY_DEBOUNCE_DOWN, down?.toString())
         }
     }
 

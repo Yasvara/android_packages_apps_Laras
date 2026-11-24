@@ -37,6 +37,11 @@ const val SUN_LUX_MAX = 20000f
 /** The panel's HBM entry lux, which the framework uses while the key is unset. */
 const val SUN_LUX_DEFAULT = 4475f
 const val LIMIT_GAP_NITS = 50f
+const val DEBOUNCE_MIN = 100
+const val DEBOUNCE_MAX = 5000
+/** The panel's auto-brightness debounce, which the framework uses while the keys are unset. */
+const val DEBOUNCE_UP_DEFAULT = 500
+const val DEBOUNCE_DOWN_DEFAULT = 2000
 
 enum class BrightnessProfile(
     override val value: Int,
@@ -66,6 +71,9 @@ data class BrightnessSettings(
     val profile: BrightnessProfile = BrightnessProfile.BALANCED,
     val speedUp: Float = 1f,
     val speedDown: Float = 1f,
+    /** Null while the build's debounce applies. */
+    val debounceUp: Int? = null,
+    val debounceDown: Int? = null,
     val sunOn: Boolean = true,
     val sunMode: SunMode = SunMode.CURVE,
     /** Null while unset. */
@@ -91,6 +99,10 @@ data class BrightnessSettings(
                 else profile.speedUp,
                 speedDown = if (custom) (float(KEY_SPEED_DOWN) ?: 1f).coerceIn(SPEED_MIN, SPEED_MAX)
                 else profile.speedDown,
+                debounceUp = if (custom) int(KEY_DEBOUNCE_UP)?.takeIf { it >= 0 }
+                    ?.coerceIn(DEBOUNCE_MIN, DEBOUNCE_MAX) else profile.debounceUp,
+                debounceDown = if (custom) int(KEY_DEBOUNCE_DOWN)?.takeIf { it >= 0 }
+                    ?.coerceIn(DEBOUNCE_MIN, DEBOUNCE_MAX) else profile.debounceDown,
                 sunOn = sun != 0,
                 sunMode = if (sun == 2) SunMode.FIXED else SunMode.CURVE,
                 sunLux = float(KEY_SUN_LUX)?.coerceIn(SUN_LUX_MIN, SUN_LUX_MAX),

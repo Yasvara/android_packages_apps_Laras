@@ -32,4 +32,15 @@
     <string name="pijar_sun_lux">Starts at</string>
     <string name="pijar_thermal">Heat guard</string>
     <string name="pijar_thermal_summary">Dims when the phone is hot, like stock</string>
+    <string name="pijar_edit_curve">Edit curve</string>
+    <string name="pijar_done">Done</string>
+    <string name="pijar_curve_reset">Panel curve</string>
+    <string name="pijar_curve_hint">Drag a point · double-tap to add · hold to remove</string>
+    <string name="pijar_curve_restored">Panel curve restored</string>
+    <string name="pijar_point_removed">Point removed</string>
+    <string name="pijar_undo">Undo</string>
+    <string name="pijar_advanced">Advanced</string>
+    <string name="pijar_debounce_up">Wait before brightening</string>
+    <string name="pijar_debounce_down">Wait before darkening</string>
+    <string name="pijar_ms"><xliff:g id="ms" example="500">%1$s</xliff:g> ms</string>
 </resources>
