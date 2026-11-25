@@ -133,6 +133,7 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
         NavLink(R.string.color_title, R.string.color_entry_summary, Route.Color),
     )
     SystemGroup.APPS -> listOf(
+        NavLink(R.string.pasang_title, R.string.pasang_entry_summary, Route.Pasang),
         NavLink(R.string.updates_title, R.string.updates_entry_summary, Route.AppUpdates()),
     )
     SystemGroup.DISPLAY -> listOf(

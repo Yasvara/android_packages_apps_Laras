@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.yasvara.laras.data.Namespace
 import org.yasvara.laras.data.SettingsRepository
+import org.yasvara.laras.data.pasang.PasangRepository
 import org.yasvara.laras.data.theme.CommitResult
 import org.yasvara.laras.data.theme.SettingsThemeStore
 import org.yasvara.laras.data.theme.ThemeApplier
@@ -188,6 +189,9 @@ class ColorViewModel(app: Application) : AndroidViewModel(app) {
                 applied.value = Draft(spec, resolved.draft.pureBlack)
                 _draft.value = applied.value
                 checkParity(resolved.scheme.fingerprint)
+                launch(Dispatchers.IO) {
+                    PasangRepository.syncRecoveryTheme(resolved.seed, resolved.draft.pureBlack)
+                }
             }
             done(result)
         }

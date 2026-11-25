@@ -4,12 +4,29 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources>
+    <string name="tabir_tab_home">Home</string>
+    <string name="tabir_tab_apps">Apps</string>
     <string name="tabir_tab_rules">Rules</string>
     <string name="tabir_tab_templates">Templates</string>
     <string name="tabir_tab_simulate">View as</string>
 
+    <string name="tabir_hero_active_title">Tabir Shield Active</string>
+    <string name="tabir_hero_idle_title">Tabir Standby</string>
+    <string name="tabir_hero_active_desc">Native framework visibility &amp; Dev/ADB shields running with O(1) lookup and zero app hooks</string>
+    <string name="tabir_hero_idle_desc">Pick apps in Apps tab or apply a template to shield banking, games, and detectors</string>
+    <string name="tabir_stat_protected">Protected</string>
+    <string name="tabir_stat_templates">Templates</string>
+    <string name="tabir_stat_hidden">Targets</string>
+
+    <string name="tabir_quick_actions">Quick actions</string>
+    <string name="tabir_action_backup">Backup</string>
+    <string name="tabir_action_restore">Restore</string>
+    <string name="tabir_action_guide">How to use</string>
+    <string name="tabir_guide_title">How to use Tabir</string>
+    <string name="tabir_guide_body">1. Open the Apps tab and tap any banking, game, or detector app.\n\n2. Enable Per-app Shield and choose Whitelist (recommended for banking &amp; games: hides all other user apps &amp; ROM packages except what you allow) or Blacklist (hides selected targets).\n\n3. Use Templates to reuse rules across many apps, or enable Bulk Select in the Apps tab to shield multiple apps in one tap.\n\n4. Use View as to verify exactly what an app can and cannot see.</string>
+
     <string name="tabir_surfaces_title">Surface concealment</string>
-    <string name="tabir_surfaces_subtitle">Native framework &amp; SettingsProvider shields applied with zero app hooks</string>
+    <string name="tabir_surfaces_subtitle">Native framework &amp; SettingsProvider shields with zero app hooks</string>
     <string name="tabir_hide_xposed_summary">%1$d Xposed module(s) detected</string>
     <string name="tabir_hide_rom">Hide Custom ROM packages</string>
     <string name="tabir_hide_rom_summary">Conceals custom ROM &amp; Yasvara packages (%1$d installed), keeping core android intact</string>
@@ -19,31 +36,58 @@
     <string name="tabir_dev_title">Developer Options &amp; ADB state</string>
     <string name="tabir_dev_summary">Spoofs adb_enabled, adb_wifi_enabled, development_settings_enabled &amp; sticky USB state</string>
     <string name="tabir_dev_off">Off</string>
-    <string name="tabir_dev_observers">Observers only</string>
+    <string name="tabir_dev_observers">Protected only</string>
     <string name="tabir_dev_all">All user apps</string>
 
-    <string name="tabir_global_title">Global scope</string>
+    <string name="tabir_global_title">Global fallback rules</string>
+    <string name="tabir_global_summary">Applies to apps without a per-app Blacklist or Whitelist rule</string>
     <string name="tabir_per_app_title">Per-app overrides (HMA)</string>
     <string name="tabir_per_app_add">Configure app</string>
-    <string name="tabir_per_app_empty">No per-app overrides yet. Tap Configure app to set Blacklist or Whitelist + Templates per observer.</string>
+    <string name="tabir_per_app_empty">No per-app overrides yet. Tap any app in the Apps tab to configure.</string>
+
+    <string name="tabir_filter_all">All</string>
+    <string name="tabir_filter_protected">Protected</string>
+    <string name="tabir_filter_detectors">Detectors</string>
+    <string name="tabir_filter_unconfigured">Default</string>
+    <string name="tabir_bulk_mode">Bulk</string>
+    <string name="tabir_bulk_apply">Configure %1$d apps</string>
+    <string name="tabir_bulk_title">Bulk configure (%1$d apps)</string>
+    <string name="tabir_bulk_done">Applied rules to %1$d apps</string>
 
     <string name="tabir_mode_global">Global</string>
     <string name="tabir_mode_blacklist">Blacklist</string>
     <string name="tabir_mode_whitelist">Whitelist</string>
-    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d template(s), %2$d custom app(s)</string>
-    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d template(s), %2$d allowed app(s)</string>
+    <string name="tabir_badge_default">Default</string>
+    <string name="tabir_badge_detector">Detector</string>
+    <string name="tabir_enable_per_app">Enable custom shield for this app</string>
+    <string name="tabir_enable_per_app_summary">When off, this app inherits Global fallback rules</string>
+    <string name="tabir_mode_whitelist_desc">Recommended for banking &amp; games — hides all user apps &amp; ROM packages except allowed ones</string>
+    <string name="tabir_mode_blacklist_desc">Hides global targets, assigned templates, and extra selected apps</string>
+    <string name="tabir_stop_and_open">Stop &amp; Open</string>
+    <string name="tabir_stop_only_toast">Force-stopped %1$s</string>
+    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d template(s), %2$d custom</string>
+    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d template(s), %2$d allowed</string>
+    <string name="tabir_observer_summary_global_active">Shielded by global scope</string>
 
     <string name="tabir_templates_new">New template</string>
-    <string name="tabir_templates_empty">No templates saved yet.</string>
+    <string name="tabir_templates_new_whitelist">+ Whitelist</string>
+    <string name="tabir_templates_new_blacklist">+ Blacklist</string>
+    <string name="tabir_templates_empty">No templates saved yet. Create a Whitelist or Blacklist template to reuse across multiple apps.</string>
     <string name="tabir_template_name">Template name</string>
-    <string name="tabir_template_summary_blacklist">Blacklist • Hides %1$d package(s)</string>
-    <string name="tabir_template_summary_whitelist">Whitelist • Allows %1$d package(s) + system apps</string>
-    <string name="tabir_assign_templates">Assigned templates</string>
+    <string name="tabir_template_summary_blacklist">Blacklist • %1$d target(s) • %2$d app(s)</string>
+    <string name="tabir_template_summary_whitelist">Whitelist • %1$d allowed • %2$d app(s)</string>
+    <string name="tabir_template_tab_targets">Target apps (%1$d)</string>
+    <string name="tabir_template_tab_applied">Applied apps (%1$d)</string>
+    <string name="tabir_template_quick_root">+ Root tools</string>
+    <string name="tabir_template_quick_xposed">+ Xposed</string>
+    <string name="tabir_template_quick_rom">+ ROM pkgs</string>
+    <string name="tabir_assign_templates">Active templates</string>
     <string name="tabir_custom_blacklist_apps">Extra hidden apps</string>
     <string name="tabir_custom_whitelist_apps">Allowed visible apps</string>
     <string name="tabir_save">Save</string>
     <string name="tabir_delete">Delete</string>
     <string name="tabir_cancel">Cancel</string>
+    <string name="tabir_ok">Got it</string>
 
     <string name="tabir_action_force_stop">Force-stop hidden apps</string>
     <string name="tabir_action_export">Export JSON backup</string>
@@ -56,6 +100,9 @@
     <string name="tabir_sim_dev_hidden">Developer Options &amp; ADB concealed (returns 0)</string>
     <string name="tabir_sim_dev_visible">Developer Options &amp; ADB visible to this app</string>
     <string name="tabir_sim_counts">%1$d hidden • %2$d visible</string>
-    <string name="tabir_sim_empty">Pick an installed app above to preview every package and setting it can observe.</string>
+    <string name="tabir_sim_empty">Pick any installed app to inspect every package and setting it can observe.</string>
+    <string name="tabir_sim_configure">Configure this app</string>
+    <string name="tabir_sim_filter_all">All</string>
+    <string name="tabir_sim_filter_hidden">Hidden</string>
+    <string name="tabir_sim_filter_visible">Visible</string>
 </resources>
-

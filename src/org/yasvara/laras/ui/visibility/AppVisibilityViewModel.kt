@@ -5,6 +5,7 @@
 package org.yasvara.laras.ui.visibility
 
 import android.app.Application
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.server.yasvara.visibility.IYasvaraAppVisibility as Rules
@@ -29,6 +30,8 @@ data class AppVisibilityUi(
     val hideRootTooling: Boolean = true,
     val devOptionsHideMode: Int = Rules.DEV_HIDE_ALL_NON_SYSTEM,
     val hidden: Set<String> = emptySet(),
+    val observers: Set<String> = emptySet(),
+    val exceptions: Set<String> = emptySet(),
     val callers: Set<String> = emptySet(),
     val modules: Set<String> = emptySet(),
     val detectedRom: Set<String> = emptySet(),
@@ -41,6 +44,7 @@ data class AppVisibilityUi(
     val suggestedTargets: List<String> = emptyList(),
     val suggestedDetectors: List<String> = emptyList(),
     val viewAs: String? = null,
+    val viewAsMode: Int = Rules.MODE_GLOBAL,
     val viewAsDevHidden: Boolean = false,
     /** Target package to whether it is hidden from [viewAs]. */
     val viewAsResult: Map<String, Boolean> = emptyMap(),
@@ -52,17 +56,70 @@ data class AppVisibilityUi(
         get() = suggestedDetectors.isNotEmpty() &&
             (suggestedTargets.isNotEmpty() || detectedRom.isNotEmpty() || detectedRoot.isNotEmpty() || modules.isNotEmpty())
 
+    /** Count of apps actively shielded by Tabir (per-app overrides + global observers). */
+    val protectedAppCount: Int
+        get() = if (scope == Rules.SCOPE_ALL_USER_APPS) {
+            val nonExemptUser = apps.count { it.packageName !in exceptions }
+            maxOf(nonExemptUser, observerConfigs.size)
+        } else {
+            (observers + observerConfigs.keys).size
+        }
+
+    /** Total distinct targets hidden globally (manual + Xposed + root tooling + ROM packages). */
+    val totalHiddenTargetCount: Int
+        get() = buildSet {
+            addAll(hidden)
+            if (hideXposed) addAll(modules)
+            if (hideRootTooling) addAll(detectedRoot)
+            if (hideRomPackages) addAll(detectedRom)
+        }.size
+
+    val isShieldActive: Boolean
+        get() = available && (
+            observerConfigs.isNotEmpty() ||
+                totalHiddenTargetCount > 0 && (scope == Rules.SCOPE_ALL_USER_APPS || observers.isNotEmpty()) ||
+                devOptionsHideMode != Rules.DEV_HIDE_OFF
+            )
+
+    fun isProtectedApp(pkg: String): Boolean {
+        if (pkg in observerConfigs) return true
+        return if (scope == Rules.SCOPE_ALL_USER_APPS) {
+            pkg !in exceptions && totalHiddenTargetCount > 0
+        } else {
+            pkg in observers
+        }
+    }
+
+    fun appliedObserversForTemplate(templateName: String): Set<String> =
+        observerConfigs.filterValues { templateName in it.templates }.keys
+
     fun label(pkg: String) = labels[pkg] ?: pkg
 }
 
-/** Every change goes to system_server at once and applies without a restart. */
-class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
+/**
+ * Unified Tabir v2 ViewModel.
+ *
+ * Uses single-IPC snapshot + cached PM app metadata so toggling any setting or editing rules
+ * requires 1 Binder round-trip and zero full PackageManager re-scans.
+ */
+class AppVisibilityViewModel(private val app: Application) : AndroidViewModel(app) {
     private val repository = AppVisibilityRepository(app)
     private val _state = MutableStateFlow(AppVisibilityUi())
     val state: StateFlow<AppVisibilityUi> = _state.asStateFlow()
 
+    @Volatile
+    private var cachedUserApps: List<UserApp>? = null
+    @Volatile
+    private var cachedRomAppsKey: Set<String> = emptySet()
+    @Volatile
+    private var cachedRomApps: List<UserApp> = emptyList()
+
     init {
-        reload()
+        refresh(reloadApps = true)
+    }
+
+    fun refresh(reloadApps: Boolean = false) {
+        viewModelScope.launch(Dispatchers.IO) { load(reloadApps = reloadApps) }
     }
 
     fun setScope(scope: Int) = edit { repository.setScope(scope) }
@@ -81,8 +138,21 @@ class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
     fun setCaller(pkg: String, listed: Boolean) =
         edit { repository.setListed(_state.value.callersList, listOf(pkg), listed) }
 
-    fun saveTemplate(name: String, mode: Int, packages: Set<String>) =
-        edit { repository.putTemplate(name, mode, packages) }
+    fun saveTemplateWithApplied(
+        oldName: String?,
+        newName: String,
+        mode: Int,
+        targetPackages: Set<String>,
+        appliedObservers: Set<String>,
+    ) = edit {
+        repository.setTemplateWithAppliedApps(
+            oldName = oldName,
+            newName = newName,
+            mode = mode,
+            targetPackages = targetPackages,
+            appliedObservers = appliedObservers,
+        )
+    }
 
     fun deleteTemplate(name: String) =
         edit { repository.deleteTemplate(name) }
@@ -100,12 +170,31 @@ class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun applyBulkObserverConfig(
+        observers: Set<String>,
+        mode: Int,
+        packages: Set<String>,
+        templates: Set<String>,
+    ) = edit {
+        repository.setBulkObserverConfig(observers, mode, packages, templates)
+    }
+
     fun clearObserverConfig(observer: String) =
         edit { repository.clearObserverConfig(observer) }
 
     fun viewAs(pkg: String?) {
         _state.value = _state.value.copy(viewAs = pkg)
-        reload()
+        if (pkg == null) {
+            _state.value = _state.value.copy(
+                viewAsMode = Rules.MODE_GLOBAL,
+                viewAsDevHidden = false,
+                viewAsResult = emptyMap(),
+            )
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            evaluateViewAs(pkg)
+        }
     }
 
     fun applySuggestion() {
@@ -123,8 +212,25 @@ class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
     fun forceStopHidden(onDone: (Int) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val count = repository.forceStopHiddenTargets()
-            load()
             withContext(Dispatchers.Main) { onDone(count) }
+        }
+    }
+
+    fun forceStopAndLaunch(pkg: String, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.forceStopPackage(pkg)
+            val launch = app.packageManager.getLaunchIntentForPackage(pkg)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            val started = if (launch != null) {
+                runCatching {
+                    app.startActivity(launch)
+                    true
+                }.getOrDefault(false)
+            } else {
+                false
+            }
+            withContext(Dispatchers.Main) { onDone(started) }
         }
     }
 
@@ -138,7 +244,7 @@ class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
     fun importJson(json: String, onDone: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val ok = repository.importConfigJson(json)
-            load()
+            if (ok) load(reloadApps = false)
             withContext(Dispatchers.Main) { onDone(ok) }
         }
     }
@@ -146,99 +252,102 @@ class AppVisibilityViewModel(app: Application) : AndroidViewModel(app) {
     private fun edit(block: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             block()
-            load()
+            load(reloadApps = false)
         }
     }
 
-    private fun reload() {
-        viewModelScope.launch(Dispatchers.IO) { load() }
+    private fun evaluateViewAs(observer: String) {
+        val eval = repository.evaluateObserver(observer)
+        val labels = _state.value.labels
+        val sorted = eval.results.entries
+            .sortedWith(
+                compareByDescending<Map.Entry<String, Boolean>> { it.value }
+                    .thenBy { (labels[it.key] ?: it.key).lowercase() },
+            )
+            .associate { it.key to it.value }
+        _state.value = _state.value.copy(
+            viewAs = observer,
+            viewAsMode = eval.mode,
+            viewAsDevHidden = eval.devHidden,
+            viewAsResult = sorted,
+        )
     }
 
-    private fun load() {
-        val scope = repository.scope
-        val hideXposed = repository.hideXposed
-        val hideRom = repository.hideRomPackages
-        val hideRoot = repository.hideRootTooling
-        val devMode = repository.devOptionsHideMode
+    private fun load(reloadApps: Boolean) {
+        val snap = repository.loadSnapshot()
+        if (!snap.available) {
+            _state.value = _state.value.copy(loading = false, available = false)
+            return
+        }
 
-        val hidden = repository.list(Rules.LIST_HIDDEN)
-        val observers = repository.list(Rules.LIST_OBSERVERS)
-        val callers = repository.list(
-            if (scope == Rules.SCOPE_ALL_USER_APPS) Rules.LIST_EXCEPTIONS else Rules.LIST_OBSERVERS,
-        )
-        val modules = repository.modules()
-        val detectedRom = repository.detectedRomPackages()
-        val detectedRoot = repository.detectedRootPackages()
-        val templates = repository.templates()
-        val observerConfigs = repository.observerConfigs()
+        val apps = if (reloadApps || cachedUserApps == null) {
+            repository.userApps().also { cachedUserApps = it }
+        } else {
+            cachedUserApps!!
+        }
 
-        val apps = repository.userApps()
-        val romApps = repository.resolveApps(detectedRom)
-        val extraKnown = hidden + callers + observerConfigs.keys +
-            observerConfigs.values.flatMap { it.packages } +
-            templates.flatMap { it.packages }
-        val extraResolved = repository.resolveApps(extraKnown - apps.map { it.packageName }.toSet() - detectedRom)
+        val romApps = if (reloadApps || snap.detectedRom != cachedRomAppsKey) {
+            repository.resolveApps(snap.detectedRom).also {
+                cachedRomAppsKey = snap.detectedRom
+                cachedRomApps = it
+            }
+        } else {
+            cachedRomApps
+        }
+
+        val callers = if (snap.scope == Rules.SCOPE_ALL_USER_APPS) snap.exceptions else snap.observers
+        val userPkgSet = apps.mapTo(HashSet(apps.size)) { it.packageName }
+        val extraKnown = snap.hidden + callers + snap.observerConfigs.keys +
+            snap.observerConfigs.values.flatMap { it.packages } +
+            snap.templates.flatMap { it.packages }
+        val unresolved = extraKnown - userPkgSet - snap.detectedRom
+        val extraResolved = if (unresolved.isNotEmpty()) repository.resolveApps(unresolved) else emptyList()
 
         val labels = HashMap<String, String>(apps.size + romApps.size + extraResolved.size)
         for (a in apps) labels[a.packageName] = a.label
         for (a in romApps) labels[a.packageName] = a.label
         for (a in extraResolved) labels[a.packageName] = a.label
 
-        val installedUser = apps.map { it.packageName }
-        val configuredObservers = observers + observerConfigs.keys
-
-        val viewAs = _state.value.viewAs
-        val candidateTargets = LinkedHashSet<String>().apply {
-            addAll(hidden)
-            addAll(modules)
-            addAll(detectedRoot)
-            addAll(detectedRom)
-            if (viewAs != null) {
-                val obsRule = observerConfigs[viewAs]
-                if (obsRule != null) {
-                    addAll(obsRule.packages)
-                    if (obsRule.mode == Rules.MODE_WHITELIST) {
-                        addAll(installedUser)
-                    }
-                }
-            }
-        }
-
-        val viewAsResult = viewAs?.let { observer ->
-            candidateTargets
-                .filter { it != observer && it != "android" }
-                .sortedBy { (labels[it] ?: it).lowercase() }
-                .associateWith { target -> repository.isHiddenFrom(target, observer) }
-        }.orEmpty()
-
-        val viewAsDevHidden = viewAs?.let { repository.isDevOptionsHiddenFrom(it) } ?: false
+        val configuredObservers = snap.observers + snap.observerConfigs.keys
+        val currentViewAs = _state.value.viewAs
+        val eval = currentViewAs?.let { repository.evaluateObserver(it) }
+        val viewAsSorted = eval?.results?.entries
+            ?.sortedWith(
+                compareByDescending<Map.Entry<String, Boolean>> { it.value }
+                    .thenBy { (labels[it.key] ?: it.key).lowercase() },
+            )
+            ?.associate { it.key to it.value }
+            .orEmpty()
 
         _state.value = _state.value.copy(
             loading = false,
-            available = repository.available,
-            scope = scope,
-            hideXposed = hideXposed,
-            hideRomPackages = hideRom,
-            hideRootTooling = hideRoot,
-            devOptionsHideMode = devMode,
-            hidden = hidden,
+            available = true,
+            scope = snap.scope,
+            hideXposed = snap.hideXposed,
+            hideRomPackages = snap.hideRomPackages,
+            hideRootTooling = snap.hideRootTooling,
+            devOptionsHideMode = snap.devOptionsHideMode,
+            hidden = snap.hidden,
+            observers = snap.observers,
+            exceptions = snap.exceptions,
             callers = callers,
-            modules = modules,
-            detectedRom = detectedRom,
-            detectedRoot = detectedRoot,
-            templates = templates,
-            observerConfigs = observerConfigs,
+            modules = snap.modules,
+            detectedRom = snap.detectedRom,
+            detectedRoot = snap.detectedRoot,
+            templates = snap.templates,
+            observerConfigs = snap.observerConfigs,
             apps = apps,
             romApps = romApps,
             labels = labels,
-            suggestedTargets = installedUser.filter {
-                VisibilitySuggestions.isTarget(it) && it !in hidden && !hideRoot
+            suggestedTargets = apps.map { it.packageName }.filter {
+                VisibilitySuggestions.isTarget(it) && it !in snap.hidden && !snap.hideRootTooling
             },
-            suggestedDetectors = installedUser.filter {
+            suggestedDetectors = apps.map { it.packageName }.filter {
                 VisibilitySuggestions.isDetector(it) && it !in configuredObservers
             },
-            viewAsDevHidden = viewAsDevHidden,
-            viewAsResult = viewAsResult,
+            viewAsMode = eval?.mode ?: Rules.MODE_GLOBAL,
+            viewAsDevHidden = eval?.devHidden ?: false,
+            viewAsResult = viewAsSorted,
         )
     }
 }

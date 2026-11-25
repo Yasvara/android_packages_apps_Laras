@@ -6,10 +6,11 @@ package org.yasvara.laras.data.visibility
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.RemoteException
 import android.os.ServiceManager
 import com.android.server.yasvara.visibility.IYasvaraAppVisibility
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class UserApp(
     val packageName: String,
@@ -27,6 +28,30 @@ data class ObserverConfig(
     val mode: Int,
     val packages: Set<String>,
     val templates: Set<String>,
+)
+
+data class TabirSnapshot(
+    val available: Boolean,
+    val scope: Int = IYasvaraAppVisibility.SCOPE_SELECTED,
+    val hideXposed: Boolean = true,
+    val hideRomPackages: Boolean = true,
+    val hideRootTooling: Boolean = true,
+    val devOptionsHideMode: Int = IYasvaraAppVisibility.DEV_HIDE_ALL_NON_SYSTEM,
+    val hidden: Set<String> = emptySet(),
+    val observers: Set<String> = emptySet(),
+    val exceptions: Set<String> = emptySet(),
+    val modules: Set<String> = emptySet(),
+    val detectedRom: Set<String> = emptySet(),
+    val detectedRoot: Set<String> = emptySet(),
+    val templates: List<TabirTemplate> = emptyList(),
+    val observerConfigs: Map<String, ObserverConfig> = emptyMap(),
+)
+
+data class ObserverEvalResult(
+    val observer: String,
+    val mode: Int = IYasvaraAppVisibility.MODE_GLOBAL,
+    val devHidden: Boolean = false,
+    val results: Map<String, Boolean> = emptyMap(),
 )
 
 /** Offered to the owner as one-tap rules, never applied on their own. */
@@ -74,68 +99,179 @@ object VisibilitySuggestions {
 class AppVisibilityRepository(private val context: Context) {
     private fun service(): IYasvaraAppVisibility? = try {
         ServiceManager.getService(SERVICE)?.let(IYasvaraAppVisibility.Stub::asInterface)
-    } catch (e: RuntimeException) {
+    } catch (_: RuntimeException) {
         null
     }
 
     val available get() = service() != null
 
-    val scope get() = call(IYasvaraAppVisibility.SCOPE_SELECTED) { it.scope }
+    /**
+     * Fetches the entire Tabir control-plane state in a single Binder IPC (eliminating the
+     * 20+ sequential IPCs and redundant system-wide PM cache invalidations).
+     */
+    fun loadSnapshot(): TabirSnapshot {
+        val svc = service() ?: return TabirSnapshot(available = false)
+        return try {
+            val raw = svc.uiSnapshotJson
+            if (raw.isNullOrBlank() || raw == "{}") {
+                loadSnapshotLegacy(svc)
+            } else {
+                parseSnapshot(raw)
+            }
+        } catch (_: Throwable) {
+            runCatching { loadSnapshotLegacy(svc) }.getOrElse { TabirSnapshot(available = false) }
+        }
+    }
 
-    fun setScope(scope: Int) = call(Unit) { it.setScope(scope) }
+    private fun parseSnapshot(raw: String): TabirSnapshot {
+        val root = JSONObject(raw)
+        val templates = ArrayList<TabirTemplate>()
+        root.optJSONObject("templates")?.let { tplMap ->
+            val keys = tplMap.keys()
+            while (keys.hasNext()) {
+                val name = keys.next()
+                val obj = tplMap.optJSONObject(name) ?: continue
+                templates += TabirTemplate(
+                    name = name,
+                    mode = obj.optInt("mode", IYasvaraAppVisibility.MODE_BLACKLIST),
+                    packages = jsonToSet(obj.optJSONArray("packages")),
+                )
+            }
+        }
+        templates.sortBy { it.name.lowercase() }
 
-    val hideXposed get() = call(true) { it.hideXposed }
+        val observerConfigs = LinkedHashMap<String, ObserverConfig>()
+        root.optJSONObject("observerRules")?.let { ruleMap ->
+            val names = ArrayList<String>()
+            val keys = ruleMap.keys()
+            while (keys.hasNext()) names += keys.next()
+            names.sort()
+            for (obs in names) {
+                val obj = ruleMap.optJSONObject(obs) ?: continue
+                observerConfigs[obs] = ObserverConfig(
+                    mode = obj.optInt("mode", IYasvaraAppVisibility.MODE_BLACKLIST),
+                    packages = jsonToSet(obj.optJSONArray("packages")),
+                    templates = jsonToSet(obj.optJSONArray("templates")),
+                )
+            }
+        }
 
-    fun setHideXposed(hide: Boolean) = call(Unit) { it.setHideXposed(hide) }
+        return TabirSnapshot(
+            available = true,
+            scope = root.optInt("scope", IYasvaraAppVisibility.SCOPE_SELECTED),
+            hideXposed = root.optBoolean("hideXposed", true),
+            hideRomPackages = root.optBoolean("hideRomPackages", true),
+            hideRootTooling = root.optBoolean("hideRootTooling", true),
+            devOptionsHideMode = root.optInt(
+                "devOptionsHideMode",
+                IYasvaraAppVisibility.DEV_HIDE_ALL_NON_SYSTEM,
+            ),
+            hidden = jsonToSet(root.optJSONArray("hidden")),
+            observers = jsonToSet(root.optJSONArray("observers")),
+            exceptions = jsonToSet(root.optJSONArray("exceptions")),
+            modules = jsonToSet(root.optJSONArray("modules")),
+            detectedRom = jsonToSet(root.optJSONArray("detectedRom")),
+            detectedRoot = jsonToSet(root.optJSONArray("detectedRoot")),
+            templates = templates,
+            observerConfigs = observerConfigs,
+        )
+    }
 
-    val hideRomPackages get() = call(true) { it.hideRomPackages }
-
-    fun setHideRomPackages(hide: Boolean) = call(Unit) { it.setHideRomPackages(hide) }
-
-    val hideRootTooling get() = call(true) { it.hideRootTooling }
-
-    fun setHideRootTooling(hide: Boolean) = call(Unit) { it.setHideRootTooling(hide) }
-
-    val devOptionsHideMode
-        get() = call(IYasvaraAppVisibility.DEV_HIDE_ALL_NON_SYSTEM) { it.devOptionsHideMode }
-
-    fun setDevOptionsHideMode(mode: Int) = call(Unit) { it.setDevOptionsHideMode(mode) }
-
-    fun list(list: Int): Set<String> = call(emptySet()) { it.getList(list).toSet() }
-
-    fun setListed(list: Int, packages: Collection<String>, listed: Boolean) =
-        call(Unit) { it.setListed(list, packages.toTypedArray(), listed) }
-
-    fun modules(): Set<String> = call(emptySet()) { it.xposedModules.toSet() }
-
-    fun detectedRomPackages(): Set<String> = call(emptySet()) { it.detectedRomPackages.toSet() }
-
-    fun detectedRootPackages(): Set<String> = call(emptySet()) { it.detectedRootPackages.toSet() }
-
-    fun templates(): List<TabirTemplate> = call(emptyList()) { svc ->
-        svc.templateNames.map { name ->
+    private fun loadSnapshotLegacy(svc: IYasvaraAppVisibility): TabirSnapshot {
+        val templates = svc.templateNames.map { name ->
             TabirTemplate(
                 name = name,
                 mode = svc.getTemplateMode(name),
                 packages = svc.getTemplatePackages(name).toSet(),
             )
         }
-    }
-
-    fun putTemplate(name: String, mode: Int, packages: Collection<String>) =
-        call(Unit) { it.putTemplate(name, mode, packages.toTypedArray()) }
-
-    fun deleteTemplate(name: String) = call(Unit) { it.deleteTemplate(name) }
-
-    fun observerConfigs(): Map<String, ObserverConfig> = call(emptyMap()) { svc ->
-        svc.configuredObservers.associateWith { obs ->
+        val observerConfigs = svc.configuredObservers.associateWith { obs ->
             ObserverConfig(
                 mode = svc.getObserverMode(obs),
                 packages = svc.getObserverPackages(obs).toSet(),
                 templates = svc.getObserverTemplates(obs).toSet(),
             )
         }
+        return TabirSnapshot(
+            available = true,
+            scope = svc.scope,
+            hideXposed = svc.hideXposed,
+            hideRomPackages = svc.hideRomPackages,
+            hideRootTooling = svc.hideRootTooling,
+            devOptionsHideMode = svc.devOptionsHideMode,
+            hidden = svc.getList(IYasvaraAppVisibility.LIST_HIDDEN).toSet(),
+            observers = svc.getList(IYasvaraAppVisibility.LIST_OBSERVERS).toSet(),
+            exceptions = svc.getList(IYasvaraAppVisibility.LIST_EXCEPTIONS).toSet(),
+            modules = svc.xposedModules.toSet(),
+            detectedRom = svc.detectedRomPackages.toSet(),
+            detectedRoot = svc.detectedRootPackages.toSet(),
+            templates = templates,
+            observerConfigs = observerConfigs,
+        )
     }
+
+    /** Single-IPC batch View-As evaluation for [observer]. */
+    fun evaluateObserver(observer: String): ObserverEvalResult {
+        val svc = service() ?: return ObserverEvalResult(observer)
+        return try {
+            val raw = svc.evaluateObserverJson(observer)
+            if (raw.isNullOrBlank() || raw == "{}") {
+                return ObserverEvalResult(observer)
+            }
+            val obj = JSONObject(raw)
+            val resObj = obj.optJSONObject("results")
+            val results = LinkedHashMap<String, Boolean>()
+            if (resObj != null) {
+                val keys = resObj.keys()
+                while (keys.hasNext()) {
+                    val pkg = keys.next()
+                    results[pkg] = resObj.optBoolean(pkg, false)
+                }
+            }
+            ObserverEvalResult(
+                observer = observer,
+                mode = obj.optInt("mode", IYasvaraAppVisibility.MODE_GLOBAL),
+                devHidden = obj.optBoolean("devHidden", false),
+                results = results,
+            )
+        } catch (_: Throwable) {
+            ObserverEvalResult(observer)
+        }
+    }
+
+    fun setScope(scope: Int) = call(Unit) { it.setScope(scope) }
+
+    fun setHideXposed(hide: Boolean) = call(Unit) { it.setHideXposed(hide) }
+
+    fun setHideRomPackages(hide: Boolean) = call(Unit) { it.setHideRomPackages(hide) }
+
+    fun setHideRootTooling(hide: Boolean) = call(Unit) { it.setHideRootTooling(hide) }
+
+    fun setDevOptionsHideMode(mode: Int) = call(Unit) { it.setDevOptionsHideMode(mode) }
+
+    fun setListed(list: Int, packages: Collection<String>, listed: Boolean) =
+        call(Unit) { it.setListed(list, packages.toTypedArray(), listed) }
+
+    fun putTemplate(name: String, mode: Int, packages: Collection<String>) =
+        call(Unit) { it.putTemplate(name, mode, packages.toTypedArray()) }
+
+    fun setTemplateWithAppliedApps(
+        oldName: String?,
+        newName: String,
+        mode: Int,
+        targetPackages: Collection<String>,
+        appliedObservers: Collection<String>,
+    ) = call(Unit) {
+        it.setTemplateWithAppliedApps(
+            oldName,
+            newName,
+            mode,
+            targetPackages.toTypedArray(),
+            appliedObservers.toTypedArray(),
+        )
+    }
+
+    fun deleteTemplate(name: String) = call(Unit) { it.deleteTemplate(name) }
 
     fun setObserverConfig(
         observer: String,
@@ -151,15 +287,25 @@ class AppVisibilityRepository(private val context: Context) {
         )
     }
 
+    fun setBulkObserverConfig(
+        observers: Collection<String>,
+        mode: Int,
+        packages: Collection<String>,
+        templates: Collection<String>,
+    ) = call(Unit) {
+        it.setBulkObserverConfig(
+            observers.toTypedArray(),
+            mode,
+            packages.toTypedArray(),
+            templates.toTypedArray(),
+        )
+    }
+
     fun clearObserverConfig(observer: String) = call(Unit) { it.clearObserverConfig(observer) }
 
-    fun isHiddenFrom(target: String, observer: String) =
-        call(false) { it.isHiddenFrom(target, observer) }
-
-    fun isDevOptionsHiddenFrom(observer: String) =
-        call(false) { it.isDevOptionsHiddenFrom(observer) }
-
     fun forceStopHiddenTargets(): Int = call(0) { it.forceStopHiddenTargets() }
+
+    fun forceStopPackage(packageName: String): Boolean = call(false) { it.forceStopPackage(packageName) }
 
     fun exportConfigJson(): String = call("{}") { it.exportConfigJson() }
 
@@ -174,6 +320,7 @@ class AppVisibilityRepository(private val context: Context) {
     }
 
     fun resolveApps(packages: Collection<String>): List<UserApp> {
+        if (packages.isEmpty()) return emptyList()
         val pm = context.packageManager
         return packages.map { pkg ->
             runCatching {
@@ -189,9 +336,19 @@ class AppVisibilityRepository(private val context: Context) {
         }.sortedBy { it.label.lowercase() }
     }
 
+    private fun jsonToSet(arr: JSONArray?): Set<String> {
+        if (arr == null || arr.length() == 0) return emptySet()
+        val out = LinkedHashSet<String>(arr.length())
+        for (i in 0 until arr.length()) {
+            val s = arr.optString(i, "")
+            if (s.isNotEmpty()) out += s
+        }
+        return out
+    }
+
     private inline fun <T> call(fallback: T, block: (IYasvaraAppVisibility) -> T): T = try {
         service()?.let(block) ?: fallback
-    } catch (e: RemoteException) {
+    } catch (_: RemoteException) {
         fallback
     }
 

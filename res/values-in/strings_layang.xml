@@ -18,6 +18,8 @@
     <string name="layang_size_s">Kecil</string>
     <string name="layang_size_m">Sedang</string>
     <string name="layang_size_l">Besar</string>
+    <string name="pref_layang_mini_width">Ukuran jendela mini / bubble (dp)</string>
+    <string name="pref_layang_mini_width_summary">Lebar ringkas jendela mengambang mini</string>
     <string name="pref_layang_grip">Area tarik ubah ukuran (dp)</string>
     <string name="pref_layang_aspect">Pertahankan bentuk game</string>
     <string name="pref_layang_aspect_summary">Game hanya membesar dan mengecil, jadi tidak pernah relayout</string>

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import org.yasvara.laras.catalog.SystemGroup
 import org.yasvara.laras.debug.ColorDebug
 import org.yasvara.laras.debug.SeamSpike
 import org.yasvara.laras.ui.LarasApp
@@ -50,6 +51,8 @@ class LarasActivity : ComponentActivity() {
         ACTION_SOUND_APPS -> Route.SoundApps
         ACTION_WIFI_REGION -> Route.WifiRegion
         ACTION_PADAT -> Route.Padat(intent.getStringExtra(EXTRA_PACKAGE)?.takeIf { it.isNotEmpty() })
+        ACTION_PASANG -> Route.Pasang
+        ACTION_LAYANG -> Route.Group(SystemGroup.MULTITASKING)
         else -> Route.Home
     }
 
@@ -61,6 +64,8 @@ class LarasActivity : ComponentActivity() {
         const val ACTION_SOUND_APPS = "org.yasvara.laras.action.SOUND_APPS"
         const val ACTION_WIFI_REGION = "org.yasvara.laras.action.WIFI_REGION"
         const val ACTION_PADAT = "org.yasvara.laras.action.PADAT"
+        const val ACTION_PASANG = "org.yasvara.laras.action.PASANG"
+        const val ACTION_LAYANG = "org.yasvara.laras.action.LAYANG"
         const val EXTRA_PACKAGE = "package"
     }
 }

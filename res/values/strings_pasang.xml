@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pasang_title">System update</string>
+    <string name="pasang_entry_summary">Live in-OS CoW OTA with zero-merge flashing</string>
+    <string name="pasang_hero_subtitle">Live CoW OTA · 0s post-boot merge</string>
+    <string name="pasang_current_build">Current build</string>
+    <string name="pasang_active_slot">Active slot</string>
+    <string name="pasang_slot_label">Slot <xliff:g id="slot" example="B">%1$s</xliff:g></string>
+    <string name="pasang_super_space">Super partition space</string>
+    <string name="pasang_super_free"><xliff:g id="free" example="5.9 GB">%1$s</xliff:g> free of <xliff:g id="total" example="11.0 GB">%2$s</xliff:g></string>
+    <string name="pasang_merge_ready">Clean · 0s merge</string>
+    <string name="pasang_merge_busy">Merge state: <xliff:g id="state" example="merging">%1$s</xliff:g></string>
+    <string name="pasang_refresh">Refresh status</string>
+    <string name="pasang_service_unavailable">Pasang OTA daemon is unavailable</string>
+
+    <string name="pasang_local_section">Install local package</string>
+    <string name="pasang_pick_zip">Choose OTA ZIP</string>
+    <string name="pasang_pick_zip_summary">Flash a Yasvara OTA ZIP or payload.bin directly while using Android</string>
+    <string name="pasang_selected_file">Selected package</string>
+    <string name="pasang_analyze_action">Analyze plan</string>
+    <string name="pasang_install_action">Install now</string>
+    <string name="pasang_cancel_action">Cancel</string>
+    <string name="pasang_reboot_action">Restart now</string>
+    <string name="pasang_reboot_ready_title">Update ready</string>
+    <string name="pasang_reboot_ready_body">Restart once to switch into Slot <xliff:g id="slot" example="A">%1$s</xliff:g>. No recovery or post-boot merge needed.</string>
+
+    <string name="pasang_plan_title">Hyper-Flash plan</string>
+    <string name="pasang_plan_saved"><xliff:g id="pct" example="88.4">%1$s</xliff:g>%% aliased · <xliff:g id="write" example="640 MB">%2$s</xliff:g> to write</string>
+    <string name="pasang_plan_extents"><xliff:g id="parts" example="7">%1$d</xliff:g> dynamic · <xliff:g id="raw" example="12">%2$d</xliff:g> raw · <xliff:g id="ext" example="18">%3$d</xliff:g> extents</string>
+    <string name="pasang_plan_sig_ok">Release signature verified</string>
+    <string name="pasang_plan_sig_dev">Dev / unsigned build (allowed in debug)</string>
+
+    <string name="pasang_phase_preflight">Checking partitions &amp; backing up super…</string>
+    <string name="pasang_phase_indexing">Indexing active slot blocks…</string>
+    <string name="pasang_phase_planning">Planning dm-linear extent aliases…</string>
+    <string name="pasang_phase_flashing">Flashing <xliff:g id="part" example="system_a">%1$s</xliff:g>…</string>
+    <string name="pasang_phase_verifying">Verifying SHA-256 readback &amp; AVB…</string>
+    <string name="pasang_phase_committing">Committing super metadata &amp; slot…</string>
+    <string name="pasang_phase_cleaning_overlay">Cleaning OverlayFS upperdirs…</string>
+    <string name="pasang_phase_done">Update installed</string>
+    <string name="pasang_phase_cancelled">Update cancelled</string>
+    <string name="pasang_phase_error">Update failed</string>
+
+    <string name="pasang_telemetry_line"><xliff:g id="written" example="320 MB">%1$s</xliff:g> / <xliff:g id="total" example="640 MB">%2$s</xliff:g> · <xliff:g id="speed" example="410 MB/s">%3$s</xliff:g> · ETA <xliff:g id="eta" example="12s">%4$s</xliff:g></string>
+    <string name="pasang_alias_badge"><xliff:g id="pct" example="88.1">%1$s</xliff:g>%% zero-copy aliased</string>
+
+    <!-- Developer & Debug Options (hidden on production user builds) -->
+    <string name="pasang_dev_section">Developer &amp; debug options</string>
+    <string name="pasang_dev_auto_clean_overlay">Auto-clean OverlayFS after OTA</string>
+    <string name="pasang_dev_auto_clean_overlay_summary">Wipe /mnt/scratch/overlay upperdirs automatically after a verified OTA commit so pushed dev files do not mask the new build</string>
+    <string name="pasang_dev_clean_now">Clean OverlayFS now</string>
+    <string name="pasang_dev_overlay_files"><xliff:g id="count" example="14">%1$d</xliff:g> overlaid files (<xliff:g id="size" example="48 MB">%2$s</xliff:g>)</string>
+    <string name="pasang_dev_overlay_clean">No overlaid dev files</string>
+    <string name="pasang_dev_overlay_cleaned">Cleaned <xliff:g id="count" example="14">%1$d</xliff:g> overlay entries (<xliff:g id="size" example="48 MB">%2$s</xliff:g> freed)</string>
+    <string name="pasang_dev_extent_aliasing">Sub-partition Extent Aliasing</string>
+    <string name="pasang_dev_extent_aliasing_summary">Zero-copy dm-linear reuse of shifted EROFS blocks from the active slot</string>
+    <string name="pasang_dev_fast_verify">Fast verify (skip readback)</string>
+    <string name="pasang_dev_fast_verify_summary">Skip full post-write SHA-256 readback on userdebug builds</string>
+    <string name="pasang_dev_allow_dev_key">Allow dev-signed packages</string>
+    <string name="pasang_dev_allow_dev_key_summary">Accept test-key or unsigned local OTA builds on userdebug</string>
+
+    <!-- Live OTA progress & completion notifications -->
+    <string name="pasang_notif_channel_progress">System update progress</string>
+    <string name="pasang_notif_channel_result">System update status</string>
+    <string name="pasang_notif_indexing_part">Indexing <xliff:g id="part" example="vendor (6/7)">%1$s</xliff:g>…</string>
+    <string name="pasang_notif_verifying_part">Verifying <xliff:g id="part" example="system_a">%1$s</xliff:g>…</string>
+    <string name="pasang_notif_elapsed">Elapsed <xliff:g id="time" example="14s">%1$s</xliff:g></string>
+    <string name="pasang_notif_done_title">System update ready</string>
+    <string name="pasang_notif_done_body">Restart once to switch to Slot <xliff:g id="slot" example="A">%1$s</xliff:g>. Zero recovery or post-boot merge.</string>
+    <string name="pasang_notif_cancelled_body">Your active slot was untouched.</string>
+</resources>

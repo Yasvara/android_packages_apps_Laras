@@ -170,6 +170,7 @@ fun AkarScreen(
     var showModuleSearch by rememberSaveable { mutableStateOf(false) }
     var moduleQuery by rememberSaveable { mutableStateOf("") }
     var moduleFilter by rememberSaveable { mutableStateOf(ModuleListFilter.ALL) }
+    var moduleSubTab by rememberSaveable { mutableStateOf(0) } // 0 = Akar Modules, 1 = Kait (Xposed)
     var repoQuery by rememberSaveable { mutableStateOf("") }
     var repoFilter by rememberSaveable { mutableStateOf(RepoListFilter.ALL) }
     var repoSort by rememberSaveable { mutableStateOf(RepoSortOrder.UPDATED) }
@@ -320,18 +321,51 @@ fun AkarScreen(
                     onClearDenied = viewModel::clearDenied,
                     onOpenApp = onOpenApp,
                 )
-                2 -> KaitModulesTab(
-                    ui = kaitUi,
-                    viewModel = kaitViewModel,
-                    showSearch = showModuleSearch,
-                    query = moduleQuery,
-                    onQueryChange = { moduleQuery = it },
-                    filter = moduleFilter,
-                    onFilterChange = { moduleFilter = it },
-                    onOpenScope = onOpenScope,
-                    onOpenActions = { actionSheetModulePkg = it.packageName },
-                    onBrowseRepo = { scope.launch { pagerState.animateScrollToPage(3) } },
-                )
+                2 -> Column(Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        FilterChip(
+                            selected = moduleSubTab == 0,
+                            onClick = { moduleSubTab = 0 },
+                            label = {
+                                Text(stringResource(R.string.akar_mod_subtab_akar, ui.modules.size))
+                            },
+                        )
+                        FilterChip(
+                            selected = moduleSubTab == 1,
+                            onClick = { moduleSubTab = 1 },
+                            label = {
+                                Text(stringResource(R.string.akar_mod_subtab_kait, kaitUi.modules.size))
+                            },
+                        )
+                    }
+                    if (moduleSubTab == 0) {
+                        AkarModulesTab(
+                            ui = ui,
+                            canUse = canUse,
+                            gate = gate,
+                            viewModel = viewModel,
+                            showSearch = showModuleSearch,
+                            query = moduleQuery,
+                            onQueryChange = { moduleQuery = it },
+                        )
+                    } else {
+                        KaitModulesTab(
+                            ui = kaitUi,
+                            viewModel = kaitViewModel,
+                            showSearch = showModuleSearch,
+                            query = moduleQuery,
+                            onQueryChange = { moduleQuery = it },
+                            filter = moduleFilter,
+                            onFilterChange = { moduleFilter = it },
+                            onOpenScope = onOpenScope,
+                            onOpenActions = { actionSheetModulePkg = it.packageName },
+                            onBrowseRepo = { scope.launch { pagerState.animateScrollToPage(3) } },
+                        )
+                    }
+                }
                 else -> KaitRepoTab(
                     ui = kaitUi,
                     viewModel = kaitViewModel,
@@ -704,6 +738,14 @@ private fun InfoTab(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        if (ui.bootguard.safeMode || ui.bootguard.disabledSuspects.isNotEmpty() || ui.bootguard.zygiskBypassed) {
+            item("bg_info_banner") {
+                BootguardRecoveryBanner(
+                    status = ui.bootguard,
+                    onReset = { gate { viewModel.clearSafeMode() } },
+                )
+            }
+        }
         item("hero") {
             Surface(shape = LarasShapes.Hero, color = heroBg, contentColor = heroFg, modifier = Modifier.fillMaxWidth()) {
                 Box(Modifier.fillMaxWidth()) {

@@ -7,6 +7,7 @@ package org.yasvara.laras.data.root
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.IBinder
 import android.os.Process
 import android.os.ServiceManager
@@ -15,7 +16,10 @@ import android.util.Log
 import com.android.server.yasvara.root.IYasvaraRoot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import org.yasvara.laras.R
+import java.io.File
 
 /** What an enrolled app may ask for. Mirrors the tiers of yasvara_rootd. */
 enum class RootTier(val value: Int) {
@@ -85,6 +89,51 @@ data class RootState(
     val frozen: Boolean,
     val daemonRunning: Boolean,
     val daemonInstalled: Boolean,
+)
+
+data class AkarModule(
+    val id: String,
+    val name: String,
+    val version: String,
+    val versionCode: String,
+    val author: String,
+    val description: String,
+    val updateJson: String,
+    val metamodule: Boolean,
+    val enabled: Boolean,
+    val remove: Boolean,
+    val update: Boolean,
+    val hasWebroot: Boolean,
+    val hasAction: Boolean,
+    val hasZygisk: Boolean,
+    val zygiskAbis: List<String>,
+    val managedFeatures: List<String>,
+    val mountStrategy: String,
+    val sizeBytes: Long,
+)
+
+data class BootguardStatus(
+    val bootcount: Int = 0,
+    val safeMode: Boolean = false,
+    val reason: String = "none",
+    val keyTrigger: String = "",
+    val disabledSuspects: List<String> = emptyList(),
+    val zygiskBypassed: Boolean = false,
+)
+
+data class ZygiskConfig(
+    val modulesEnabled: Boolean = false,
+    val enabled: Boolean = false,
+    val denylist: Set<Int> = emptySet(),
+    val scopes: Map<String, Set<Int>> = emptyMap(),
+    val defaultUnmount: Boolean = true,
+    val forceUnmount: Set<Int> = emptySet(),
+    val exemptUnmount: Set<Int> = emptySet(),
+)
+
+data class ExecOutput(
+    val exitCode: Int,
+    val output: String,
 )
 
 /**
@@ -209,6 +258,172 @@ class RootRepository(private val context: Context) {
 
     suspend fun setOption(key: String, value: Int) = withContext(Dispatchers.IO) {
         call(false, "setOption") { it.setOption(key, value) }
+    }
+
+    // ---- Akar Module Engine, Bootguard & Native Zygisk (SPEC-0049) ----
+
+    suspend fun listModules(): List<AkarModule> = withContext(Dispatchers.IO) {
+        val raw = call("[]", "listModulesJson") { it.listModulesJson() ?: "[]" }
+        runCatching {
+            val arr = JSONArray(raw)
+            buildList(arr.length()) {
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    val abisArr = o.optJSONArray("zygiskAbis")
+                    val abis = buildList {
+                        if (abisArr != null) for (j in 0 until abisArr.length()) add(abisArr.optString(j))
+                    }
+                    val featsArr = o.optJSONArray("managedFeatures")
+                    val feats = buildList {
+                        if (featsArr != null) for (j in 0 until featsArr.length()) add(featsArr.optString(j))
+                    }
+                    add(
+                        AkarModule(
+                            id = o.optString("id"),
+                            name = o.optString("name", o.optString("id")),
+                            version = o.optString("version"),
+                            versionCode = o.optString("versionCode"),
+                            author = o.optString("author"),
+                            description = o.optString("description"),
+                            updateJson = o.optString("updateJson"),
+                            metamodule = o.optBoolean("metamodule"),
+                            enabled = o.optBoolean("enabled", true),
+                            remove = o.optBoolean("remove"),
+                            update = o.optBoolean("update"),
+                            hasWebroot = o.optBoolean("hasWebroot"),
+                            hasAction = o.optBoolean("hasAction"),
+                            hasZygisk = o.optBoolean("hasZygisk"),
+                            zygiskAbis = abis,
+                            managedFeatures = feats,
+                            mountStrategy = o.optString("mountStrategy", "none"),
+                            sizeBytes = o.optLong("sizeBytes"),
+                        ),
+                    )
+                }
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    private fun parseExecResult(raw: String): ExecOutput {
+        val nl = raw.indexOf('\n')
+        return if (nl > 0) {
+            ExecOutput(raw.substring(0, nl).toIntOrNull() ?: 1, raw.substring(nl + 1))
+        } else {
+            ExecOutput(1, raw)
+        }
+    }
+
+    suspend fun installModuleFromUri(uri: Uri): ExecOutput = withContext(Dispatchers.IO) {
+        val stageDir = File(context.cacheDir, "akar_install").apply { mkdirs() }
+        val fileName = "mod_${System.currentTimeMillis()}.zip"
+        val dest = File(stageDir, fileName)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                dest.outputStream().use { output -> input.copyTo(output) }
+            } ?: return@withContext ExecOutput(1, "Cannot open selected ZIP")
+            val raw = call("1\nroot service unavailable", "installModuleFromCache") {
+                it.installModuleFromCache(fileName) ?: "1\nempty response"
+            }
+            parseExecResult(raw)
+        } catch (t: Throwable) {
+            ExecOutput(1, t.message ?: "install error")
+        } finally {
+            dest.delete()
+        }
+    }
+
+    suspend fun setModuleEnabled(id: String, enabled: Boolean): Boolean = withContext(Dispatchers.IO) {
+        call(false, "setModuleEnabled") { it.setModuleEnabled(id, enabled) }
+    }
+
+    suspend fun setModuleRemove(id: String, remove: Boolean): Boolean = withContext(Dispatchers.IO) {
+        call(false, "setModuleRemove") { it.setModuleRemove(id, remove) }
+    }
+
+    suspend fun runModuleAction(id: String): ExecOutput = withContext(Dispatchers.IO) {
+        val raw = call("1\nroot service unavailable", "runModuleAction") {
+            it.runModuleAction(id) ?: "1\nempty response"
+        }
+        parseExecResult(raw)
+    }
+
+    suspend fun bootguardStatus(): BootguardStatus = withContext(Dispatchers.IO) {
+        val raw = call("{}", "getBootguardStatusJson") { it.bootguardStatusJson ?: "{}" }
+        runCatching {
+            val o = JSONObject(raw)
+            val sArr = o.optJSONArray("disabledSuspects")
+            val suspects = buildList {
+                if (sArr != null) for (i in 0 until sArr.length()) {
+                    val s = sArr.optString(i)
+                    if (s.isNotEmpty()) add(s)
+                }
+            }
+            BootguardStatus(
+                bootcount = o.optInt("bootcount"),
+                safeMode = o.optBoolean("safeMode"),
+                reason = o.optString("reason", "none"),
+                keyTrigger = o.optString("keyTrigger"),
+                disabledSuspects = suspects,
+                zygiskBypassed = o.optBoolean("zygiskBypassed"),
+            )
+        }.getOrDefault(BootguardStatus())
+    }
+
+    suspend fun clearSafeMode(): Boolean = withContext(Dispatchers.IO) {
+        call(false, "clearSafeMode") { it.clearSafeMode() }
+    }
+
+    suspend fun zygiskConfig(): ZygiskConfig = withContext(Dispatchers.IO) {
+        val raw = call("{}", "getZygiskConfigJson") { it.zygiskConfigJson ?: "{}" }
+        runCatching {
+            val o = JSONObject(raw)
+            fun intSet(arr: JSONArray?): Set<Int> = buildSet {
+                if (arr != null) for (i in 0 until arr.length()) add(arr.optInt(i))
+            }
+            val scopesObj = o.optJSONObject("scopes")
+            val scopes = buildMap<String, Set<Int>> {
+                if (scopesObj != null) {
+                    val keys = scopesObj.keys()
+                    while (keys.hasNext()) {
+                        val k = keys.next()
+                        put(k, intSet(scopesObj.optJSONArray(k)))
+                    }
+                }
+            }
+            ZygiskConfig(
+                modulesEnabled = o.optBoolean("modulesEnabled", false),
+                enabled = o.optBoolean("enabled", false),
+                denylist = intSet(o.optJSONArray("denylist")),
+                scopes = scopes,
+                defaultUnmount = o.optBoolean("defaultUnmount", true),
+                forceUnmount = intSet(o.optJSONArray("forceUnmount")),
+                exemptUnmount = intSet(o.optJSONArray("exemptUnmount")),
+            )
+        }.getOrDefault(ZygiskConfig())
+    }
+
+    suspend fun saveZygiskConfig(cfg: ZygiskConfig): Boolean = withContext(Dispatchers.IO) {
+        val jo = JSONObject().apply {
+            put("modulesEnabled", cfg.modulesEnabled)
+            put("enabled", cfg.enabled)
+            put("denylist", JSONArray(cfg.denylist.sorted()))
+            put("defaultUnmount", cfg.defaultUnmount)
+            put("forceUnmount", JSONArray(cfg.forceUnmount.sorted()))
+            put("exemptUnmount", JSONArray(cfg.exemptUnmount.sorted()))
+            val sc = JSONObject()
+            for ((id, uids) in cfg.scopes) {
+                sc.put(id, JSONArray(uids.sorted()))
+            }
+            put("scopes", sc)
+        }
+        call(false, "setZygiskConfigJson") { it.setZygiskConfigJson(jo.toString()) }
+    }
+
+    suspend fun execModuleShell(moduleId: String, command: String): ExecOutput = withContext(Dispatchers.IO) {
+        val raw = call("1\nroot service unavailable", "execModuleShell") {
+            it.execModuleShell(moduleId, command) ?: "1\nempty response"
+        }
+        parseExecResult(raw)
     }
 
     fun labelOf(pkg: String): String = try {

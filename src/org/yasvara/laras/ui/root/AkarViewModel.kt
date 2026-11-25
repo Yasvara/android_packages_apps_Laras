@@ -6,6 +6,7 @@ package org.yasvara.laras.ui.root
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.system.Os
 import androidx.lifecycle.AndroidViewModel
@@ -18,8 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.yasvara.laras.R
+import org.yasvara.laras.data.root.AkarModule
 import org.yasvara.laras.data.root.AkarShortcuts
 import org.yasvara.laras.data.root.AuditEvent
+import org.yasvara.laras.data.root.BootguardStatus
 import org.yasvara.laras.data.root.DeniedAttempt
 import org.yasvara.laras.data.root.GrantPreset
 import org.yasvara.laras.data.root.InstalledApp
@@ -28,6 +31,7 @@ import org.yasvara.laras.data.root.RootRepository
 import org.yasvara.laras.data.root.RootScope
 import org.yasvara.laras.data.root.RootState
 import org.yasvara.laras.data.root.RootTier
+import org.yasvara.laras.data.root.ZygiskConfig
 
 data class DeviceInfo(
     val model: String = Build.MODEL,
@@ -58,6 +62,14 @@ data class AkarUi(
     val selfTest: String? = null,
     val selfTestOk: Boolean? = null,
     val device: DeviceInfo = DeviceInfo(),
+    /** Akar Module Engine, Bootguard & ROM-Native Zygisk state (SPEC-0049). */
+    val modules: List<AkarModule> = emptyList(),
+    val bootguard: BootguardStatus = BootguardStatus(),
+    val zygisk: ZygiskConfig = ZygiskConfig(),
+    val moduleBusy: Boolean = false,
+    val consoleTitle: String? = null,
+    val consoleLog: String? = null,
+    val consoleExitCode: Int? = null,
     /** Set when a change was refused (locked device, daemon missing…). */
     val error: Boolean = false,
 ) {
@@ -86,12 +98,15 @@ class AkarViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             val appCtx: Context = getApplication()
-            val (grants, denied, audit, allApps) = coroutineScope {
+            val (grants, denied, audit, allApps, modules, bootguard, zygisk) = coroutineScope {
                 val g = async { repo.grants() }
                 val d = async { repo.denied() }
                 val a = async { repo.audit(limit = 200) }
                 val apps = async { repo.allApps() }
-                Quad(g.await(), d.await(), a.await(), apps.await())
+                val mods = async { repo.listModules() }
+                val bg = async { repo.bootguardStatus() }
+                val zg = async { repo.zygiskConfig() }
+                LoadedBundle(g.await(), d.await(), a.await(), apps.await(), mods.await(), bg.await(), zg.await())
             }
             val termux = repo.isInstalled(RootRepository.TERMUX)
             val idle = repo.option("idle_days")
@@ -107,6 +122,9 @@ class AkarViewModel(app: Application) : AndroidViewModel(app) {
                     denied = denied,
                     audit = audit,
                     installedApps = allApps,
+                    modules = modules,
+                    bootguard = bootguard,
+                    zygisk = zygisk,
                     idleDays = idle.takeIf { v -> v >= 0 } ?: it.idleDays,
                     notifyDenied = notify != 0,
                     logFull = logFull == 1,
@@ -220,6 +238,79 @@ class AkarViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun dismissError() = _state.update { it.copy(error = false) }
+
+    fun dismissConsole() = _state.update {
+        it.copy(consoleTitle = null, consoleLog = null, consoleExitCode = null)
+    }
+
+    fun installModule(uri: Uri) {
+        viewModelScope.launch {
+            val title = getApplication<Application>().getString(R.string.akar_mod_install_title)
+            _state.update { it.copy(moduleBusy = true, consoleTitle = title, consoleLog = "…", consoleExitCode = null) }
+            val res = repo.installModuleFromUri(uri)
+            _state.update {
+                it.copy(
+                    moduleBusy = false,
+                    consoleLog = res.output.ifBlank { if (res.exitCode == 0) "OK" else "Failed (${res.exitCode})" },
+                    consoleExitCode = res.exitCode,
+                )
+            }
+            load()
+        }
+    }
+
+    fun setModuleEnabled(id: String, enabled: Boolean) = change { repo.setModuleEnabled(id, enabled) }
+
+    fun setModuleRemove(id: String, remove: Boolean) = change { repo.setModuleRemove(id, remove) }
+
+    fun runModuleAction(mod: AkarModule) {
+        viewModelScope.launch {
+            _state.update { it.copy(moduleBusy = true, consoleTitle = mod.name, consoleLog = "…", consoleExitCode = null) }
+            val res = repo.runModuleAction(mod.id)
+            _state.update {
+                it.copy(
+                    moduleBusy = false,
+                    consoleLog = res.output.ifBlank { "Exit ${res.exitCode}" },
+                    consoleExitCode = res.exitCode,
+                )
+            }
+            load()
+        }
+    }
+
+    fun clearSafeMode() = change { repo.clearSafeMode() }
+
+    fun setModulesEnabled(enabled: Boolean) = change {
+        val cur = _state.value.zygisk
+        repo.saveZygiskConfig(cur.copy(modulesEnabled = enabled, enabled = if (enabled) cur.enabled else false))
+    }
+
+    fun setZygiskEnabled(enabled: Boolean) = change {
+        val cur = _state.value.zygisk
+        repo.saveZygiskConfig(cur.copy(modulesEnabled = cur.modulesEnabled || enabled, enabled = enabled))
+    }
+
+    fun setDefaultUnmount(enabled: Boolean) = change {
+        repo.saveZygiskConfig(_state.value.zygisk.copy(defaultUnmount = enabled))
+    }
+
+    fun updateZygiskDenylist(uids: Set<Int>) = change {
+        repo.saveZygiskConfig(_state.value.zygisk.copy(denylist = uids))
+    }
+
+    fun updateModuleScope(moduleId: String, uids: Set<Int>) = change {
+        val nextScopes = _state.value.zygisk.scopes.toMutableMap()
+        if (uids.isEmpty()) nextScopes.remove(moduleId) else nextScopes[moduleId] = uids
+        repo.saveZygiskConfig(_state.value.zygisk.copy(scopes = nextScopes))
+    }
 }
 
-private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+private data class LoadedBundle(
+    val grants: List<RootGrant>,
+    val denied: List<DeniedAttempt>,
+    val audit: List<AuditEvent>,
+    val apps: List<InstalledApp>,
+    val modules: List<AkarModule>,
+    val bootguard: BootguardStatus,
+    val zygisk: ZygiskConfig,
+)

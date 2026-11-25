@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="akar_mod_subtab_akar">Akar Modules (%1$d)</string>
+    <string name="akar_mod_subtab_kait">Kait Xposed (%1$d)</string>
+    <string name="akar_mod_search_hint">Search Akar modules…</string>
+    <string name="akar_mod_install_title">Install module</string>
+    <string name="akar_mod_install_zip">Install ZIP</string>
+    <string name="akar_mod_installed_hdr">Installed modules (%1$d)</string>
+    <string name="akar_mod_empty_title">No Akar modules</string>
+    <string name="akar_mod_empty_body">Install Magisk, KernelSU, or Zygisk module ZIPs. Hybrid OverlayFS mounting and ROM-native Zygisk are built in with zero overhead.</string>
+    <string name="akar_mod_badge_reboot">Reboot needed</string>
+    <string name="akar_mod_badge_removing">Removing on reboot</string>
+    <string name="akar_mod_action_btn">Action</string>
+    <string name="akar_mod_webui_btn">WebUI</string>
+    <string name="akar_mod_scope_btn">Scope</string>
+    <string name="akar_mod_remove">Uninstall</string>
+    <string name="akar_mod_undo_remove">Undo</string>
+    <string name="akar_mod_save">Save</string>
+
+    <string name="akar_zygisk_section">Module Engine, Native Zygisk &amp; Stealth</string>
+    <string name="akar_mod_engine_title">Akar Module Engine</string>
+    <string name="akar_mod_engine_sub_on">Enabled · Hybrid OverlayFS mount &amp; bootguard active</string>
+    <string name="akar_mod_engine_sub_off">Off (default) · zero mounts, zero boot scripts, zero overhead</string>
+    <string name="akar_zygisk_title">Native Zygisk (API v4/v5)</string>
+    <string name="akar_zygisk_sub_on">Active · scoped child-only load, zero idle daemon</string>
+    <string name="akar_zygisk_sub_off">Off · zero Zygisk code loaded in any process</string>
+    <string name="akar_unmount_title">Tabir Unmount by default</string>
+    <string name="akar_unmount_sub">Detach module overlays from non-root apps inside Zygote</string>
+    <string name="akar_zygisk_denylist_btn">DenyList (%1$d)</string>
+    <string name="akar_zygisk_denylist_title">Zygisk DenyList</string>
+    <string name="akar_zygisk_denylist_sub">Selected apps never load Zygisk and always detach module mounts.</string>
+    <string name="akar_zygisk_scope_title">Scope · %1$s</string>
+    <string name="akar_zygisk_scope_sub">Empty = all non-DenyList apps. Selecting specific apps ensures zero overhead everywhere else.</string>
+
+    <string name="akar_bg_safemode_title">Bootguard Safe Mode Active</string>
+    <string name="akar_bg_rollback_title">Bootguard Smart Rollback</string>
+    <string name="akar_bg_safemode_body">All modules and Zygisk were bypassed on this boot (%1$s). Disable any faulty module, then reset Safe Mode.</string>
+    <string name="akar_bg_key_body">Hardware shortcut triggered Safe Mode (%1$s). All modules and Zygisk are temporarily disabled.</string>
+    <string name="akar_bg_suspects_body">Suspected bootloop module(s) auto-disabled: %1$s</string>
+    <string name="akar_bg_clear_action">Reset Safe Mode</string>
+</resources>

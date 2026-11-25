@@ -80,6 +80,8 @@ android_app {
         "YasvaraMonet",
         // The management binder of the ROM-native Kait hooking runtime (vendor/yasvara/kait).
         "yasvara-kait-ipc",
+        // Pasang lazy In-OS Live CoW OTA daemon AIDL Java stub (vendor/yasvara/pasang).
+        "yasvara.pasang-java",
     ],
     use_embedded_native_libs: true,
     // The filter list compiler (vendor/yasvara/saring).

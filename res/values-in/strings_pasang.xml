@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pasang_title">Pembaruan sistem</string>
+    <string name="pasang_entry_summary">OTA CoW langsung di OS tanpa merge</string>
+    <string name="pasang_hero_subtitle">Live CoW OTA · 0 dtk merge pasca-boot</string>
+    <string name="pasang_current_build">Build saat ini</string>
+    <string name="pasang_active_slot">Slot aktif</string>
+    <string name="pasang_slot_label">Slot <xliff:g id="slot" example="B">%1$s</xliff:g></string>
+    <string name="pasang_super_space">Ruang partisi super</string>
+    <string name="pasang_super_free"><xliff:g id="free" example="5.9 GB">%1$s</xliff:g> bebas dari <xliff:g id="total" example="11.0 GB">%2$s</xliff:g></string>
+    <string name="pasang_merge_ready">Bersih · 0 dtk merge</string>
+    <string name="pasang_merge_busy">Status merge: <xliff:g id="state" example="merging">%1$s</xliff:g></string>
+    <string name="pasang_refresh">Segarkan status</string>
+    <string name="pasang_service_unavailable">Daemon OTA Pasang tidak tersedia</string>
+
+    <string name="pasang_local_section">Pasang paket lokal</string>
+    <string name="pasang_pick_zip">Pilih ZIP OTA</string>
+    <string name="pasang_pick_zip_summary">Pasang ZIP OTA Yasvara atau payload.bin langsung saat Android berjalan</string>
+    <string name="pasang_selected_file">Paket terpilih</string>
+    <string name="pasang_analyze_action">Analisis rencana</string>
+    <string name="pasang_install_action">Pasang sekarang</string>
+    <string name="pasang_cancel_action">Batal</string>
+    <string name="pasang_reboot_action">Mulai ulang sekarang</string>
+    <string name="pasang_reboot_ready_title">Pembaruan siap</string>
+    <string name="pasang_reboot_ready_body">Mulai ulang sekali untuk beralih ke Slot <xliff:g id="slot" example="A">%1$s</xliff:g>. Tanpa recovery maupun merge pasca-boot.</string>
+
+    <string name="pasang_plan_title">Rencana Hyper-Flash</string>
+    <string name="pasang_plan_saved"><xliff:g id="pct" example="88.4">%1$s</xliff:g>%% di-alias · <xliff:g id="write" example="640 MB">%2$s</xliff:g> ditulis</string>
+    <string name="pasang_plan_extents"><xliff:g id="parts" example="7">%1$d</xliff:g> dinamis · <xliff:g id="raw" example="12">%2$d</xliff:g> raw · <xliff:g id="ext" example="18">%3$d</xliff:g> extent</string>
+    <string name="pasang_plan_sig_ok">Tanda tangan rilis terverifikasi</string>
+    <string name="pasang_plan_sig_dev">Build dev / tanpa tanda tangan (diizinkan di mode debug)</string>
+
+    <string name="pasang_phase_preflight">Memeriksa partisi &amp; mencadangkan super…</string>
+    <string name="pasang_phase_indexing">Mengindeks blok slot aktif…</string>
+    <string name="pasang_phase_planning">Merencanakan alias extent dm-linear…</string>
+    <string name="pasang_phase_flashing">Menulis <xliff:g id="part" example="system_a">%1$s</xliff:g>…</string>
+    <string name="pasang_phase_verifying">Memverifikasi SHA-256 &amp; AVB…</string>
+    <string name="pasang_phase_committing">Menyimpan metadata super &amp; slot…</string>
+    <string name="pasang_phase_cleaning_overlay">Membersihkan upperdir OverlayFS…</string>
+    <string name="pasang_phase_done">Pembaruan terpasang</string>
+    <string name="pasang_phase_cancelled">Pembaruan dibatalkan</string>
+    <string name="pasang_phase_error">Pembaruan gagal</string>
+
+    <string name="pasang_telemetry_line"><xliff:g id="written" example="320 MB">%1$s</xliff:g> / <xliff:g id="total" example="640 MB">%2$s</xliff:g> · <xliff:g id="speed" example="410 MB/s">%3$s</xliff:g> · ETA <xliff:g id="eta" example="12s">%4$s</xliff:g></string>
+    <string name="pasang_alias_badge"><xliff:g id="pct" example="88.1">%1$s</xliff:g>%% alias zero-copy</string>
+
+    <!-- Opsi Developer & Debug (disembunyikan pada build user produksi) -->
+    <string name="pasang_dev_section">Opsi developer &amp; debug</string>
+    <string name="pasang_dev_auto_clean_overlay">Bersihkan OverlayFS otomatis setelah OTA</string>
+    <string name="pasang_dev_auto_clean_overlay_summary">Hapus upperdir /mnt/scratch/overlay secara otomatis setelah commit OTA terverifikasi agar file dev tidak menimpa build baru</string>
+    <string name="pasang_dev_clean_now">Bersihkan OverlayFS sekarang</string>
+    <string name="pasang_dev_overlay_files"><xliff:g id="count" example="14">%1$d</xliff:g> berkas overlay (<xliff:g id="size" example="48 MB">%2$s</xliff:g>)</string>
+    <string name="pasang_dev_overlay_clean">Tidak ada berkas overlay dev</string>
+    <string name="pasang_dev_overlay_cleaned">Membersihkan <xliff:g id="count" example="14">%1$d</xliff:g> entri overlay (<xliff:g id="size" example="48 MB">%2$s</xliff:g> dibebaskan)</string>
+    <string name="pasang_dev_extent_aliasing">Extent Aliasing sub-partisi</string>
+    <string name="pasang_dev_extent_aliasing_summary">Gunakan ulang blok EROFS yang bergeser dari slot aktif secara zero-copy</string>
+    <string name="pasang_dev_fast_verify">Verifikasi cepat (lewati readback)</string>
+    <string name="pasang_dev_fast_verify_summary">Lewati pembacaan ulang SHA-256 penuh pada build userdebug</string>
+    <string name="pasang_dev_allow_dev_key">Izinkan paket bertanda tangan dev</string>
+    <string name="pasang_dev_allow_dev_key_summary">Terima paket OTA lokal bertanda tangan uji atau tanpa tanda tangan di userdebug</string>
+
+    <!-- Notifikasi progres & status OTA langsung -->
+    <string name="pasang_notif_channel_progress">Progres pembaruan sistem</string>
+    <string name="pasang_notif_channel_result">Status pembaruan sistem</string>
+    <string name="pasang_notif_indexing_part">Mengindeks <xliff:g id="part" example="vendor (6/7)">%1$s</xliff:g>…</string>
+    <string name="pasang_notif_verifying_part">Memverifikasi <xliff:g id="part" example="system_a">%1$s</xliff:g>…</string>
+    <string name="pasang_notif_elapsed">Berjalan <xliff:g id="time" example="14s">%1$s</xliff:g></string>
+    <string name="pasang_notif_done_title">Pembaruan sistem siap</string>
+    <string name="pasang_notif_done_body">Mulai ulang sekali untuk beralih ke Slot <xliff:g id="slot" example="A">%1$s</xliff:g>. Tanpa recovery maupun merge pasca-boot.</string>
+    <string name="pasang_notif_cancelled_body">Slot aktif Anda tidak berubah.</string>
+</resources>

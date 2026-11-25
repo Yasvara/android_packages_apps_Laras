@@ -23,9 +23,26 @@
     <string name="visibility_unavailable">Layanan Tabir tidak berjalan</string>
     <string name="visibility_search">Cari aplikasi</string>
 
+    <string name="tabir_tab_home">Beranda</string>
+    <string name="tabir_tab_apps">Aplikasi</string>
     <string name="tabir_tab_rules">Aturan</string>
     <string name="tabir_tab_templates">Templat</string>
     <string name="tabir_tab_simulate">Simulasi</string>
+
+    <string name="tabir_hero_active_title">Perisai Tabir Aktif</string>
+    <string name="tabir_hero_idle_title">Tabir Siaga</string>
+    <string name="tabir_hero_active_desc">Perlindungan native framework &amp; Opsi Pengembang berjalan O(1) tanpa hook aplikasi</string>
+    <string name="tabir_hero_idle_desc">Pilih aplikasi di tab Aplikasi atau gunakan templat untuk melindungi bank, game, dan detektor</string>
+    <string name="tabir_stat_protected">Terlindungi</string>
+    <string name="tabir_stat_templates">Templat</string>
+    <string name="tabir_stat_hidden">Target</string>
+
+    <string name="tabir_quick_actions">Aksi cepat</string>
+    <string name="tabir_action_backup">Cadangkan</string>
+    <string name="tabir_action_restore">Pulihkan</string>
+    <string name="tabir_action_guide">Cara pakai</string>
+    <string name="tabir_guide_title">Cara memakai Tabir</string>
+    <string name="tabir_guide_body">1. Buka tab Aplikasi lalu ketuk aplikasi perbankan, game, atau detektor yang ingin dilindungi.\n\n2. Aktifkan perisai khusus lalu pilih Whitelist (direkomendasikan untuk bank &amp; game: menyembunyikan semua aplikasi pengguna lain &amp; paket ROM kecuali yang diizinkan) atau Blacklist (menyembunyikan target tertentu).\n\n3. Gunakan Templat agar aturan bisa dipakai ulang ke banyak aplikasi, atau aktifkan mode Massal di tab Aplikasi untuk mengatur banyak aplikasi sekaligus.\n\n4. Pakai tab Simulasi untuk mengecek langsung paket dan status ADB yang terlihat oleh aplikasi tersebut.</string>
 
     <string name="tabir_surfaces_title">Perisai permukaan</string>
     <string name="tabir_surfaces_subtitle">Perlindungan native di framework &amp; SettingsProvider tanpa hook aplikasi</string>
@@ -38,31 +55,58 @@
     <string name="tabir_dev_title">Opsi Pengembang &amp; status ADB</string>
     <string name="tabir_dev_summary">Menyamarkan adb_enabled, adb_wifi_enabled, development_settings_enabled &amp; broadcast USB</string>
     <string name="tabir_dev_off">Nonaktif</string>
-    <string name="tabir_dev_observers">Hanya pengamat</string>
-    <string name="tabir_dev_all">Semua aplikasi pengguna</string>
+    <string name="tabir_dev_observers">Hanya terlindungi</string>
+    <string name="tabir_dev_all">Semua aplikasi</string>
 
-    <string name="tabir_global_title">Cakupan global</string>
+    <string name="tabir_global_title">Aturan global bawaan</string>
+    <string name="tabir_global_summary">Berlaku untuk aplikasi tanpa aturan khusus Blacklist atau Whitelist</string>
     <string name="tabir_per_app_title">Aturan per-aplikasi (HMA)</string>
     <string name="tabir_per_app_add">Atur aplikasi</string>
-    <string name="tabir_per_app_empty">Belum ada aturan khusus aplikasi. Ketuk Atur aplikasi untuk memilih Blacklist atau Whitelist + Templat.</string>
+    <string name="tabir_per_app_empty">Belum ada aturan khusus aplikasi. Ketuk aplikasi mana saja di tab Aplikasi.</string>
+
+    <string name="tabir_filter_all">Semua</string>
+    <string name="tabir_filter_protected">Terlindungi</string>
+    <string name="tabir_filter_detectors">Detektor</string>
+    <string name="tabir_filter_unconfigured">Bawaan</string>
+    <string name="tabir_bulk_mode">Massal</string>
+    <string name="tabir_bulk_apply">Atur %1$d aplikasi</string>
+    <string name="tabir_bulk_title">Atur massal (%1$d aplikasi)</string>
+    <string name="tabir_bulk_done">Aturan diterapkan ke %1$d aplikasi</string>
 
     <string name="tabir_mode_global">Global</string>
     <string name="tabir_mode_blacklist">Blacklist</string>
     <string name="tabir_mode_whitelist">Whitelist</string>
-    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d templat, %2$d aplikasi tambahan</string>
-    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d templat, %2$d aplikasi diizinkan</string>
+    <string name="tabir_badge_default">Bawaan</string>
+    <string name="tabir_badge_detector">Detektor</string>
+    <string name="tabir_enable_per_app">Aktifkan perisai khusus aplikasi ini</string>
+    <string name="tabir_enable_per_app_summary">Jika nonaktif, aplikasi mengikuti aturan global bawaan</string>
+    <string name="tabir_mode_whitelist_desc">Direkomendasikan untuk bank &amp; game — sembunyikan semua aplikasi pengguna &amp; ROM kecuali yang diizinkan</string>
+    <string name="tabir_mode_blacklist_desc">Sembunyikan target global, templat aktif, dan aplikasi tambahan yang dipilih</string>
+    <string name="tabir_stop_and_open">Stop &amp; Buka</string>
+    <string name="tabir_stop_only_toast">%1$s dihentikan paksa</string>
+    <string name="tabir_observer_summary_blacklist">Blacklist • %1$d templat, %2$d tambahan</string>
+    <string name="tabir_observer_summary_whitelist">Whitelist • %1$d templat, %2$d diizinkan</string>
+    <string name="tabir_observer_summary_global_active">Dilindungi cakupan global</string>
 
     <string name="tabir_templates_new">Templat baru</string>
-    <string name="tabir_templates_empty">Belum ada templat tersimpan.</string>
+    <string name="tabir_templates_new_whitelist">+ Whitelist</string>
+    <string name="tabir_templates_new_blacklist">+ Blacklist</string>
+    <string name="tabir_templates_empty">Belum ada templat tersimpan. Buat templat Whitelist atau Blacklist agar bisa diterapkan ke banyak aplikasi.</string>
     <string name="tabir_template_name">Nama templat</string>
-    <string name="tabir_template_summary_blacklist">Blacklist • Menyembunyikan %1$d paket</string>
-    <string name="tabir_template_summary_whitelist">Whitelist • Mengizinkan %1$d paket + aplikasi sistem</string>
+    <string name="tabir_template_summary_blacklist">Blacklist • %1$d target • %2$d aplikasi</string>
+    <string name="tabir_template_summary_whitelist">Whitelist • %1$d diizinkan • %2$d aplikasi</string>
+    <string name="tabir_template_tab_targets">Paket target (%1$d)</string>
+    <string name="tabir_template_tab_applied">Aplikasi penerap (%1$d)</string>
+    <string name="tabir_template_quick_root">+ Alat root</string>
+    <string name="tabir_template_quick_xposed">+ Xposed</string>
+    <string name="tabir_template_quick_rom">+ Paket ROM</string>
     <string name="tabir_assign_templates">Templat aktif</string>
     <string name="tabir_custom_blacklist_apps">Aplikasi tersembunyi tambahan</string>
     <string name="tabir_custom_whitelist_apps">Aplikasi yang diizinkan terlihat</string>
     <string name="tabir_save">Simpan</string>
     <string name="tabir_delete">Hapus</string>
     <string name="tabir_cancel">Batal</string>
+    <string name="tabir_ok">Mengerti</string>
 
     <string name="tabir_action_force_stop">Hentikan paksa aplikasi tersembunyi</string>
     <string name="tabir_action_export">Ekspor cadangan JSON</string>
@@ -75,6 +119,9 @@
     <string name="tabir_sim_dev_hidden">Opsi Pengembang &amp; ADB tersamar (bernilai 0)</string>
     <string name="tabir_sim_dev_visible">Opsi Pengembang &amp; ADB terlihat oleh aplikasi ini</string>
     <string name="tabir_sim_counts">%1$d tersembunyi • %2$d terlihat</string>
-    <string name="tabir_sim_empty">Pilih aplikasi di atas untuk melihat simulasi paket dan pengaturan yang dapat diamatinya.</string>
+    <string name="tabir_sim_empty">Pilih aplikasi terpasang untuk memeriksa langsung paket dan pengaturan yang dapat diamatinya.</string>
+    <string name="tabir_sim_configure">Atur aplikasi ini</string>
+    <string name="tabir_sim_filter_all">Semua</string>
+    <string name="tabir_sim_filter_hidden">Tersembunyi</string>
+    <string name="tabir_sim_filter_visible">Terlihat</string>
 </resources>
-

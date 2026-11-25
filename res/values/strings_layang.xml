@@ -19,6 +19,8 @@
     <string name="layang_size_s">Small</string>
     <string name="layang_size_m">Medium</string>
     <string name="layang_size_l">Large</string>
+    <string name="pref_layang_mini_width">Mini / bubble size (dp)</string>
+    <string name="pref_layang_mini_width_summary">Compact width of a mini floating window</string>
     <string name="pref_layang_grip">Resize handle (dp)</string>
     <string name="pref_layang_aspect">Keep game shape</string>
     <string name="pref_layang_aspect_summary">Games only grow and shrink, so they never re-layout</string>

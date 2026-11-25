@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="akar_mod_subtab_akar">Modul Akar (%1$d)</string>
+    <string name="akar_mod_subtab_kait">Kait Xposed (%1$d)</string>
+    <string name="akar_mod_search_hint">Cari modul Akar…</string>
+    <string name="akar_mod_install_title">Pasang modul</string>
+    <string name="akar_mod_install_zip">Pasang ZIP</string>
+    <string name="akar_mod_installed_hdr">Modul terpasang (%1$d)</string>
+    <string name="akar_mod_empty_title">Belum ada modul Akar</string>
+    <string name="akar_mod_empty_body">Pasang ZIP modul Magisk, KernelSU, atau Zygisk. Mounting OverlayFS hibrida dan Zygisk bawaan ROM aktif tanpa overhead.</string>
+    <string name="akar_mod_badge_reboot">Perlu mulai ulang</string>
+    <string name="akar_mod_badge_removing">Dihapus saat reboot</string>
+    <string name="akar_mod_action_btn">Aksi</string>
+    <string name="akar_mod_webui_btn">WebUI</string>
+    <string name="akar_mod_scope_btn">Cakupan</string>
+    <string name="akar_mod_remove">Hapus</string>
+    <string name="akar_mod_undo_remove">Batal</string>
+    <string name="akar_mod_save">Simpan</string>
+
+    <string name="akar_zygisk_section">Mesin Modul, Zygisk Native &amp; Stealth</string>
+    <string name="akar_mod_engine_title">Mesin Modul Akar</string>
+    <string name="akar_mod_engine_sub_on">Aktif · mount OverlayFS hibrida &amp; bootguard berjalan</string>
+    <string name="akar_mod_engine_sub_off">Mati (bawaan) · tanpa mount, tanpa skrip boot, nol overhead</string>
+    <string name="akar_zygisk_title">Zygisk Native (API v4/v5)</string>
+    <string name="akar_zygisk_sub_on">Aktif · muat khusus target, tanpa daemon latar belakang</string>
+    <string name="akar_zygisk_sub_off">Mati · nol kode Zygisk dimuat di proses mana pun</string>
+    <string name="akar_unmount_title">Tabir Unmount bawaan</string>
+    <string name="akar_unmount_sub">Lepas overlay modul dari aplikasi non-root di dalam Zygote</string>
+    <string name="akar_zygisk_denylist_btn">DenyList (%1$d)</string>
+    <string name="akar_zygisk_denylist_title">DenyList Zygisk</string>
+    <string name="akar_zygisk_denylist_sub">Aplikasi terpilih tidak pernah memuat Zygisk dan selalu melepas mount modul.</string>
+    <string name="akar_zygisk_scope_title">Cakupan · %1$s</string>
+    <string name="akar_zygisk_scope_sub">Kosong = semua aplikasi di luar DenyList. Memilih aplikasi spesifik membuat nol overhead di aplikasi lain.</string>
+
+    <string name="akar_bg_safemode_title">Safe Mode Bootguard Aktif</string>
+    <string name="akar_bg_rollback_title">Smart Rollback Bootguard</string>
+    <string name="akar_bg_safemode_body">Semua modul dan Zygisk dilewati pada boot ini (%1$s). Nonaktifkan modul bermasalah lalu reset Safe Mode.</string>
+    <string name="akar_bg_key_body">Pintasan tombol fisik memicu Safe Mode (%1$s). Semua modul dan Zygisk sementara dinonaktifkan.</string>
+    <string name="akar_bg_suspects_body">Modul terduga bootloop dinonaktifkan otomatis: %1$s</string>
+    <string name="akar_bg_clear_action">Reset Safe Mode</string>
+</resources>

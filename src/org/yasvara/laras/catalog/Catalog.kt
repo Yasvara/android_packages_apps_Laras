@@ -201,6 +201,7 @@ object Prefs {
     val layangSize = ChoicePref(
         Namespace.SECURE, "yasvara_layang_default_size", LayangSize.entries, LayangSize.MEDIUM,
     )
+    val layangMiniWidth = IntSliderPref(Namespace.SECURE, "yasvara_layang_mini_width_dp", 96, 72..140)
     val layangGrip = IntSliderPref(Namespace.SECURE, "yasvara_layang_grip_dp", 24, 16..40)
     val layangAspectLock = SwitchPref(Namespace.SECURE, "yasvara_layang_game_aspect_lock", true)
     val layangMiniFps = ChoicePref(
@@ -444,6 +445,8 @@ enum class SystemGroup(
                 applies = { it[Prefs.layangEnabled] }),
             Entry(Prefs.layangSize, R.string.pref_layang_size,
                 applies = { it[Prefs.layangEnabled] }),
+            Entry(Prefs.layangMiniWidth, R.string.pref_layang_mini_width,
+                R.string.pref_layang_mini_width_summary, applies = { it[Prefs.layangEnabled] }),
             Entry(Prefs.layangGrip, R.string.pref_layang_grip,
                 applies = { it[Prefs.layangEnabled] }),
             Entry(Prefs.layangAspectLock, R.string.pref_layang_aspect,
