@@ -78,6 +78,7 @@ import org.yasvara.laras.data.PrefEditor
 import org.yasvara.laras.data.PrefSnapshot
 import org.yasvara.laras.ui.components.ChoiceButtons
 import org.yasvara.laras.ui.components.EntryList
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.icon
 import org.yasvara.laras.ui.icons.IconsEditor
 import org.yasvara.laras.ui.preview.DeviceState
@@ -115,7 +116,7 @@ fun EditorScreen(
     val samples = remember { StatusBarSamples() }
 
     CompositionLocalProvider(LocalStatusBarSamples provides samples) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(LarasSurfaces.pageCanvas)) {
             val sheetMax = maxHeight * 0.58f
             Column(Modifier.fillMaxSize()) {
                 Box(

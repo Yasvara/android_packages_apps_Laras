@@ -52,6 +52,7 @@ import org.yasvara.laras.data.theme.ThemeChange
 import org.yasvara.laras.data.theme.ThemeKey
 import org.yasvara.laras.ui.LarasViewModel
 import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.groupedShape
 
 /** Lab: the Advanced gate, and on debuggable builds the tools used to test theme apply. */
@@ -68,7 +69,7 @@ fun LabSection(prefs: PrefSnapshot, editor: PrefEditor, viewModel: LarasViewMode
 private fun AdvancedGate(prefs: PrefSnapshot, editor: PrefEditor) {
     val enabled = prefs[Prefs.larasAdvanced]
     var warning by rememberSaveable { mutableStateOf(false) }
-    Surface(shape = groupedShape(0, 1), color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(shape = groupedShape(0, 1), color = LarasSurfaces.card) {
         Row(
             Modifier.fillMaxWidth()
                 .toggleable(enabled, role = Role.Switch) { on ->
@@ -181,7 +182,7 @@ private fun ThemeTestTools(prefs: PrefSnapshot, viewModel: LarasViewModel) {
 private fun ToolRow(title: Int, summary: Int, index: Int, count: Int, onClick: (Offset) -> Unit) {
     val view = LocalView.current
     var centre by remember { mutableStateOf(Offset.Unspecified) }
-    Surface(shape = groupedShape(index, count), color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(shape = groupedShape(index, count), color = LarasSurfaces.card) {
         Column(
             Modifier.fillMaxWidth()
                 .onGloballyPositioned { centre = it.boundsInWindow().center }

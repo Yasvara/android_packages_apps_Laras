@@ -55,6 +55,7 @@ import org.yasvara.laras.data.integrity.Tier
 import org.yasvara.laras.ui.components.HeroBackdropKind
 import org.yasvara.laras.ui.components.LarasHeroBackdrop
 import org.yasvara.laras.ui.components.LarasMascotIcon
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.Tone
 
@@ -356,7 +357,7 @@ private fun Panel(content: @Composable () -> Unit) {
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceBright,
+        color = LarasSurfaces.card,
     ) {
         Column(Modifier.padding(16.dp)) { content() }
     }

@@ -80,6 +80,7 @@ import org.yasvara.laras.data.root.RootScope
 import org.yasvara.laras.data.root.RootTier
 import org.yasvara.laras.ui.components.AppIcon
 import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.groupedShape
 
 private enum class ScopeOption { KEEP, ALWAYS, UNTIL_REBOOT, TEN_MIN, ONE_HOUR, ONE_DAY }
@@ -204,7 +205,7 @@ fun AkarAppScreen(
         }
     }
 
-    val surface = MaterialTheme.colorScheme.surfaceContainer
+    val surface = LarasSurfaces.pageCanvas
     Scaffold(
         containerColor = surface,
         snackbarHost = { SnackbarHost(snackbar) },

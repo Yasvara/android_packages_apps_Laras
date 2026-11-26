@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.yasvara.laras.catalog.Prefs
 import org.yasvara.laras.data.Namespace
 import org.yasvara.laras.data.SettingsRepository
 import org.yasvara.laras.data.pasang.PasangRepository
@@ -122,6 +123,16 @@ class ColorViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch { loadWallpaper() }
+        // Pure black is also switched from Settings; follow it unless it is being changed here.
+        viewModelScope.launch {
+            settings.observe(listOf(Prefs.pureBlack)).collect { snapshot ->
+                val black = snapshot[Prefs.pureBlack]
+                val was = applied.value
+                if (was.pureBlack == black) return@collect
+                applied.value = was.copy(pureBlack = black)
+                _draft.update { if (it.pureBlack == was.pureBlack) it.copy(pureBlack = black) else it }
+            }
+        }
     }
 
     fun setSeedIndex(index: Int) = edit {
@@ -177,12 +188,17 @@ class ColorViewModel(app: Application) : AndroidViewModel(app) {
                     System.currentTimeMillis(),
                 )
             }
+            // Pure black is written only when changed here, so a colour apply never overrides
+            // the Settings switch.
+            val black = resolved.draft.pureBlack
             val change = ThemeChange(
-                mapOf(
-                    ThemeKey.COLOR to spec.toJson(true),
-                    ThemeKey.PURE_BLACK to if (resolved.draft.pureBlack) "1" else "0",
-                    ThemeKey.OVERLAYS to aosp,
-                )
+                buildMap {
+                    put(ThemeKey.COLOR, spec.toJson(true))
+                    if (black != applied.value.pureBlack) {
+                        put(ThemeKey.PURE_BLACK, if (black) "1" else "0")
+                    }
+                    put(ThemeKey.OVERLAYS, aosp)
+                }
             )
             val result = themes.apply(change, x, y, expectThemeChange = true, awaitRedraw)
             if (result is CommitResult.Applied) {

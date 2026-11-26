@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 import org.yasvara.laras.R
 import org.yasvara.laras.data.root.AuditEvent
 import org.yasvara.laras.data.root.RootRepository
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.groupedShape
 
 private enum class LogFilter { ALL, EXEC, DENIED, POLICY }
@@ -108,7 +109,7 @@ fun AkarLogsScreen(
         }
     }
 
-    val surface = MaterialTheme.colorScheme.surfaceContainer
+    val surface = LarasSurfaces.pageCanvas
     Scaffold(
         containerColor = surface,
         snackbarHost = { SnackbarHost(snackbar) },
@@ -165,8 +166,8 @@ fun AkarLogsScreen(
                             singleLine = true,
                             shape = RoundedCornerShape(24.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceBright,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceBright,
+                                focusedContainerColor = LarasSurfaces.card,
+                                unfocusedContainerColor = LarasSurfaces.card,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                             ),
@@ -196,7 +197,7 @@ fun AkarLogsScreen(
                     item("empty") {
                         Surface(
                             shape = RoundedCornerShape(18.dp),
-                            color = MaterialTheme.colorScheme.surfaceBright,
+                            color = LarasSurfaces.card,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
@@ -256,7 +257,7 @@ private fun LogItemRow(
         MINUTE_MS,
     ).toString()
 
-    Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceBright, onClick = onClick) {
+    Surface(shape = shape, color = LarasSurfaces.card, onClick = onClick) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.Top,

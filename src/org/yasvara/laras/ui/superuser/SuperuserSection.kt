@@ -70,6 +70,7 @@ import org.yasvara.laras.data.PrefEditor
 import org.yasvara.laras.data.PrefSnapshot
 import org.yasvara.laras.data.SwitchPref
 import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.glyph.GuardGlyph
 
 /** The guards a package passes on its way in, and those that keep the screen and storage private. */
@@ -145,7 +146,7 @@ private fun Header(title: Int, open: List<Boolean>) {
     val c = MaterialTheme.colorScheme
     Surface(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 6.dp, bottomEnd = 6.dp),
-        color = c.surfaceBright,
+        color = LarasSurfaces.card,
     ) {
         Row(
             Modifier.fillMaxWidth().padding(start = 20.dp, end = 18.dp, top = 16.dp, bottom = 14.dp),
@@ -209,7 +210,7 @@ private fun GuardRow(entry: Entry, prefs: PrefSnapshot, editor: PrefEditor, last
     // The row rounds out and takes the tertiary tone as the guard opens.
     val open by animateFloatAsState(if (on) 1f else 0f, motion.slowSpatialSpec(), label = "open")
     val tint by animateColorAsState(
-        if (on) lerp(c.surfaceBright, c.tertiary, 0.16f) else c.surfaceBright,
+        if (on) lerp(LarasSurfaces.card, c.tertiary, 0.16f) else LarasSurfaces.card,
         motion.defaultEffectsSpec(), label = "tint",
     )
     val corner by animateDpAsState(if (on) 20.dp else 6.dp, motion.defaultSpatialSpec(), label = "corner")

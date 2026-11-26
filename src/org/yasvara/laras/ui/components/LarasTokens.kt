@@ -46,16 +46,29 @@ object LarasSpacing {
 /**
  * Consistent 3-tier M3 surface hierarchy across Light, Dark, and Pure Black themes:
  * [pageCanvas] -> [card] -> [nestedCard], and [sheetContainer] -> [sheetCard].
+ *
+ * Pure black keeps the container ladder elevated, so the canvas drops to the black surface and
+ * every tier steps down one level beneath it.
  */
 object LarasSurfaces {
+    /** True when the scheme in effect (system or draft) is the pure black dark scheme. */
+    val isPureBlack: Boolean
+        @Composable get() = MaterialTheme.colorScheme.surface == Color.Black
+
     val pageCanvas: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+        @Composable get() = MaterialTheme.colorScheme.let {
+            if (isPureBlack) it.surface else it.surfaceContainer
+        }
 
     val card: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceBright
+        @Composable get() = MaterialTheme.colorScheme.let {
+            if (isPureBlack) it.surfaceContainerHigh else it.surfaceBright
+        }
 
     val nestedCard: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh
+        @Composable get() = MaterialTheme.colorScheme.let {
+            if (isPureBlack) it.surfaceContainerHighest else it.surfaceContainerHigh
+        }
 
     val sheetContainer: Color
         @Composable get() = MaterialTheme.colorScheme.surfaceContainerLow

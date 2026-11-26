@@ -210,8 +210,11 @@ private fun readPentas(context: Context): Pair<List<String>, String?> {
     val installed = runCatching { pm.getApplicationInfo(PENTAS_PACKAGE, 0) }.isSuccess
     if (!installed) return emptyList<String>() to null
     val cr = context.contentResolver
-    val listed = Settings.System.getString(cr, "pentas_game_list").orEmpty()
-        .split(';').filter { it.isNotBlank() }.map { it.substringBefore('=') }
+    // "pkg=1;pkg=0": =0 takes an automatically found game out.
+    val entries = Settings.System.getString(cr, "pentas_game_list").orEmpty()
+        .split(';').filter { it.isNotBlank() }
+        .associate { it.substringBefore('=').trim() to (it.substringAfter('=', "1").trim() != "0") }
+    val listed = entries.filterValues { it }.keys
     val auto = Settings.System.getInt(cr, "pentas_auto_game_detect", 1) != 0
     @Suppress("DEPRECATION")
     val detected = if (!auto) emptyList() else pm.getInstalledApplications(0)
@@ -221,6 +224,7 @@ private fun readPentas(context: Context): Pair<List<String>, String?> {
                     (it.flags and android.content.pm.ApplicationInfo.FLAG_IS_GAME) != 0)
         }
         .map { it.packageName }
+        .filter { entries[it] != false }
     val last = Settings.System.getString(cr, "pentas_last_game")?.takeIf { it.isNotEmpty() }
     val label = { pkg: String ->
         runCatching { pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString() }.getOrNull()
