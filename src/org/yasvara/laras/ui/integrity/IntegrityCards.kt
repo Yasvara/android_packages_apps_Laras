@@ -96,6 +96,7 @@ import org.yasvara.laras.data.integrity.PifProfile
 import org.yasvara.laras.data.integrity.PifSource
 import org.yasvara.laras.data.integrity.Revocation
 import org.yasvara.laras.ui.components.CheckSwitch
+import org.yasvara.laras.ui.components.LarasSurfaces
 import org.yasvara.laras.ui.components.StatusLine
 import org.yasvara.laras.ui.components.Tone
 import org.yasvara.laras.ui.components.groupedShape
@@ -174,7 +175,7 @@ private fun ListRow(
     onCheckedChange: (Boolean) -> Unit = {},
     switchEnabled: Boolean = true,
 ) {
-    Surface(shape = groupedShape(index, ROWS), color = MaterialTheme.colorScheme.surfaceBright) {
+    Surface(shape = groupedShape(index, ROWS), color = LarasSurfaces.card) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
             Row(
                 Modifier.weight(1f).clickable(onClick = onClick)
@@ -1208,6 +1209,9 @@ internal fun KeyboxSheet(
                         Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        if (info.rkpManufacturer.isNotEmpty()) {
+                            MetaPill(stringResource(R.string.keybox_rkp_manufacturer, info.rkpManufacturer))
+                        }
                         MetaPill(
                             stringResource(if (expired) R.string.keybox_expired_on else R.string.keybox_expires_on, date),
                             warn = expired,

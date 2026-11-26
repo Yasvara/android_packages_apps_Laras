@@ -22,6 +22,7 @@
     <string name="integrity_keybox_valid">Tidak dicabut</string>
     <string name="integrity_keybox_revoked">Dicabut Google</string>
     <string name="integrity_keybox_present">Belum dicek ke daftar pencabutan Google</string>
+    <string name="keybox_rkp_manufacturer">RKP · %1$s</string>
     <string name="keybox_evoker_hint">Penyedia pihak ketiga opsional. Mengunduh keybox tidak menjamin Strong Integrity.</string>
     <string name="keybox_evoker_sync">Sinkronkan dari Evoker</string>
     <string name="keybox_evoker_confirm_title">Unduh keybox dari Evoker?</string>

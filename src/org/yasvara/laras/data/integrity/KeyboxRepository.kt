@@ -21,6 +21,7 @@ class KeyboxInfo(
     val notAfter: Long,
     val chainLength: Int,
     val hasPrivateKey: Boolean,
+    val rkpManufacturer: String = "",
 ) {
     val expired get() = notAfter < System.currentTimeMillis()
 }
@@ -74,9 +75,11 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
                 notAfter = remote.notAfter,
                 chainLength = remote.chainLength,
                 hasPrivateKey = remote.hasPrivateKey,
+                rkpManufacturer = remote.rkpManufacturer,
             )
         }
-        val keybox = installed().keyboxes.firstOrNull() ?: return null
+        val keyboxes = installed().keyboxes
+        val keybox = keyboxes.firstOrNull() ?: return null
         val leaf = keybox.leaf()
         return KeyboxInfo(
             algorithm = keybox.algorithm,
@@ -85,6 +88,7 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
             notAfter = leaf.notAfter.time,
             chainLength = keybox.chain.size,
             hasPrivateKey = keybox.hasPrivateKey(),
+            rkpManufacturer = YasvaraKeyboxProvider.rkpManufacturer(keyboxes),
         )
     }
 
@@ -106,7 +110,8 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         val first = result.keyboxes.first()
         val leaf = first.leaf()
         val info = KeyboxInfo(first.algorithm, leaf.serialNumber.toString(16),
-            leaf.issuerX500Principal.name, leaf.notAfter.time, first.chain.size, first.hasPrivateKey())
+            leaf.issuerX500Principal.name, leaf.notAfter.time, first.chain.size,
+            first.hasPrivateKey(), YasvaraKeyboxProvider.rkpManufacturer(result.keyboxes))
         val service = AttestationService.get()
         if (service == null || !AttestationService.canWrite(context)) {
             return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)

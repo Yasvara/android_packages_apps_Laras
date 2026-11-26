@@ -28,6 +28,7 @@ object AttestationService {
         val notAfter: Long,
         val chainLength: Int,
         val hasPrivateKey: Boolean,
+        val rkpManufacturer: String = "",
     )
 
     fun info(): RemoteInfo? {
@@ -44,6 +45,7 @@ object AttestationService {
                 notAfter = o.optLong("notAfter"),
                 chainLength = o.optInt("chainLength"),
                 hasPrivateKey = o.optBoolean("hasPrivateKey"),
+                rkpManufacturer = o.optString("rkpManufacturer"),
             )
         } catch (_: Exception) { null }
     }

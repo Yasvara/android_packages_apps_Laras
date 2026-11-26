@@ -338,6 +338,7 @@
     <string name="keybox_interim_custody">Interim storage: the whole file, private key included, lives in system settings until it moves into the system service. Re-import after major updates.</string>
     <string name="keybox_reimport_needed">The stored keybox has no private key, so it was removed. Import it again.</string>
     <string name="keybox_summary">%1$s keybox \u00b7 %2$d certificates</string>
+    <string name="keybox_rkp_manufacturer">RKP \u00b7 %1$s</string>
     <string name="keybox_expires_on">Expires %1$s</string>
     <string name="keybox_expired_on">Expired %1$s</string>
     <string name="keybox_checked">Checked %1$s</string>
