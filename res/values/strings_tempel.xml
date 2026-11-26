@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="tempel_title">Tempel NFC</string>
+    <string name="tempel_entry_summary">Clone cards, write blank tags, and switch smartdoor or payment profiles</string>
+    <string name="tempel_hce_desc">Tempel NFC Card Emulation</string>
+    <string name="tempel_tile_nfc_off">NFC off</string>
+    <string name="tempel_tile_empty">No cards</string>
+    <string name="tempel_tile_ready">Ready</string>
+    <string name="tempel_shield">Shield</string>
+    <string name="tempel_unshield">Disable shield</string>
+    <string name="tempel_shield_active">Observe Mode Shield Active</string>
+    <string name="tempel_default_payment">Default Payment Wallet</string>
+    <string name="tempel_enable_nfc_hint">Turn on NFC to emulate, scan, or write cards</string>
+    <string name="tempel_turn_on_nfc">Turn on NFC</string>
+    <string name="tempel_return_payment">Return to Payment</string>
+    <string name="tempel_tab_vault">Vault</string>
+    <string name="tempel_tab_scan">Scan</string>
+    <string name="tempel_tab_write">Write</string>
+    <string name="tempel_add_uid">Manual UID</string>
+    <string name="tempel_add_wallet">Payment App</string>
+    <string name="tempel_import">Import</string>
+    <string name="tempel_profiles_header">Saved cards &amp; wallets</string>
+    <string name="tempel_empty_title">No NFC cards saved</string>
+    <string name="tempel_empty_body">Scan a smartdoor card, add a manual UID/FeliCa IDm, import .nfc/.mct, or add your payment wallet.</string>
+    <string name="tempel_scan_prompt">Hold an NFC card to the back of the phone</string>
+    <string name="tempel_scanning">Reading card &amp; checking sectors…</string>
+    <string name="tempel_card_name">Card name</string>
+    <string name="tempel_save_vault">Save to Vault</string>
+    <string name="tempel_clone_to_card">Write to Card</string>
+    <string name="tempel_verdict_uid">Phone emulation ready (UID + ATQA + SAK). Works on UID-based smartdoors.</string>
+    <string name="tempel_verdict_t4t">Type-4A / NDEF HCE ready. Emulates directly on phone or writes to NTAG.</string>
+    <string name="tempel_verdict_felica">FeliCa IDm + PMm + System Code emulation ready.</string>
+    <string name="tempel_verdict_typeb">ISO 14443-B PUPI emulation ready.</string>
+    <string name="tempel_verdict_mfc_enc">Encrypted MIFARE Classic sectors detected. UID-only emulation may work on UID doors; for sector-checked doors, use the Write tab with a Gen2/CUID, Gen3, or Gen4 Magic card.</string>
+    <string name="tempel_verdict_emoney">Prepaid / EMV purse keys cannot leave card silicon. Balance inspected read-only; UID-only door clone supported.</string>
+    <string name="tempel_verdict_ntag">Phone emulates 7-byte UID only; use the Write tab to clone full memory onto a physical NTAG tag.</string>
+    <string name="tempel_verdict_nfcv">ISO 15693 (NFC-V) cannot be emulated by phone NFCC; full physical block cloning is supported in the Write tab.</string>
+    <string name="tempel_writer_title">Multi-Tech Card Writer</string>
+    <string name="tempel_writer_desc">Write UID, dumps, or NDEF onto physical Gen2/CUID, Gen3 APDU, Gen4 Ultimate Magic, NTAG/Ultralight, NFC-V, or FeliCa Lite-S tags with automatic anti-brick guards.</string>
+    <string name="tempel_writer_no_source">Save or scan a non-payment card first to write it onto a physical tag.</string>
+    <string name="tempel_writer_source">Source profile</string>
+    <string name="tempel_writer_target">Target physical tag type</string>
+    <string name="tempel_writer_arm">Arm Writer — Tap Blank Tag</string>
+    <string name="tempel_writer_waiting">Waiting for target tag… (Tap to cancel)</string>
+</resources>

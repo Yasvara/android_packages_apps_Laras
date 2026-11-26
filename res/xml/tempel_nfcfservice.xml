@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<host-nfcf-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/tempel_hce_desc">
+    <system-code-filter android:name="4000" />
+    <nfcid2-filter android:name="02FE000000000000" />
+</host-nfcf-service>

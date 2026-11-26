@@ -141,6 +141,7 @@ private val SEARCH_DESTINATIONS = listOf(
     FeatureDestination(R.string.padat_title, R.string.padat_entry_summary, Route.Padat(), listOf("compress", "f2fs", "zstd", "lz4", "storage")),
     FeatureDestination(R.string.pasang_title, R.string.pasang_entry_summary, Route.Pasang, listOf("ota", "update", "system update", "pasang", "slot", "firmware", "overlay")),
     FeatureDestination(R.string.saring_title, R.string.saring_entry_summary, Route.Saring, listOf("adblock", "dns", "tracker", "doh", "safesearch")),
+    FeatureDestination(R.string.tempel_title, R.string.tempel_entry_summary, Route.Tempel, listOf("nfc", "tempel", "clone", "kloning", "smartdoor", "kartu", "mifare", "felica", "ntag", "writer", "magic", "emoney", "flazz", "gopay", "wallet")),
     FeatureDestination(R.string.wifi_region_title, R.string.group_connectivity_summary, Route.WifiRegion, listOf("country", "channel", "5ghz", "6ghz")),
     FeatureDestination(R.string.nada_title, R.string.nada_entry_summary, Route.Nada, listOf("dsp", "eq", "equalizer", "dolby", "bass", "viper")),
     FeatureDestination(R.string.swara_title, R.string.swara_entry_summary, Route.SoundApps, listOf("audio", "volume", "mic", "per-app")),

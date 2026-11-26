@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<quickaccesswallet-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="org.yasvara.laras.LarasActivity"
+    android:targetActivity="org.yasvara.laras.LarasActivity"
+    android:shortcutShortLabel="@string/tempel_title"
+    android:shortcutLongLabel="@string/tempel_entry_summary" />

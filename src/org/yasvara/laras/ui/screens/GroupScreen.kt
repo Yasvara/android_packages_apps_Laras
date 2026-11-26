@@ -149,6 +149,7 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
         NavLink(R.string.raba_title, R.string.raba_entry_summary, Route.Haptics),
     )
     SystemGroup.CONNECTIVITY -> listOf(
+        NavLink(R.string.tempel_title, R.string.tempel_entry_summary, Route.Tempel),
         NavLink(R.string.saring_title, R.string.saring_entry_summary, Route.Saring),
         NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
     )

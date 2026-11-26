@@ -64,6 +64,12 @@
         android:name="yasvara.permission.MANAGE_PASANG"
         android:protectionLevel="signature" />
     <uses-permission android:name="yasvara.permission.MANAGE_PASANG" />
+    <!-- Tempel: NFC card vault, profile switching, and tag writer (YasvaraTempelService). -->
+    <permission
+        android:name="yasvara.permission.MANAGE_TEMPEL"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_TEMPEL" />
+    <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -96,6 +102,15 @@
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.OPEN" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Tempel: NFC card manager & writer. -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.TEMPEL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Long press on a Laras Quick Settings tile opens that tile's page. -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
             <!-- Settings › App info › Updates; extra "package". -->
             <intent-filter>
@@ -289,6 +304,56 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
+        </service>
+
+        <!-- Tempel: tap cycles active NFC card profile; long press opens Tempel manager. -->
+        <service
+            android:name=".tempel.TempelTile"
+            android:exported="true"
+            android:icon="@drawable/ic_tempel"
+            android:label="@string/tempel_title"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <!-- Tempel: on-demand ISO-DEP / Type-4A NDEF Host Card Emulation service. -->
+        <service
+            android:name=".tempel.TempelHostApduService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/tempel_apduservice" />
+        </service>
+        <!-- Tempel: on-demand FeliCa (NFC-F) Host Card Emulation service. -->
+        <service
+            android:name=".tempel.TempelHostNfcFService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_NFCF_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_nfcf_service"
+                android:resource="@xml/tempel_nfcfservice" />
+        </service>
+        <!-- Tempel: on-demand lockscreen Quick Access Wallet card carousel. -->
+        <service
+            android:name=".tempel.TempelWalletService"
+            android:exported="true"
+            android:icon="@drawable/ic_tempel"
+            android:label="@string/tempel_title"
+            android:permission="android.permission.BIND_QUICK_ACCESS_WALLET_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.quickaccesswallet.QuickAccessWalletService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.quickaccesswallet"
+                android:resource="@xml/tempel_wallet" />
         </service>
 
         <activity

@@ -5,8 +5,10 @@
 
 package org.yasvara.laras
 
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.service.quicksettings.TileService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +19,7 @@ import androidx.compose.runtime.setValue
 import org.yasvara.laras.catalog.SystemGroup
 import org.yasvara.laras.debug.ColorDebug
 import org.yasvara.laras.debug.SeamSpike
+import org.yasvara.laras.tempel.TempelTile
 import org.yasvara.laras.ui.LarasApp
 import org.yasvara.laras.ui.Route
 import org.yasvara.laras.ui.theme.LarasTheme
@@ -53,19 +56,27 @@ class LarasActivity : ComponentActivity() {
         ACTION_PADAT -> Route.Padat(intent.getStringExtra(EXTRA_PACKAGE)?.takeIf { it.isNotEmpty() })
         ACTION_PASANG -> Route.Pasang
         ACTION_LAYANG -> Route.Group(SystemGroup.MULTITASKING)
+        ACTION_TEMPEL -> Route.Tempel
+        TileService.ACTION_QS_TILE_PREFERENCES -> when (
+            intent.getParcelableExtra(Intent.EXTRA_COMPONENT_NAME, ComponentName::class.java)?.className
+        ) {
+            TempelTile::class.java.name -> Route.Tempel
+            else -> Route.Akar()
+        }
         else -> Route.Home
     }
 
-    private companion object {
-        const val ACTION_APP_UPDATES = "org.yasvara.laras.action.APP_UPDATES"
-        const val ACTION_AKAR = "org.yasvara.laras.action.AKAR"
-        const val ACTION_KAIT = "org.yasvara.laras.action.KAIT"
-        const val ACTION_NADA = "org.yasvara.laras.action.NADA"
-        const val ACTION_SOUND_APPS = "org.yasvara.laras.action.SOUND_APPS"
-        const val ACTION_WIFI_REGION = "org.yasvara.laras.action.WIFI_REGION"
-        const val ACTION_PADAT = "org.yasvara.laras.action.PADAT"
-        const val ACTION_PASANG = "org.yasvara.laras.action.PASANG"
-        const val ACTION_LAYANG = "org.yasvara.laras.action.LAYANG"
-        const val EXTRA_PACKAGE = "package"
+    companion object {
+        const val ACTION_TEMPEL = "org.yasvara.laras.action.TEMPEL"
+        private const val ACTION_APP_UPDATES = "org.yasvara.laras.action.APP_UPDATES"
+        private const val ACTION_AKAR = "org.yasvara.laras.action.AKAR"
+        private const val ACTION_KAIT = "org.yasvara.laras.action.KAIT"
+        private const val ACTION_NADA = "org.yasvara.laras.action.NADA"
+        private const val ACTION_SOUND_APPS = "org.yasvara.laras.action.SOUND_APPS"
+        private const val ACTION_WIFI_REGION = "org.yasvara.laras.action.WIFI_REGION"
+        private const val ACTION_PADAT = "org.yasvara.laras.action.PADAT"
+        private const val ACTION_PASANG = "org.yasvara.laras.action.PASANG"
+        private const val ACTION_LAYANG = "org.yasvara.laras.action.LAYANG"
+        private const val EXTRA_PACKAGE = "package"
     }
 }

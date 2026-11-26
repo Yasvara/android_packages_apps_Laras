@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="tempel_title">Tempel NFC</string>
+    <string name="tempel_entry_summary">Kloning kartu, tulis tag fisik, dan ganti profil smartdoor atau pembayaran</string>
+    <string name="tempel_hce_desc">Emulasi Kartu NFC Tempel</string>
+    <string name="tempel_tile_nfc_off">NFC mati</string>
+    <string name="tempel_tile_empty">Belum ada kartu</string>
+    <string name="tempel_tile_ready">Siap</string>
+    <string name="tempel_shield">Perisai</string>
+    <string name="tempel_unshield">Matikan perisai</string>
+    <string name="tempel_shield_active">Perisai Observe Mode Aktif</string>
+    <string name="tempel_default_payment">Dompet Pembayaran Utama</string>
+    <string name="tempel_enable_nfc_hint">Nyalakan NFC untuk emulasi, pindai, atau tulis kartu</string>
+    <string name="tempel_turn_on_nfc">Nyalakan NFC</string>
+    <string name="tempel_return_payment">Kembali ke Pembayaran</string>
+    <string name="tempel_tab_vault">Kartu</string>
+    <string name="tempel_tab_scan">Pindai</string>
+    <string name="tempel_tab_write">Tulis</string>
+    <string name="tempel_add_uid">UID Manual</string>
+    <string name="tempel_add_wallet">Dompet</string>
+    <string name="tempel_import">Impor</string>
+    <string name="tempel_profiles_header">Kartu &amp; dompet tersimpan</string>
+    <string name="tempel_empty_title">Belum ada kartu NFC</string>
+    <string name="tempel_empty_body">Pindai kartu smartdoor, tambah UID/IDm manual, impor .nfc/.mct, atau tambah dompet pembayaran.</string>
+    <string name="tempel_scan_prompt">Tempelkan kartu NFC di belakang ponsel</string>
+    <string name="tempel_scanning">Membaca kartu &amp; memeriksa sektor…</string>
+    <string name="tempel_card_name">Nama kartu</string>
+    <string name="tempel_save_vault">Simpan ke Vault</string>
+    <string name="tempel_clone_to_card">Tulis ke Kartu</string>
+    <string name="tempel_verdict_uid">Siap emulasi di ponsel (UID + ATQA + SAK). Cocok untuk smartdoor berbasis UID.</string>
+    <string name="tempel_verdict_t4t">Siap emulasi HCE Type-4A / NDEF di ponsel atau tulis ke NTAG.</string>
+    <string name="tempel_verdict_felica">Siap emulasi FeliCa IDm + PMm + System Code.</string>
+    <string name="tempel_verdict_typeb">Siap emulasi ISO 14443-B PUPI.</string>
+    <string name="tempel_verdict_mfc_enc">Sektor MIFARE Classic terenkripsi terdeteksi. Emulasi UID cocok untuk pintu UID; untuk pintu cek sektor, gunakan tab Tulis dengan kartu Gen2/CUID, Gen3, atau Gen4 Magic.</string>
+    <string name="tempel_verdict_emoney">Kunci saldo e-Money/EMV tidak bisa keluar dari chip. Saldo dibaca read-only; kloning UID untuk akses pintu tetap didukung.</string>
+    <string name="tempel_verdict_ntag">Ponsel mengemulasi UID 7-byte; gunakan tab Tulis untuk menyalin memori penuh ke tag NTAG fisik.</string>
+    <string name="tempel_verdict_nfcv">ISO 15693 (NFC-V) tidak dapat diemulasi NFCC ponsel; kloning blok penuh ke tag fisik didukung di tab Tulis.</string>
+    <string name="tempel_writer_title">Penulis Kartu Multi-Teknologi</string>
+    <string name="tempel_writer_desc">Tulis UID, dump, atau NDEF ke kartu fisik Gen2/CUID, Gen3 APDU, Gen4 Ultimate Magic, NTAG/Ultralight, NFC-V, atau FeliCa Lite-S dengan proteksi anti-brick otomatis.</string>
+    <string name="tempel_writer_no_source">Simpan atau pindai kartu non-pembayaran terlebih dulu untuk menulisnya ke tag fisik.</string>
+    <string name="tempel_writer_source">Profil sumber</string>
+    <string name="tempel_writer_target">Jenis kartu fisik tujuan</string>
+    <string name="tempel_writer_arm">Siapkan Penulis — Tempel Tag Kosong</string>
+    <string name="tempel_writer_waiting">Menunggu tag tujuan… (Ketuk untuk batal)</string>
+</resources>

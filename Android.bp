@@ -23,6 +23,7 @@ android_app {
         ":yasvara-app-visibility-aidl",
         ":yasvara-lelap-aidl",
         ":yasvara-saring-aidl",
+        ":yasvara-tempel-aidl",
         ":yasvara-padat-aidl",
         ":yasvara-nada-aidl",
         ":yasvara-nada-client",
