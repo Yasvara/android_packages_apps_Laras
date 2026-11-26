@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.yasvara.laras.data.pasang.KernelPackageInfo
 import org.yasvara.laras.data.pasang.PasangDevOptions
 import org.yasvara.laras.data.pasang.PasangInstallService
 import org.yasvara.laras.data.pasang.PasangOverlayCleanResult
@@ -44,6 +45,12 @@ data class PasangUiState(
     val cleaningOverlay: Boolean = false,
     val lastOverlayClean: PasangOverlayCleanResult? = null,
     val message: String? = null,
+    val runningKernel: String = System.getProperty("os.version").orEmpty(),
+    val kernelPath: String? = null,
+    val kernelPackage: KernelPackageInfo? = null,
+    val kernelPlanning: Boolean = false,
+    val kernelPlan: PasangPlan? = null,
+    val kernelError: String? = null,
 )
 
 class PasangViewModel(app: Application) : AndroidViewModel(app) {
@@ -97,6 +104,12 @@ class PasangViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             val (path, label) = resolved
+            val kernel = withContext(Dispatchers.IO) { repo.readKernelPackage(uri) }
+            if (kernel != null) {
+                _state.update { it.copy(planning = false) }
+                planKernel(path, kernel)
+                return@launch
+            }
             val opts = _state.value.devOptions
             val plan = withContext(Dispatchers.IO) { repo.planOta(path, opts) }
             _state.update {
@@ -107,6 +120,55 @@ class PasangViewModel(app: Application) : AndroidViewModel(app) {
                     plan = plan,
                 )
             }
+        }
+    }
+
+    fun onPickKernelUri(uri: Uri) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(kernelPlanning = true, kernelPlan = null, kernelPackage = null, kernelError = null)
+            }
+            val (resolved, kernel) = withContext(Dispatchers.IO) {
+                repo.resolveOtaUri(uri) to repo.readKernelPackage(uri)
+            }
+            when {
+                resolved == null -> fail("Cannot open selected file")
+                kernel == null -> fail("Not a kernel package (no ${KernelPackageInfo.ENTRY})")
+                !kernel.deviceMatches -> fail("Built for ${kernel.device}, this is ${android.os.Build.DEVICE}")
+                else -> planKernel(resolved.first, kernel)
+            }
+        }
+    }
+
+    private fun fail(msg: String) {
+        _state.update { it.copy(kernelPlanning = false, kernelPath = null, kernelError = msg) }
+    }
+
+    private suspend fun planKernel(path: String, kernel: KernelPackageInfo) {
+        _state.update {
+            it.copy(
+                kernelPlanning = true,
+                kernelPath = path,
+                kernelPackage = kernel,
+                kernelPlan = null,
+                kernelError = null,
+            )
+        }
+        val plan = withContext(Dispatchers.IO) { repo.planOta(path, _state.value.devOptions) }
+        _state.update { it.copy(kernelPlanning = false, kernelPlan = plan) }
+    }
+
+    fun flashKernel() {
+        val path = _state.value.kernelPath ?: return
+        val opts = _state.value.devOptions
+        viewModelScope.launch {
+            val rc = withContext(Dispatchers.IO) { repo.startOta(path, opts) }
+            if (rc != 0) {
+                _state.update { it.copy(kernelError = "Failed to start flash (code $rc)") }
+                return@launch
+            }
+            PasangInstallService.startMonitoring(getApplication())
+            startPolling()
         }
     }
 

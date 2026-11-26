@@ -17,6 +17,8 @@ import org.json.JSONObject
 import yasvara.pasang.IPasang
 import java.io.File
 import java.util.Locale
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 data class PasangSlotInfo(
     val version: String = "",
@@ -84,8 +86,56 @@ data class PasangPlan(
     val freeSuperBefore: Long = 0L,
     val freeSuperAfter: Long = 0L,
     val overlayFilesPresent: Long = 0L,
+    val partialUpdate: Boolean = false,
+    val carriedPartitions: Int = 0,
+    val carriedBytesCopied: Long = 0L,
     val error: String = "",
 )
+
+/** Contents of `drago-kernel.prop` from a `yv kernel package` zip. */
+data class KernelPackageInfo(
+    val name: String,
+    val codename: String,
+    val maintainer: String,
+    val release: String,
+    val utsVersion: String,
+    val compiler: String,
+    val device: String,
+    val date: String,
+    val partitions: List<String>,
+) {
+    val isRunning: Boolean get() = release.isNotEmpty() && release == System.getProperty("os.version")
+    val deviceMatches: Boolean get() = device.isEmpty() || device == Build.DEVICE
+
+    /** "clang 21.0.0" out of the full toolchain banner. */
+    val compilerShort: String get() =
+        Regex("clang version ([0-9.]+)").find(compiler)?.let { "clang ${it.groupValues[1]}" }
+            ?: compiler.take(32)
+
+    companion object {
+        const val ENTRY = "drago-kernel.prop"
+
+        fun parse(text: String): KernelPackageInfo? {
+            val m = text.lineSequence()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") && '=' in it }
+                .associate { it.substringBefore('=') to it.substringAfter('=') }
+            val release = m["kernel.release"] ?: return null
+            return KernelPackageInfo(
+                name = m["kernel.name"].orEmpty().ifEmpty { "Kernel" },
+                codename = m["kernel.codename"].orEmpty(),
+                maintainer = m["kernel.maintainer"].orEmpty(),
+                release = release,
+                utsVersion = m["kernel.uts_version"].orEmpty(),
+                compiler = m["kernel.compiler"].orEmpty(),
+                device = m["kernel.device"].orEmpty(),
+                date = m["kernel.date"].orEmpty(),
+                partitions = m["package.partitions"].orEmpty()
+                    .split(',').map { it.trim() }.filter { it.isNotEmpty() },
+            )
+        }
+    }
+}
 
 data class PasangOverlayCleanResult(
     val removedEntries: Long = 0L,
@@ -231,6 +281,9 @@ class PasangRepository(private val context: Context) {
                 freeSuperBefore = j.optLong("free_super_before"),
                 freeSuperAfter = j.optLong("free_super_after"),
                 overlayFilesPresent = j.optLong("overlay_files_present"),
+                partialUpdate = j.optBoolean("partial_update"),
+                carriedPartitions = j.optInt("carried_partitions"),
+                carriedBytesCopied = j.optLong("carried_bytes_copied"),
             )
         }.getOrElse {
             PasangPlan(error = it.message ?: "Malformed plan response")
@@ -334,6 +387,32 @@ class PasangRepository(private val context: Context) {
             return toDaemonPath(raw) to (displayName ?: File(raw).name)
         }
         return null
+    }
+
+    /**
+     * Reads `drago-kernel.prop` out of a picked zip. Tries the central directory first
+     * through the picker's fd (no payload scan); falls back to streaming.
+     */
+    fun readKernelPackage(uri: Uri): KernelPackageInfo? {
+        val viaFd = runCatching {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                ZipFile(File("/proc/self/fd/${pfd.fd}")).use { zip ->
+                    val e = zip.getEntry(KernelPackageInfo.ENTRY) ?: return@use ""
+                    zip.getInputStream(e).bufferedReader().readText()
+                }
+            }
+        }.getOrNull()
+        if (viaFd != null) return if (viaFd.isEmpty()) null else KernelPackageInfo.parse(viaFd)
+
+        return runCatching {
+            context.contentResolver.openInputStream(uri)?.use { raw ->
+                ZipInputStream(raw.buffered()).use { zin ->
+                    generateSequence { zin.nextEntry }
+                        .firstOrNull { it.name == KernelPackageInfo.ENTRY }
+                        ?.let { KernelPackageInfo.parse(zin.bufferedReader().readText()) }
+                }
+            }
+        }.getOrNull()
     }
 
     private fun toDaemonPath(path: String): String = when {

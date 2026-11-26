@@ -101,6 +101,11 @@ fun PasangScreen(
     ) { uri ->
         if (uri != null) viewModel.onPickUri(uri)
     }
+    val kernelPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) viewModel.onPickKernelUri(uri)
+    }
 
     Page(stringResource(R.string.pasang_title), onBack) {
         // 1. Hero System & Slot Status Card
@@ -161,6 +166,17 @@ fun PasangScreen(
                 onPick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                 onAnalyze = viewModel::reanalyzePlan,
                 onInstall = viewModel::startInstall,
+            )
+        }
+
+        item(key = "kernel-header") {
+            LarasSectionHeader(stringResource(R.string.pasang_kernel_section))
+        }
+        item(key = "kernel-card") {
+            KernelPackageCard(
+                state = state,
+                onPick = { kernelPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
+                onFlash = viewModel::flashKernel,
             )
         }
 
@@ -708,6 +724,145 @@ private fun LocalPackageCard(
 }
 
 @Composable
+private fun KernelPackageCard(
+    state: PasangUiState,
+    onPick: () -> Unit,
+    onFlash: () -> Unit,
+) {
+    val pkg = state.kernelPackage
+    val idle = !state.status.busy && !state.kernelPlanning && state.daemonAvailable
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceBright,
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                ) {
+                    Icon(
+                        Icons.Rounded.Memory,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.padding(10.dp).size(24.dp),
+                    )
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.pasang_kernel_running),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        state.runningKernel,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            if (pkg != null) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            listOf(pkg.name, pkg.codename).filter { it.isNotEmpty() }.joinToString(" · "),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                        Text(
+                            pkg.release,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                        Text(
+                            listOf(pkg.compilerShort, pkg.date, pkg.maintainer)
+                                .filter { it.isNotEmpty() }.joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                        )
+                        if (pkg.partitions.isNotEmpty()) {
+                            Text(
+                                pkg.partitions.joinToString("  "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
+                            )
+                        }
+                        if (pkg.isRunning) {
+                            Text(
+                                stringResource(R.string.pasang_kernel_same),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (state.kernelPlanning) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().height(6.dp),
+                    strokeCap = StrokeCap.Round,
+                )
+            }
+
+            state.kernelError?.let { PlanSummaryBox(PasangPlan(error = it)) }
+            state.kernelPlan?.let { PlanSummaryBox(plan = it) }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                FilledTonalButton(
+                    onClick = onPick,
+                    enabled = idle,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.pasang_kernel_pick))
+                }
+                val plan = state.kernelPlan
+                if (state.kernelPath != null && plan != null && plan.error.isEmpty()) {
+                    Button(
+                        onClick = onFlash,
+                        enabled = idle,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Rounded.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.pasang_kernel_flash))
+                    }
+                }
+            }
+            if (pkg == null && state.kernelError == null) {
+                Text(
+                    stringResource(R.string.pasang_kernel_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun PlanSummaryBox(plan: PasangPlan) {
     val context = LocalContext.current
     if (plan.error.isNotEmpty()) {
@@ -780,6 +935,17 @@ private fun PlanSummaryBox(plan: PasangPlan) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
             )
+            if (plan.partialUpdate) {
+                Text(
+                    stringResource(
+                        R.string.pasang_plan_partial,
+                        plan.carriedPartitions,
+                        Formatter.formatShortFileSize(context, plan.carriedBytesCopied),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
+                )
+            }
             Text(
                 if (plan.signatureVerified) stringResource(R.string.pasang_plan_sig_ok)
                 else stringResource(R.string.pasang_plan_sig_dev),

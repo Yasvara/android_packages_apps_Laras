@@ -72,4 +72,11 @@
     <string name="pasang_notif_done_title">Pembaruan sistem siap</string>
     <string name="pasang_notif_done_body">Mulai ulang sekali untuk beralih ke Slot <xliff:g id="slot" example="A">%1$s</xliff:g>. Tanpa recovery maupun merge pasca-boot.</string>
     <string name="pasang_notif_cancelled_body">Slot aktif Anda tidak berubah.</string>
+    <string name="pasang_plan_partial">Pembaruan parsial · <xliff:g id="count" example="39">%1$d</xliff:g> partisi dibawa (<xliff:g id="size" example="180 MB">%2$s</xliff:g> disalin)</string>
+    <string name="pasang_kernel_section">Kernel</string>
+    <string name="pasang_kernel_running">Kernel berjalan</string>
+    <string name="pasang_kernel_pick">Pilih kernel</string>
+    <string name="pasang_kernel_flash">Flash kernel</string>
+    <string name="pasang_kernel_same">Build ini sudah berjalan</string>
+    <string name="pasang_kernel_hint">Paket kernel dari yv kernel package hanya menulis boot, vendor_boot, dtbo, dan partisi dlkm ke slot lain. Sisanya dibawa, jadi cukup mulai ulang.</string>
 </resources>
