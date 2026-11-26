@@ -6,3 +6,14 @@
 # ONNX Runtime too, and its telemetry client stays out (its provider is removed from the AAR).
 -keep class ai.onnxruntime.** { *; }
 -dontwarn ai.onnxruntime.**
+
+# MapLibre's native core calls back into its Java classes by name. Its own rules keep
+# EnclosingMethod, which R8 accepts only with InnerClasses.
+-keepattributes InnerClasses
+-keep class org.maplibre.android.** { *; }
+-dontwarn org.maplibre.android.**
+# OkHttp probes for optional TLS providers that are not on Android.
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

@@ -56,6 +56,7 @@ import org.yasvara.laras.ui.root.AkarAppScreen
 import org.yasvara.laras.ui.root.AkarLogsScreen
 import org.yasvara.laras.ui.root.AkarScreen
 import org.yasvara.laras.ui.root.AkarSettingsScreen
+import org.yasvara.laras.ui.samar.SamarScreen
 import org.yasvara.laras.ui.tempel.TempelScreen
 import org.yasvara.laras.ui.saring.SaringScreen
 import org.yasvara.laras.ui.saring.SaringTab
@@ -103,6 +104,7 @@ sealed interface Route {
     data object KetikFlags : Route { override val id = "ketik_flags" }
     data class Padat(val focus: String? = null) : Route { override val id = "padat:${focus.orEmpty()}" }
     data object Pasang : Route { override val id = "pasang" }
+    data object Samar : Route { override val id = "samar" }
     data object Tempel : Route { override val id = "tempel" }
 
     companion object {
@@ -130,6 +132,7 @@ sealed interface Route {
                 "ketik_flags" -> KetikFlags
                 "padat" -> Padat(arg.takeIf { it.isNotEmpty() && it != id })
                 "pasang" -> Pasang
+                "samar" -> Samar
                 "tempel" -> Tempel
                 "updates" -> AppUpdates(arg.takeIf { it.isNotEmpty() && it != id })
                 "akar" -> Akar(arg.takeIf { it.isNotEmpty() && it != id })
@@ -282,6 +285,7 @@ fun LarasApp(
                     entry<Route.KetikFlags> { KetikFlagEditorScreen(onBack = back) }
                     entry<Route.Padat> { route -> PadatScreen(onBack = back, focus = route.focus) }
                     entry<Route.Pasang> { PasangScreen(onBack = back) }
+                    entry<Route.Samar> { SamarScreen(onBack = back) }
                     entry<Route.Tempel> { TempelScreen(onBack = back) }
                     entry<Route.Changed> {
                         ChangedScreen(prefs, viewModel, onResetAll = viewModel::resetAll, onBack = back)

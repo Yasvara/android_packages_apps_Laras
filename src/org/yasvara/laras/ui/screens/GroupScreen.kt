@@ -154,6 +154,7 @@ private fun navLinksFor(group: SystemGroup): List<NavLink> = when (group) {
         NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
     )
     SystemGroup.PRIVACY -> listOf(
+        NavLink(R.string.samar_title, R.string.samar_entry_summary, Route.Samar),
         NavLink(R.string.saring_title, R.string.saring_entry_summary, Route.Saring),
         NavLink(R.string.lelap_cuts_title, R.string.lelap_cuts_entry_summary, Route.LelapCuts),
     )

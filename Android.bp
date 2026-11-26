@@ -23,6 +23,7 @@ android_app {
         ":yasvara-app-visibility-aidl",
         ":yasvara-lelap-aidl",
         ":yasvara-saring-aidl",
+        ":yasvara-samar-aidl",
         ":yasvara-tempel-aidl",
         ":yasvara-padat-aidl",
         ":yasvara-nada-aidl",
@@ -83,6 +84,8 @@ android_app {
         "yasvara-kait-ipc",
         // Pasang lazy In-OS Live CoW OTA daemon AIDL Java stub (vendor/yasvara/pasang).
         "yasvara.pasang-java",
+        // Samar's map: MapLibre Native (vendor/yasvara/prebuilts/maplibre).
+        "yasvara-maplibre",
     ],
     use_embedded_native_libs: true,
     // The filter list compiler (vendor/yasvara/saring).

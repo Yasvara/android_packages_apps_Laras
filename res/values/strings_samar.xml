@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="samar_title">Samar</string>
+    <string name="samar_entry_summary">Choose the location apps see, per app or for all</string>
+    <string name="samar_unavailable">Samar isn\'t running on this build</string>
+    <string name="samar_tab_location">Location</string>
+    <string name="samar_tab_apps">Apps</string>
+    <string name="samar_tab_privacy">Privacy</string>
+    <string name="samar_tab_maps">Maps</string>
+
+    <string name="samar_find_hint">Search a place, coordinates or map link</string>
+    <string name="samar_clear">Clear</string>
+    <string name="samar_map_hint">Tap the map to pick a place</string>
+    <string name="samar_move_here">Move here</string>
+    <string name="samar_save_place">Save place</string>
+    <string name="samar_save">Save</string>
+    <string name="samar_delete">Delete</string>
+    <string name="samar_place_name">Name</string>
+    <string name="samar_link_away">%1$s from the current location</string>
+
+    <string name="samar_master">Fake location</string>
+    <string name="samar_master_on">Apps see %1$s</string>
+    <string name="samar_master_off">Apps see your real location</string>
+    <string name="samar_master_no_place">Pick a place on the map first</string>
+    <string name="samar_turn_on">Turn on</string>
+
+    <string name="samar_movement">Movement</string>
+    <string name="samar_speed">Speed</string>
+    <string name="samar_speed_summary">How fast the joystick moves you. Changes of pace are smoothed like a real walk or drive.</string>
+    <string name="samar_speed_walk">Walk</string>
+    <string name="samar_speed_run">Run</string>
+    <string name="samar_speed_bike">Bike</string>
+    <string name="samar_speed_car">Car</string>
+    <string name="samar_panel">Floating joystick</string>
+    <string name="samar_panel_summary">A live map and joystick over any app</string>
+    <string name="samar_panel_tile">Show it from Quick Settings</string>
+    <string name="samar_panel_tile_summary">Turning Samar on from its tile also opens the floating joystick</string>
+    <string name="samar_altitude">Altitude</string>
+    <string name="samar_altitude_value">%1$.0f m above sea level</string>
+    <string name="samar_altitude_hint">Between −500 and 9000 m</string>
+
+    <string name="samar_places">Saved places</string>
+    <string name="samar_places_empty">Save places you use often to jump back with one tap</string>
+    <string name="samar_places_save_current">Save current</string>
+    <string name="samar_place_here">You are here</string>
+    <string name="samar_note_emergency">Emergency calls and your phone app always get your real location. Apps receive it as an ordinary location from the system, not from a mock provider.</string>
+
+    <string name="samar_notice_moved">Moved %1$s</string>
+    <string name="samar_notice_set">Location set</string>
+    <string name="samar_notice_set_off">Location set. Samar is off, so apps still see your real location.</string>
+    <string name="samar_notice_not_understood">That doesn\'t look like a location</string>
+    <string name="samar_notice_needs_place">Pick a place on the map first</string>
+    <string name="samar_notice_saved">Saved “%1$s”</string>
+    <string name="samar_notice_download_failed">Couldn\'t start the download: %1$s</string>
+    <string name="samar_notice_cache_cleared">Map cache cleared</string>
+
+    <string name="samar_apps_note">Apps follow the location above unless you choose otherwise. Apps that get location through Google Play services follow the choice made for Google Play services.</string>
+    <string name="samar_apps_search">Search apps</string>
+    <string name="samar_apps_empty">No apps match</string>
+    <string name="samar_filter_custom">Custom</string>
+    <string name="samar_mode_follow">Follows Samar</string>
+    <string name="samar_mode_follow_summary">Sees the fake location while Samar is on</string>
+    <string name="samar_mode_real">Real location</string>
+    <string name="samar_mode_real_summary">Always sees where you really are</string>
+    <string name="samar_mode_own">Own location</string>
+    <string name="samar_mode_own_summary">Sees a location of its own, even while Samar is off</string>
+    <string name="samar_app_summary_layers">%1$s · %2$d privacy changes</string>
+    <string name="samar_app_location">This app\'s location</string>
+    <string name="samar_app_use_global">Same as Samar</string>
+    <string name="samar_app_panel_hint">To walk this app\'s location with the joystick, tap the title in the floating joystick to switch to it.</string>
+
+    <string name="samar_privacy_note">Apps can find you without GPS by reading nearby Wi-Fi, cell towers, Bluetooth beacons or the location in photos. These switches cut those paths for every app; system apps keep them.</string>
+    <string name="samar_layer_radio">Hide Wi-Fi and cell info</string>
+    <string name="samar_layer_radio_summary">Nearby networks, the connected router\'s address and cell towers. Wi-Fi still works.</string>
+    <string name="samar_layer_ble">Hide Bluetooth scans</string>
+    <string name="samar_layer_ble_summary">Beacons and nearby devices that reveal where you are. Paired devices still work.</string>
+    <string name="samar_layer_media">Strip photo location</string>
+    <string name="samar_layer_media_summary">Apps get your photos without the place they were taken</string>
+    <string name="samar_layer_lan">Block local network</string>
+    <string name="samar_layer_lan_summary">Stops apps finding the devices on your Wi-Fi, which identify your home</string>
+    <string name="samar_layer_default">Default (%1$s)</string>
+    <string name="samar_layer_hidden">Hidden</string>
+    <string name="samar_layer_shown">Allowed</string>
+    <string name="samar_privacy_per_app">Per-app choices</string>
+    <string name="samar_privacy_per_app_summary">Hide or allow these for one app</string>
+
+    <string name="samar_maps_areas">Areas</string>
+    <string name="samar_maps_saved">Saved</string>
+    <string name="samar_maps_storage">Storage</string>
+    <string name="samar_maps_download_here">Download this area</string>
+    <string name="samar_maps_save_offline">Save offline</string>
+    <string name="samar_maps_saved_areas">Offline areas</string>
+    <string name="samar_maps_none">Saved areas work without a connection. Move the map to an area and download it.</string>
+    <string name="samar_maps_area_summary">%1$s · %2$s · updated %3$s</string>
+    <string name="samar_maps_progress">Downloading %1$d%% · %2$s</string>
+    <string name="samar_maps_paused">Paused at %1$d%% · %2$s</string>
+    <string name="samar_maps_error">Couldn\'t finish: %1$s</string>
+    <string name="samar_maps_update">Update</string>
+    <string name="samar_maps_pause">Pause</string>
+    <string name="samar_maps_resume">Resume</string>
+    <string name="samar_maps_cache">Recently viewed maps</string>
+    <string name="samar_maps_cache_summary">Kept up to 128 MB so maps you\'ve looked at open quickly</string>
+    <string name="samar_maps_cache_clear">Clear</string>
+    <string name="samar_maps_attribution">Map data © OpenStreetMap contributors, tiles by OpenFreeMap. OpenFreeMap sees which map tiles are shown, never your location.</string>
+    <string name="samar_maps_download_title">Download area</string>
+    <string name="samar_maps_estimate">About %1$s</string>
+    <string name="samar_maps_too_big">This area is too large. Zoom in and try again.</string>
+    <string name="samar_maps_download">Download</string>
+    <string name="samar_maps_delete_title">Delete “%1$s”?</string>
+    <string name="samar_maps_delete_body">Frees %1$s. Parts you view again are cached as usual.</string>
+    <string name="samar_detail_streets">Streets</string>
+    <string name="samar_detail_overview">City overview</string>
+
+    <string name="samar_tile">Fake location</string>
+    <string name="samar_tile_off">Off</string>
+    <string name="samar_tile_no_place">Pick a place</string>
+    <string name="samar_target_global">All apps</string>
+    <string name="samar_panel_open">Open floating joystick</string>
+    <string name="samar_panel_minimize">Minimise</string>
+    <string name="samar_panel_close">Close</string>
+    <string name="samar_panel_recenter">Back to the location</string>
+    <string name="samar_panel_hint">Long-press the map to jump there</string>
+    <string name="samar_panel_on">On</string>
+    <string name="samar_panel_off">Off</string>
+    <string name="samar_panel_own">This app\'s own location</string>
+    <string name="samar_panel_moving">%1$.1f km/h · %2$s</string>
+    <string name="samar_joystick">Joystick</string>
+
+    <string name="samar_link_label">Fake location</string>
+    <string name="samar_link_title">Use this location?</string>
+    <string name="samar_link_go">Move here</string>
+    <string name="samar_link_done">Apps now see this location</string>
+</resources>

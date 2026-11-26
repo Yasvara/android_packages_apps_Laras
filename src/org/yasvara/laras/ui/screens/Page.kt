@@ -53,6 +53,8 @@ fun Page(
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     compactTopBar: Boolean = true,
+    /** False while a child that pans by itself (a map) has the finger. */
+    userScrollEnabled: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
     val scroll = if (compactTopBar) {
@@ -106,6 +108,7 @@ fun Page(
     ) { padding ->
         LazyColumn(
             state = listState,
+            userScrollEnabled = userScrollEnabled,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding()),

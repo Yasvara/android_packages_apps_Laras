@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The Yasvara Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="samar_title">Samar</string>
+    <string name="samar_entry_summary">Pilih lokasi yang dilihat aplikasi, per aplikasi atau semuanya</string>
+    <string name="samar_unavailable">Samar tidak berjalan di build ini</string>
+    <string name="samar_tab_location">Lokasi</string>
+    <string name="samar_tab_apps">Aplikasi</string>
+    <string name="samar_tab_privacy">Privasi</string>
+    <string name="samar_tab_maps">Peta</string>
+
+    <string name="samar_find_hint">Cari tempat, koordinat, atau link peta</string>
+    <string name="samar_clear">Hapus</string>
+    <string name="samar_map_hint">Ketuk peta untuk memilih tempat</string>
+    <string name="samar_move_here">Pindah ke sini</string>
+    <string name="samar_save_place">Simpan tempat</string>
+    <string name="samar_save">Simpan</string>
+    <string name="samar_delete">Hapus</string>
+    <string name="samar_place_name">Nama</string>
+    <string name="samar_link_away">%1$s dari lokasi sekarang</string>
+
+    <string name="samar_master">Lokasi samaran</string>
+    <string name="samar_master_on">Aplikasi melihat %1$s</string>
+    <string name="samar_master_off">Aplikasi melihat lokasi asli kamu</string>
+    <string name="samar_master_no_place">Pilih tempat di peta dulu</string>
+    <string name="samar_turn_on">Nyalakan</string>
+
+    <string name="samar_movement">Gerakan</string>
+    <string name="samar_speed">Kecepatan</string>
+    <string name="samar_speed_summary">Seberapa cepat joystick menggerakkanmu. Perubahan laju dihaluskan seperti jalan atau berkendara sungguhan.</string>
+    <string name="samar_speed_walk">Jalan</string>
+    <string name="samar_speed_run">Lari</string>
+    <string name="samar_speed_bike">Sepeda</string>
+    <string name="samar_speed_car">Mobil</string>
+    <string name="samar_panel">Joystick melayang</string>
+    <string name="samar_panel_summary">Peta langsung dan joystick di atas aplikasi apa pun</string>
+    <string name="samar_panel_tile">Tampilkan dari Setelan Cepat</string>
+    <string name="samar_panel_tile_summary">Menyalakan Samar dari tile-nya juga membuka joystick melayang</string>
+    <string name="samar_altitude">Ketinggian</string>
+    <string name="samar_altitude_value">%1$.0f m di atas permukaan laut</string>
+    <string name="samar_altitude_hint">Antara −500 dan 9000 m</string>
+
+    <string name="samar_places">Tempat tersimpan</string>
+    <string name="samar_places_empty">Simpan tempat yang sering dipakai agar bisa kembali dengan sekali ketuk</string>
+    <string name="samar_places_save_current">Simpan yang sekarang</string>
+    <string name="samar_place_here">Kamu di sini</string>
+    <string name="samar_note_emergency">Panggilan darurat dan aplikasi telepon selalu mendapat lokasi asli. Aplikasi menerimanya sebagai lokasi biasa dari sistem, bukan dari penyedia lokasi tiruan.</string>
+
+    <string name="samar_notice_moved">Pindah %1$s</string>
+    <string name="samar_notice_set">Lokasi diatur</string>
+    <string name="samar_notice_set_off">Lokasi diatur. Samar mati, jadi aplikasi masih melihat lokasi asli.</string>
+    <string name="samar_notice_not_understood">Itu sepertinya bukan lokasi</string>
+    <string name="samar_notice_needs_place">Pilih tempat di peta dulu</string>
+    <string name="samar_notice_saved">“%1$s” disimpan</string>
+    <string name="samar_notice_download_failed">Unduhan tidak bisa dimulai: %1$s</string>
+    <string name="samar_notice_cache_cleared">Cache peta dihapus</string>
+
+    <string name="samar_apps_note">Aplikasi mengikuti lokasi di atas kecuali kamu memilih lain. Aplikasi yang mendapat lokasi lewat layanan Google Play mengikuti pilihan untuk layanan Google Play.</string>
+    <string name="samar_apps_search">Cari aplikasi</string>
+    <string name="samar_apps_empty">Tidak ada aplikasi yang cocok</string>
+    <string name="samar_filter_custom">Diubah</string>
+    <string name="samar_mode_follow">Ikut Samar</string>
+    <string name="samar_mode_follow_summary">Melihat lokasi samaran saat Samar menyala</string>
+    <string name="samar_mode_real">Lokasi asli</string>
+    <string name="samar_mode_real_summary">Selalu melihat lokasi kamu yang sebenarnya</string>
+    <string name="samar_mode_own">Lokasi sendiri</string>
+    <string name="samar_mode_own_summary">Melihat lokasinya sendiri, meski Samar mati</string>
+    <string name="samar_app_summary_layers">%1$s · %2$d perubahan privasi</string>
+    <string name="samar_app_location">Lokasi aplikasi ini</string>
+    <string name="samar_app_use_global">Sama dengan Samar</string>
+    <string name="samar_app_panel_hint">Untuk menggerakkan lokasi aplikasi ini dengan joystick, ketuk judul di joystick melayang untuk beralih ke aplikasi ini.</string>
+
+    <string name="samar_privacy_note">Aplikasi bisa menemukanmu tanpa GPS lewat Wi-Fi sekitar, menara seluler, beacon Bluetooth, atau lokasi di foto. Sakelar ini memutus jalur itu untuk semua aplikasi; aplikasi sistem tetap punya akses.</string>
+    <string name="samar_layer_radio">Sembunyikan info Wi-Fi dan seluler</string>
+    <string name="samar_layer_radio_summary">Jaringan sekitar, alamat router yang tersambung, dan menara seluler. Wi-Fi tetap jalan.</string>
+    <string name="samar_layer_ble">Sembunyikan pindaian Bluetooth</string>
+    <string name="samar_layer_ble_summary">Beacon dan perangkat sekitar yang membuka lokasimu. Perangkat tersambung tetap jalan.</string>
+    <string name="samar_layer_media">Hapus lokasi foto</string>
+    <string name="samar_layer_media_summary">Aplikasi mendapat foto tanpa tempat pengambilannya</string>
+    <string name="samar_layer_lan">Blokir jaringan lokal</string>
+    <string name="samar_layer_lan_summary">Mencegah aplikasi menemukan perangkat di Wi-Fi kamu, yang bisa mengenali rumahmu</string>
+    <string name="samar_layer_default">Bawaan (%1$s)</string>
+    <string name="samar_layer_hidden">Disembunyikan</string>
+    <string name="samar_layer_shown">Diizinkan</string>
+    <string name="samar_privacy_per_app">Pilihan per aplikasi</string>
+    <string name="samar_privacy_per_app_summary">Sembunyikan atau izinkan ini untuk satu aplikasi</string>
+
+    <string name="samar_maps_areas">Area</string>
+    <string name="samar_maps_saved">Tersimpan</string>
+    <string name="samar_maps_storage">Penyimpanan</string>
+    <string name="samar_maps_download_here">Unduh area ini</string>
+    <string name="samar_maps_save_offline">Simpan offline</string>
+    <string name="samar_maps_saved_areas">Area offline</string>
+    <string name="samar_maps_none">Area tersimpan bisa dipakai tanpa koneksi. Geser peta ke suatu area lalu unduh.</string>
+    <string name="samar_maps_area_summary">%1$s · %2$s · diperbarui %3$s</string>
+    <string name="samar_maps_progress">Mengunduh %1$d%% · %2$s</string>
+    <string name="samar_maps_paused">Dijeda di %1$d%% · %2$s</string>
+    <string name="samar_maps_error">Tidak selesai: %1$s</string>
+    <string name="samar_maps_update">Perbarui</string>
+    <string name="samar_maps_pause">Jeda</string>
+    <string name="samar_maps_resume">Lanjutkan</string>
+    <string name="samar_maps_cache">Peta yang baru dilihat</string>
+    <string name="samar_maps_cache_summary">Disimpan sampai 128 MB agar peta yang pernah dilihat cepat terbuka</string>
+    <string name="samar_maps_cache_clear">Hapus</string>
+    <string name="samar_maps_attribution">Data peta © kontributor OpenStreetMap, tile dari OpenFreeMap. OpenFreeMap hanya melihat tile peta yang ditampilkan, tidak pernah lokasimu.</string>
+    <string name="samar_maps_download_title">Unduh area</string>
+    <string name="samar_maps_estimate">Sekitar %1$s</string>
+    <string name="samar_maps_too_big">Area ini terlalu luas. Perbesar peta lalu coba lagi.</string>
+    <string name="samar_maps_download">Unduh</string>
+    <string name="samar_maps_delete_title">Hapus “%1$s”?</string>
+    <string name="samar_maps_delete_body">Mengosongkan %1$s. Bagian yang dilihat lagi akan di-cache seperti biasa.</string>
+    <string name="samar_detail_streets">Jalan</string>
+    <string name="samar_detail_overview">Gambaran kota</string>
+
+    <string name="samar_tile">Lokasi samaran</string>
+    <string name="samar_tile_off">Mati</string>
+    <string name="samar_tile_no_place">Pilih tempat</string>
+    <string name="samar_target_global">Semua aplikasi</string>
+    <string name="samar_panel_open">Buka joystick melayang</string>
+    <string name="samar_panel_minimize">Kecilkan</string>
+    <string name="samar_panel_close">Tutup</string>
+    <string name="samar_panel_recenter">Kembali ke lokasi</string>
+    <string name="samar_panel_hint">Tekan lama peta untuk melompat</string>
+    <string name="samar_panel_on">Nyala</string>
+    <string name="samar_panel_off">Mati</string>
+    <string name="samar_panel_own">Lokasi sendiri aplikasi ini</string>
+    <string name="samar_panel_moving">%1$.1f km/j · %2$s</string>
+    <string name="samar_joystick">Joystick</string>
+
+    <string name="samar_link_label">Lokasi samaran</string>
+    <string name="samar_link_title">Pakai lokasi ini?</string>
+    <string name="samar_link_go">Pindah ke sini</string>
+    <string name="samar_link_done">Aplikasi sekarang melihat lokasi ini</string>
+</resources>

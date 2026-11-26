@@ -4,6 +4,7 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="org.yasvara.laras">
 
     <!-- Required by SystemUI to render its lock screen preview for Laras. -->
@@ -64,12 +65,23 @@
         android:name="yasvara.permission.MANAGE_PASANG"
         android:protectionLevel="signature" />
     <uses-permission android:name="yasvara.permission.MANAGE_PASANG" />
+    <!-- Samar: the location apps see and location privacy (SamarService). Signature level. -->
+    <permission
+        android:name="yasvara.permission.MANAGE_SAMAR"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="yasvara.permission.MANAGE_SAMAR" />
     <!-- Tempel: NFC card vault, profile switching, and tag writer (YasvaraTempelService). -->
     <permission
         android:name="yasvara.permission.MANAGE_TEMPEL"
         android:protectionLevel="signature" />
     <uses-permission android:name="yasvara.permission.MANAGE_TEMPEL" />
     <uses-permission android:name="android.permission.NFC" />
+    <!-- Samar's floating map and joystick. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- MapLibre asks for these; Laras never reads location, it sets it. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -101,6 +113,11 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="org.yasvara.laras.action.OPEN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Samar: the fake location page. -->
+            <intent-filter>
+                <action android:name="org.yasvara.laras.action.SAMAR" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- Tempel: NFC card manager & writer. -->
@@ -306,6 +323,20 @@
             </intent-filter>
         </service>
 
+        <!-- Samar: tap turns the fake location on or off; long press opens its page. -->
+        <service
+            android:name=".samar.SamarTile"
+            android:exported="true"
+            android:icon="@drawable/ic_samar"
+            android:label="@string/samar_tile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
         <!-- Tempel: tap cycles active NFC card profile; long press opens Tempel manager. -->
         <service
             android:name=".tempel.TempelTile"
@@ -355,6 +386,27 @@
                 android:name="android.quickaccesswallet"
                 android:resource="@xml/tempel_wallet" />
         </service>
+        <!-- Share a place from a maps app, or open a geo: link, to use it as the fake location. -->
+        <activity
+            android:name=".samar.SamarLinkActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:icon="@drawable/ic_samar"
+            android:label="@string/samar_link_label"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Laras.Translucent">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geo" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".depth.DepthStudioActivity"
