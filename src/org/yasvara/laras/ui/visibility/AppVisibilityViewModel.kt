@@ -234,6 +234,20 @@ class AppVisibilityViewModel(private val app: Application) : AndroidViewModel(ap
         }
     }
 
+    fun resetObserverRiskCache(pkg: String, andLaunch: Boolean = false, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ok = repository.resetObserverRiskCache(pkg)
+            if (ok && andLaunch) {
+                app.packageManager.getLaunchIntentForPackage(pkg)?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }?.let { launch ->
+                    runCatching { app.startActivity(launch) }
+                }
+            }
+            withContext(Dispatchers.Main) { onDone(ok) }
+        }
+    }
+
     fun exportJson(onReady: (String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val json = repository.exportConfigJson()

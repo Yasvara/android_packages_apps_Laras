@@ -65,6 +65,10 @@
     <string name="tabir_mode_blacklist_desc">Hides global targets, assigned templates, and extra selected apps</string>
     <string name="tabir_stop_and_open">Stop &amp; Open</string>
     <string name="tabir_stop_only_toast">Force-stopped %1$s</string>
+    <string name="tabir_reset_risk_cache">Reset Risk / DFP</string>
+    <string name="tabir_reset_risk_hint">Clears stale device risk &amp; DFP caches (e.g. Shopee/SeaBank) on next open without logging you out</string>
+    <string name="tabir_reset_risk_ok_toast">Risk &amp; DFP cache reset for %1$s (login preserved). Reopen app to refresh.</string>
+    <string name="tabir_reset_risk_fail_toast">Could not reset risk cache for %1$s</string>
     <string name="tabir_observer_summary_blacklist">Blacklist • %1$d template(s), %2$d custom</string>
     <string name="tabir_observer_summary_whitelist">Whitelist • %1$d template(s), %2$d allowed</string>
     <string name="tabir_observer_summary_global_active">Shielded by global scope</string>

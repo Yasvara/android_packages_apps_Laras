@@ -75,6 +75,14 @@ object VisibilitySuggestions {
         "org.frknkrc44.hma_oss",
         "org.lsposed.manager",
         "rikka.appops",
+        "io.github.vvb2060.keyattestation",
+        "gr.nikolasspyr.integritycheck",
+        "com.eltavine.duckdetector",
+        "io.github.vvb2060.mahoshojo",
+        "io.github.vvb2060.momo",
+        "com.reveny.nativecheck",
+        "icu.nullptr.nativetest",
+        "com.zhenxi.hunter",
     )
 
     fun isTarget(pkg: String) = pkg in TARGETS
@@ -306,6 +314,9 @@ class AppVisibilityRepository(private val context: Context) {
     fun forceStopHiddenTargets(): Int = call(0) { it.forceStopHiddenTargets() }
 
     fun forceStopPackage(packageName: String): Boolean = call(false) { it.forceStopPackage(packageName) }
+
+    fun resetObserverRiskCache(packageName: String): Boolean =
+        call(false) { it.resetObserverRiskCache(packageName) }
 
     fun exportConfigJson(): String = call("{}") { it.exportConfigJson() }
 

@@ -235,14 +235,17 @@ class KaitRepository(private val context: Context) {
     }
 
     fun requestUninstall(packageName: String) {
-        runCatching {
-            @Suppress("DEPRECATION")
-            context.startActivity(
-                Intent(Intent.ACTION_UNINSTALL_PACKAGE)
-                    .setData(Uri.fromParts("package", packageName, null))
-                    .putExtra(Intent.EXTRA_RETURN_RESULT, false)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
+        val intent = Intent(Intent.ACTION_DELETE)
+            .setData(Uri.fromParts("package", packageName, null))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val ok = runCatching {
+            context.startActivity(intent)
+            true
+        }.onFailure { e ->
+            Log.w(TAG, "ACTION_DELETE failed for $packageName; falling back to App Info", e)
+        }.getOrDefault(false)
+        if (!ok) {
+            openAppInfo(packageName)
         }
     }
 

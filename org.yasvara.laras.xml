@@ -14,6 +14,7 @@
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
         <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE"/>
         <permission name="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND"/>
+        <permission name="android.permission.DELETE_PACKAGES"/>
         <permission name="yasvara.permission.WRITE_ATTESTATION"/>
         <permission name="yasvara.permission.MANAGE_KAIT"/>
         <permission name="yasvara.permission.MANAGE_UPDATE_POLICY"/>

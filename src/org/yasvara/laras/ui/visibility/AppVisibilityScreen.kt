@@ -39,6 +39,7 @@ import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.StopCircle
 import androidx.compose.material.icons.rounded.Tune
@@ -346,6 +347,18 @@ fun AppVisibilityScreen(onBack: () -> Unit, viewModel: AppVisibilityViewModel = 
                             Toast.LENGTH_SHORT,
                         ).show()
                     }
+                }
+            },
+            onResetRiskCache = {
+                viewModel.resetObserverRiskCache(obsPkg) { ok ->
+                    Toast.makeText(
+                        context,
+                        context.getString(
+                            if (ok) R.string.tabir_reset_risk_ok_toast else R.string.tabir_reset_risk_fail_toast,
+                            ui.label(obsPkg),
+                        ),
+                        Toast.LENGTH_LONG,
+                    ).show()
                 }
             },
         )
@@ -1204,6 +1217,7 @@ private fun ObserverConfigSheet(
     onDismiss: () -> Unit,
     onSave: (Boolean, Int, Set<String>, Set<String>) -> Unit,
     onStopAndOpen: () -> Unit,
+    onResetRiskCache: () -> Unit,
 ) {
     var enabled by remember { mutableStateOf(initial != null) }
     var mode by remember { mutableIntStateOf(initial?.mode ?: Rules.MODE_WHITELIST) }
@@ -1263,14 +1277,24 @@ private fun ObserverConfigSheet(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedButton(onClick = onStopAndOpen, modifier = Modifier.fillMaxWidth()) {
+                FilledTonalButton(onClick = onResetRiskCache, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.RestartAlt, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.tabir_reset_risk_cache), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                OutlinedButton(onClick = onStopAndOpen, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.tabir_stop_and_open))
+                    Text(stringResource(R.string.tabir_stop_and_open), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(4.dp))
                     Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.size(14.dp))
                 }
             }
+            Text(
+                text = stringResource(R.string.tabir_reset_risk_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             LarasSwitchRow(
                 title = stringResource(R.string.tabir_enable_per_app),
