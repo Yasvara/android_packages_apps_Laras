@@ -389,33 +389,21 @@
     <string name="targets_required">Required by Play Integrity</string>
     <string name="targets_empty">No apps match</string>
 
-    <!-- Integrity: ladder outcomes per target app -->
-    <string name="rung_waiting">Protected \u00b7 waiting for its first key</string>
-    <string name="rung_passthrough">Device chain \u2014 untouched</string>
-    <string name="rung_patched">Protected \u00b7 Patched</string>
-    <string name="rung_synthesized">Protected \u00b7 Synthesized</string>
-    <string name="rung_original">Device chain</string>
-    <string name="rung_failed">Failed: %1$s</string>
-    <string name="rung_failed_unknown">unknown reason</string>
-    <string name="rung_ago">%1$s \u00b7 %2$s ago</string>
-    <string name="rung_just_now">just now</string>
-    <string name="rung_minutes">%d min</string>
-    <string name="rung_hours">%d h</string>
-
     <!-- Integrity: advanced attestation panel -->
     <string name="adv_title">Advanced</string>
-    <string name="adv_summary">Debug controls. The engine picks the technique itself; force one only to diagnose.</string>
-    <string name="adv_force_label">Force technique</string>
-    <string name="adv_force_auto">Auto</string>
-    <string name="adv_force_patch">Patch</string>
-    <string name="adv_force_passthrough">Passthrough</string>
+    <string name="adv_summary">Per-app security patch overrides, live engine status, and Play Integrity cache reset.</string>
+    <string name="adv_status_line">Boot: %1$s \u00b7 Keybox: %2$s \u00b7 Cache gen #%3$d</string>
+    <string name="adv_status_pending">pending</string>
+    <string name="adv_status_loaded">loaded</string>
+    <string name="adv_status_none">none</string>
     <string name="adv_patch_label">Per-app security patch</string>
     <string name="adv_patch_hint">Overrides the profile patch claimed inside attestation for one app. Format YYYY-MM-DD; empty removes it.</string>
     <string name="adv_patch_package">Package</string>
     <string name="adv_patch_date">Patch date</string>
     <string name="adv_patch_add">Set override</string>
     <string name="adv_patch_remove">Remove override</string>
-    <string name="adv_reprobe">Re-probe TEE</string>
+    <string name="adv_purge_cache">Purge integrity cache</string>
+    <string name="adv_purge_done">DroidGuard &amp; Play Integrity cache reset queued; Play Services restarted.</string>
 
     <!-- Integrity: bank login tip -->
     <string name="integrity_bank_body">Add the app in Target apps, update the device profile, make sure your keybox is not revoked, then tap Restart and reopen the app. Run the check to see which level you reach.</string>

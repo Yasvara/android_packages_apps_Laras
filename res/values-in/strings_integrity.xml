@@ -62,4 +62,11 @@
     <string name="pif_manual_raw_hint">Tempel teks pif.json atau key=value pif.prop di sini</string>
     <string name="pif_manual_valid_preview">Siap: %1$s · Patch %2$s</string>
     <string name="pif_release_badge">Android %1$s</string>
+    <string name="adv_summary">Override patch keamanan per-aplikasi, status engine langsung, dan reset cache Play Integrity.</string>
+    <string name="adv_status_line">Boot: %1$s \u00b7 Keybox: %2$s \u00b7 Gen cache #%3$d</string>
+    <string name="adv_status_pending">menunggu</string>
+    <string name="adv_status_loaded">terpasang</string>
+    <string name="adv_status_none">kosong</string>
+    <string name="adv_purge_cache">Bersihkan cache integrity</string>
+    <string name="adv_purge_done">Reset cache DroidGuard &amp; Play Integrity dijadwalkan; Play Services dimulai ulang.</string>
 </resources>

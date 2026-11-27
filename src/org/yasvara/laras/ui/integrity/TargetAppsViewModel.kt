@@ -13,10 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.yasvara.laras.data.integrity.AttestationService
 import org.yasvara.laras.data.integrity.IntegrityKeys
 import org.yasvara.laras.data.integrity.PlayServices
-import org.yasvara.laras.data.integrity.RungReport
-import org.yasvara.laras.data.integrity.RungStore
 import org.yasvara.laras.data.integrity.SecureStore
 import org.yasvara.laras.data.integrity.TargetApp
 import org.yasvara.laras.data.integrity.TargetsRepository
@@ -28,12 +27,12 @@ data class TargetAppsUi(
     val selected: Set<String> = emptySet(),
     val query: String = "",
     val showSystem: Boolean = false,
-    /** Last engine outcome per package; empty when the engine never served it. */
-    val rungs: Map<String, RungReport> = emptyMap(),
-    /** Debug override for the ladder; "" means auto. */
-    val force: String = "",
+    /** Live runtime status reported by YasvaraAttestationService. */
+    val status: AttestationService.RuntimeStatus? = null,
     /** Per-package patch-date override ({package: YYYY-MM-DD}). */
     val patchOverrides: Map<String, String> = emptyMap(),
+    /** Number of GMS/Play Store processes restarted by the last manual cache purge. */
+    val purgedProcesses: Int? = null,
 ) {
     val visible: List<TargetApp>
         get() = apps.filter {
@@ -46,7 +45,6 @@ data class TargetAppsUi(
 class TargetAppsViewModel(app: Application) : AndroidViewModel(app) {
     private val store = SecureStore(app.contentResolver)
     private val repository = TargetsRepository(app, store)
-    private val rungs = RungStore(store)
     private val _state = MutableStateFlow(TargetAppsUi(selected = repository.selected()))
     val state: StateFlow<TargetAppsUi> = _state.asStateFlow()
 
@@ -75,22 +73,13 @@ class TargetAppsViewModel(app: Application) : AndroidViewModel(app) {
     /** Selects the installed apps known to check attestation, without clearing anything. */
     fun autoSelect() = commit(_state.value.selected + repository.suggestions(_state.value.apps))
 
-    /** Re-reads engine outcomes; call when returning to the screen. */
-    fun refreshRungs() {
-        _state.update {
-            it.copy(
-                rungs = rungs.all(),
-                force = store.getString(IntegrityKeys.TS_FORCE),
-                patchOverrides = readOverrides(),
-            )
+    /** Refreshes live engine status and per-app patch overrides off the main thread. */
+    fun refreshStatus() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val status = AttestationService.status()
+            val overrides = readOverrides()
+            _state.update { it.copy(status = status, patchOverrides = overrides) }
         }
-    }
-
-    /** Debug override for the ladder; empty means auto. */
-    fun setForce(value: String) {
-        _state.update { it.copy(force = value) }
-        PlayServices.markRestartNeeded()
-        viewModelScope.launch(Dispatchers.IO) { store.putString(IntegrityKeys.TS_FORCE, value) }
     }
 
     fun setPatchOverride(pkg: String, date: String) {
@@ -105,10 +94,15 @@ class TargetAppsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun reprobeTee() {
-        PlayServices.markRestartNeeded()
+    /** Forces GMS & Play Store to purge dg.db / gmscompliance / app_dg_cache cleanly. */
+    fun purgeIntegrityCache() {
         viewModelScope.launch(Dispatchers.IO) {
-            store.putLong(IntegrityKeys.TS_TEE_REPROBE, System.currentTimeMillis())
+            val killed = AttestationService.purgeIntegrityCache()
+            if (killed < 0) {
+                PlayServices.restart(getApplication())
+            }
+            val status = AttestationService.status()
+            _state.update { it.copy(status = status, purgedProcesses = killed.coerceAtLeast(0)) }
         }
     }
 

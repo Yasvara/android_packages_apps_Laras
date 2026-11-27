@@ -45,12 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.yasvara.laras.R
-import org.yasvara.laras.data.integrity.RungReport
 import org.yasvara.laras.data.integrity.TargetApp
 import org.yasvara.laras.data.integrity.TargetsRepository
 import org.yasvara.laras.ui.components.AppIcon
 import org.yasvara.laras.ui.components.CheckSwitch
-import org.yasvara.laras.ui.components.ChoiceGroup
 import org.yasvara.laras.ui.components.HeroBackdropKind
 import org.yasvara.laras.ui.components.LarasBadge
 import org.yasvara.laras.ui.components.LarasCollapsibleCard
@@ -69,7 +67,7 @@ fun TargetAppsScreen(onBack: () -> Unit, viewModel: TargetAppsViewModel = viewMo
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val visible = ui.visible
 
-    LaunchedEffect(Unit) { viewModel.refreshRungs() }
+    LaunchedEffect(Unit) { viewModel.refreshStatus() }
 
     Page(stringResource(R.string.targets_title), onBack) {
         item("summary") {
@@ -146,7 +144,12 @@ fun TargetAppsScreen(onBack: () -> Unit, viewModel: TargetAppsViewModel = viewMo
             }
             else -> items(visible.size, key = { visible[it].packageName }) { i ->
                 val app = visible[i]
-                TargetRow(app, app.packageName in ui.selected, ui.rungs[app.packageName], groupedShape(i, visible.size)) {
+                TargetRow(
+                    app = app,
+                    checked = app.packageName in ui.selected,
+                    patchOverride = ui.patchOverrides[app.packageName],
+                    shape = groupedShape(i, visible.size),
+                ) {
                     viewModel.toggle(app.packageName, it)
                 }
             }
@@ -159,12 +162,17 @@ fun TargetAppsScreen(onBack: () -> Unit, viewModel: TargetAppsViewModel = viewMo
 private fun TargetRow(
     app: TargetApp,
     checked: Boolean,
-    rung: RungReport?,
+    patchOverride: String?,
     shape: Shape,
     onChange: (Boolean) -> Unit,
 ) {
     val required = app.packageName in TargetsRepository.REQUIRED
     val protected = checked || required
+    val subtitle = when {
+        !patchOverride.isNullOrEmpty() -> "${app.packageName} · $patchOverride"
+        required -> stringResource(R.string.targets_required)
+        else -> app.packageName
+    }
     Surface(shape = shape, color = LarasSurfaces.card) {
         Row(
             Modifier
@@ -181,11 +189,10 @@ private fun TargetRow(
                     if (app.isSystem) LarasBadge(stringResource(R.string.targets_system_badge))
                 }
                 Text(
-                    outcomeLine(app.packageName, protected, rung),
+                    subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
-                    color = if (rung != null && protected && rung.rung == "failed") MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             CheckSwitch(checked = protected, enabled = !required)
@@ -194,42 +201,10 @@ private fun TargetRow(
 }
 
 @Composable
-private fun outcomeLine(pkg: String, protected: Boolean, rung: RungReport?): String {
-    if (!protected) return pkg
-    if (rung == null) return stringResource(R.string.rung_waiting)
-    val what = when (rung.rung) {
-        "passthrough" -> stringResource(R.string.rung_passthrough)
-        "patched" -> stringResource(R.string.rung_patched)
-        "synthesized" -> stringResource(R.string.rung_synthesized)
-        "original" -> stringResource(R.string.rung_original)
-        "failed" -> stringResource(R.string.rung_failed, rung.reason.ifEmpty { stringResource(R.string.rung_failed_unknown) })
-        else -> rung.rung
-    }
-    val whenText = rungAt(rung.at)
-    return if (rung.rung == "failed" || whenText.isEmpty()) what else stringResource(R.string.rung_ago, what, whenText)
-}
-
-@Composable
-private fun rungAt(at: Long): String {
-    if (at <= 0L) return ""
-    val mins = (System.currentTimeMillis() - at) / 60_000L
-    return when {
-        mins < 1 -> stringResource(R.string.rung_just_now)
-        mins < 60 -> stringResource(R.string.rung_minutes, mins.toInt())
-        else -> stringResource(R.string.rung_hours, (mins / 60).toInt())
-    }
-}
-
-@Composable
 private fun AdvancedCard(ui: TargetAppsUi, viewModel: TargetAppsViewModel) {
     var open by rememberSaveable { mutableStateOf(false) }
     var pkgInput by rememberSaveable { mutableStateOf("") }
     var dateInput by rememberSaveable { mutableStateOf("") }
-    val forceOptions = listOf(
-        "" to R.string.adv_force_auto,
-        "patch" to R.string.adv_force_patch,
-        "passthrough" to R.string.adv_force_passthrough,
-    )
 
     LarasCollapsibleCard(
         title = stringResource(R.string.adv_title),
@@ -239,13 +214,23 @@ private fun AdvancedCard(ui: TargetAppsUi, viewModel: TargetAppsViewModel) {
         onToggleExpand = { open = !open },
         modifier = Modifier.padding(top = 10.dp),
     ) {
-        Text(stringResource(R.string.adv_force_label), style = MaterialTheme.typography.titleSmall)
-        ChoiceGroup(
-            options = forceOptions,
-            selected = forceOptions.firstOrNull { it.first == ui.force } ?: forceOptions.first(),
-            label = { stringResource(it.second) },
-            onSelect = { viewModel.setForce(it.first) },
-        )
+        ui.status?.let { s ->
+            val bootText = if (s.bootDigestReady) {
+                s.bootSource.ifEmpty { "ok" }
+            } else {
+                stringResource(R.string.adv_status_pending)
+            }
+            val keyboxText = when {
+                !s.keyboxLoaded -> stringResource(R.string.adv_status_none)
+                s.rkpManufacturer.isNotEmpty() -> "RKP · ${s.rkpManufacturer}"
+                else -> stringResource(R.string.adv_status_loaded)
+            }
+            Text(
+                stringResource(R.string.adv_status_line, bootText, keyboxText, s.purgeGen),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(stringResource(R.string.adv_patch_label), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.adv_patch_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -259,7 +244,7 @@ private fun AdvancedCard(ui: TargetAppsUi, viewModel: TargetAppsViewModel) {
             OutlinedTextField(
                 dateInput, { dateInput = it.trim() },
                 label = { Text(stringResource(R.string.adv_patch_date)) },
-                placeholder = { Text("2026-09-05") },
+                placeholder = { Text("2026-10-05") },
                 singleLine = true,
                 shape = LarasShapes.Inset,
                 modifier = Modifier.weight(1f),
@@ -273,7 +258,14 @@ private fun AdvancedCard(ui: TargetAppsUi, viewModel: TargetAppsViewModel) {
                     dateInput = ""
                 }
             }) { Text(stringResource(R.string.adv_patch_add)) }
-            OutlinedButton(viewModel::reprobeTee) { Text(stringResource(R.string.adv_reprobe)) }
+            OutlinedButton(viewModel::purgeIntegrityCache) { Text(stringResource(R.string.adv_purge_cache)) }
+        }
+        ui.purgedProcesses?.let {
+            Text(
+                stringResource(R.string.adv_purge_done),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
         ui.patchOverrides.forEach { (pkg, date) ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

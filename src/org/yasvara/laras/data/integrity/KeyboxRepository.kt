@@ -5,11 +5,11 @@
 package org.yasvara.laras.data.integrity
 
 import android.content.Context
-import android.security.yasvara.YasvaraKeyboxProvider
-import android.security.yasvara.YasvaraKeyboxProvider.ParseResult
+import android.security.yasvara.YasvaraIntegrityContract
 import android.util.Log
+import java.io.ByteArrayInputStream
+import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.util.Base64
 
 enum class KeyboxProblem { EMPTY, NOT_XML, NO_CERTIFICATE, BAD_CERTIFICATE, CHAIN_TOO_SHORT, INVALID_KEYBOX, TOO_LARGE, NO_PRIVATE_KEY, SERVICE_UNAVAILABLE }
 
@@ -33,38 +33,32 @@ sealed interface KeyboxImport {
 }
 
 /**
- * The user's own keybox.xml.
+ * Thin UI repository for the user's keybox.xml.
  *
- * <p>The full file (private key included) is installed into YasvaraAttestationService, the
- * single owner of the credential. Settings.Secure holds only the public chain for the
- * info/revocation UI; import is refused when the service cannot take custody. A value left
- * in Secure by older builds is moved into the service by [migrate].
+ * <p>All cryptographic XML/PEM/chain/SPKI/CBOR validation runs in Rust inside
+ * `YasvaraAttestationService` (`libyasvara_integrity_jni`), guaranteeing 100% parity with
+ * `keystore2`. Settings.Secure stores only the Rust-generated public chain XML for local
+ * revocation checks and display.
  */
 class KeyboxRepository(private val context: Context, private val store: SecureStore) {
     private val feed = RevocationFeed(context)
 
-    private fun installed(): ParseResult = YasvaraKeyboxProvider.parse(store.getString(IntegrityKeys.TS_KEYBOX))
-
-    /** True when the private key is held by the service (preferred) or in Secure (fallback). */
+    /** True when the private key is held by the service. */
     fun custody(): Custody {
-        val remote = AttestationService.info()
-        if (remote != null) return Custody.SERVICE
-        val stored = installed().keyboxes.firstOrNull()
-        if (stored != null && stored.hasPrivateKey()) return Custody.INTERIM
+        if (AttestationService.info() != null) return Custody.SERVICE
+        val raw = store.getString(IntegrityKeys.TS_KEYBOX)
+        if (raw.contains("<PrivateKey", ignoreCase = true)) return Custody.INTERIM
         return Custody.NONE
     }
 
     enum class Custody { SERVICE, INTERIM, NONE }
 
-    /** The chain the engine will use, leaf first, or empty when no keybox is installed. */
-    fun chain(): List<X509Certificate> = installed().keyboxes.firstOrNull()?.chain.orEmpty()
+    /** The first installed public certificate chain, leaf first, or empty. */
+    fun chain(): List<X509Certificate> = chains().firstOrNull().orEmpty()
 
-    /**
-     * Every installed keybox chain (one per algorithm: ecdsa, rsa, ...). The engine picks
-     * the chain matching the app key's algorithm, so callers that compare chains must
-     * consider all of them, not just [chain].
-     */
-    fun chains(): List<List<X509Certificate>> = installed().keyboxes.map { it.chain }
+    /** Every installed public certificate chain stored in Settings.Secure (no private keys). */
+    fun chains(): List<List<X509Certificate>> =
+        decodePublicChains(store.getString(IntegrityKeys.TS_KEYBOX))
 
     fun info(): KeyboxInfo? {
         AttestationService.info()?.let { remote ->
@@ -78,53 +72,57 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
                 rkpManufacturer = remote.rkpManufacturer,
             )
         }
-        val keyboxes = installed().keyboxes
-        val keybox = keyboxes.firstOrNull() ?: return null
-        val leaf = keybox.leaf()
+        val chain = chain()
+        val leaf = chain.firstOrNull() ?: return null
         return KeyboxInfo(
-            algorithm = keybox.algorithm,
+            algorithm = if (leaf.publicKey.algorithm.equals("RSA", ignoreCase = true)) "rsa" else "ecdsa",
             serialHex = leaf.serialNumber.toString(16),
             issuer = leaf.issuerX500Principal.name,
             notAfter = leaf.notAfter.time,
-            chainLength = keybox.chain.size,
-            hasPrivateKey = keybox.hasPrivateKey(),
-            rkpManufacturer = YasvaraKeyboxProvider.rkpManufacturer(keyboxes),
+            chainLength = chain.size,
+            hasPrivateKey = false,
+            rkpManufacturer = store.getString(YasvaraIntegrityContract.SECURE_RKP_MANUFACTURER),
         )
     }
 
     @Synchronized
     fun import(raw: String): KeyboxImport {
-        if (raw.length > KeyboxPayload.MAX_BYTES || raw.toByteArray(Charsets.UTF_8).size > KeyboxPayload.MAX_BYTES) {
+        if (raw.length > KeyboxPayload.MAX_BYTES
+            || raw.toByteArray(Charsets.UTF_8).size > KeyboxPayload.MAX_BYTES) {
             return KeyboxImport.Rejected(KeyboxProblem.TOO_LARGE)
         }
         if (raw.isBlank()) return KeyboxImport.Rejected(KeyboxProblem.EMPTY)
         val serviceXml = KeyboxPayload.xml(raw) ?: return KeyboxImport.Rejected(KeyboxProblem.NOT_XML)
-        val result = YasvaraKeyboxProvider.parse(serviceXml)
-        if (!result.isValid) return KeyboxImport.Rejected(problemOf(result.error))
-        if (result.keyboxes.none { it.hasPrivateKey() }) {
-            return KeyboxImport.Rejected(KeyboxProblem.NO_PRIVATE_KEY)
-        }
-        // Construct the public view from certificates only: arbitrary XML comments,
-        // attributes or extra elements from a remote source must never reach Settings.
-        val xml = publicChainXml(result)
-        val first = result.keyboxes.first()
-        val leaf = first.leaf()
-        val info = KeyboxInfo(first.algorithm, leaf.serialNumber.toString(16),
-            leaf.issuerX500Principal.name, leaf.notAfter.time, first.chain.size,
-            first.hasPrivateKey(), YasvaraKeyboxProvider.rkpManufacturer(result.keyboxes))
         val service = AttestationService.get()
         if (service == null || !AttestationService.canWrite(context)) {
             return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)
         }
+        val inspected = AttestationService.inspectKeybox(serviceXml, requirePrivateKey = true)
+            ?: return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)
+        if (!inspected.valid) {
+            return KeyboxImport.Rejected(problemOf(inspected.error))
+        }
+        val remote = inspected.info ?: return KeyboxImport.Rejected(KeyboxProblem.INVALID_KEYBOX)
         try {
             service.setKeybox(serviceXml)
         } catch (e: Exception) {
             Log.w(TAG, "Attestation service refused the keybox")
             return KeyboxImport.Rejected(KeyboxProblem.SERVICE_UNAVAILABLE)
         }
-        store.putString(IntegrityKeys.TS_KEYBOX, xml)
+        // Persist only the Rust-generated public chain XML (zero private keys in Settings.Secure).
+        store.putString(IntegrityKeys.TS_KEYBOX, inspected.publicChainXml)
         store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "")
-        return KeyboxImport.Imported(info)
+        return KeyboxImport.Imported(
+            KeyboxInfo(
+                algorithm = remote.algorithm,
+                serialHex = remote.serialHex,
+                issuer = remote.issuer,
+                notAfter = remote.notAfter,
+                chainLength = remote.chainLength,
+                hasPrivateKey = remote.hasPrivateKey,
+                rkpManufacturer = inspected.rkpManufacturer,
+            )
+        )
     }
 
     /** Removes the keybox from the service first; the local view only follows a confirmed clear. */
@@ -143,39 +141,39 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
     }
 
     /**
-     * Moves a Phase-1 full keybox (private key in Secure) into the service when it is
-     * available, leaving only the public chain behind. Drops values that parse to
-     * nothing. Returns true when the user must re-import (a privkey-less value with no
-     * service to complete it). Idempotent.
+     * Moves a legacy Phase-1 full keybox (private key in Secure) into the Rust-backed service,
+     * leaving only the public chain XML behind. Idempotent.
      */
     @Synchronized
     fun migrate(): Boolean {
         val raw = store.getString(IntegrityKeys.TS_KEYBOX)
         if (raw.isEmpty()) return false
         val xml = KeyboxPayload.xml(raw) ?: return true
-        val result = YasvaraKeyboxProvider.parse(xml)
-        if (!result.isValid) {
+        val service = AttestationService.get()
+        if (service == null || !AttestationService.canWrite(context)) {
+            return !raw.contains("<PrivateKey", ignoreCase = true)
+        }
+        val inspected = AttestationService.inspectKeybox(xml, requirePrivateKey = false)
+            ?: return false
+        if (!inspected.valid) {
             store.putString(IntegrityKeys.TS_KEYBOX, "")
             store.putString(IntegrityKeys.TS_LAST_REVOKE_STATUS, "")
             return true
         }
-        val full = result.keyboxes.any { it.hasPrivateKey() }
-        if (full && AttestationService.canWrite(context)) {
+        val hasPriv = inspected.info?.hasPrivateKey == true
+        if (hasPriv) {
             try {
-                val service = AttestationService.get() ?: return false
-                val publicXml = publicChainXml(result)
                 service.setKeybox(xml)
-                store.putString(IntegrityKeys.TS_KEYBOX, publicXml)
+                store.putString(IntegrityKeys.TS_KEYBOX, inspected.publicChainXml)
                 return false
             } catch (e: Exception) {
-                Log.w(TAG, "Could not move the keybox into the attestation service")
+                Log.w(TAG, "Could not move keybox into attestation service")
                 return false
             }
         }
-        if (!full && AttestationService.info() == null) return true
-        if (!full) {
-            val publicXml = publicChainXml(result)
-            if (raw != publicXml) store.putString(IntegrityKeys.TS_KEYBOX, publicXml)
+        if (AttestationService.info() == null) return true
+        if (raw != inspected.publicChainXml) {
+            store.putString(IntegrityKeys.TS_KEYBOX, inspected.publicChainXml)
         }
         return false
     }
@@ -208,29 +206,44 @@ class KeyboxRepository(private val context: Context, private val store: SecureSt
         }
     }
 
-    private fun publicChainXml(result: ParseResult): String = buildString {
-        append("<AndroidAttestation>")
-        for (key in result.keyboxes) {
-            append("<Key algorithm=\"").append(key.algorithm).append("\"><CertificateChain>")
-            for (cert in key.chain) {
-                append("<Certificate format=\"pem\">-----BEGIN CERTIFICATE-----\n")
-                append(Base64.getEncoder().encodeToString(cert.encoded))
-                append("\n-----END CERTIFICATE-----</Certificate>")
-            }
-            append("</CertificateChain></Key>")
-        }
-        append("</AndroidAttestation>")
-    }
-
     private fun problemOf(error: Int) = when (error) {
-        YasvaraKeyboxProvider.ERROR_EMPTY -> KeyboxProblem.EMPTY
-        YasvaraKeyboxProvider.ERROR_NOT_XML -> KeyboxProblem.NOT_XML
-        YasvaraKeyboxProvider.ERROR_BAD_CERTIFICATE -> KeyboxProblem.BAD_CERTIFICATE
-        YasvaraKeyboxProvider.ERROR_CHAIN_TOO_SHORT -> KeyboxProblem.CHAIN_TOO_SHORT
-        YasvaraKeyboxProvider.ERROR_INVALID_KEYBOX -> KeyboxProblem.INVALID_KEYBOX
+        YasvaraIntegrityContract.KEYBOX_ERR_EMPTY -> KeyboxProblem.EMPTY
+        YasvaraIntegrityContract.KEYBOX_ERR_NOT_XML -> KeyboxProblem.NOT_XML
+        YasvaraIntegrityContract.KEYBOX_ERR_BAD_CERTIFICATE -> KeyboxProblem.BAD_CERTIFICATE
+        YasvaraIntegrityContract.KEYBOX_ERR_CHAIN_TOO_SHORT -> KeyboxProblem.CHAIN_TOO_SHORT
+        YasvaraIntegrityContract.KEYBOX_ERR_INVALID_KEYBOX -> KeyboxProblem.INVALID_KEYBOX
+        YasvaraIntegrityContract.KEYBOX_ERR_NO_PRIVATE_KEY -> KeyboxProblem.NO_PRIVATE_KEY
+        YasvaraIntegrityContract.KEYBOX_ERR_TOO_LARGE -> KeyboxProblem.TOO_LARGE
         else -> KeyboxProblem.NO_CERTIFICATE
     }
 
+    companion object {
+        private val KEY_BLOCK_RE = Regex("(?is)<Key\\b[^>]*>(.*?)</Key>")
+        private val PEM_CERT_RE = Regex("-----BEGIN CERTIFICATE-----[\\s\\S]*?-----END CERTIFICATE-----")
+
+        /** Lightweight public-only PEM decoder for UI display & revocation checks. */
+        private fun decodePublicChains(xml: String): List<List<X509Certificate>> {
+            if (xml.isBlank()) return emptyList()
+            val cf = CertificateFactory.getInstance("X.509")
+            val keyBlocks = KEY_BLOCK_RE.findAll(xml).map { it.groupValues[1] }.toList()
+                .ifEmpty { listOf(xml) }
+            val result = mutableListOf<List<X509Certificate>>()
+            for (block in keyBlocks) {
+                val chain = mutableListOf<X509Certificate>()
+                for (match in PEM_CERT_RE.findAll(block)) {
+                    try {
+                        val cert = cf.generateCertificate(
+                            ByteArrayInputStream(match.value.toByteArray(Charsets.UTF_8))
+                        ) as? X509Certificate
+                        if (cert != null) chain += cert
+                    } catch (_: Exception) {
+                    }
+                }
+                if (chain.isNotEmpty()) result += chain
+            }
+            return result
+        }
+    }
 }
 
 private const val TAG = "KeyboxRepository"

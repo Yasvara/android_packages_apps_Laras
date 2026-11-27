@@ -37,7 +37,9 @@ object PlayServices {
     }
 
     fun restart(context: Context) {
-        kill(context, PACKAGES)
+        if (AttestationService.purgeIntegrityCache() < 0) {
+            kill(context, PACKAGES)
+        }
         _restartPending.value = false
     }
 

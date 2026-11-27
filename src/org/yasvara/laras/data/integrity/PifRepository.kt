@@ -5,6 +5,7 @@
 package org.yasvara.laras.data.integrity
 
 import android.content.Context
+import android.security.yasvara.YasvaraIntegrityContract
 import android.util.Log
 import java.io.File
 
@@ -247,7 +248,7 @@ class PifRepository(private val context: Context, private val store: SecureStore
 
     companion object {
         private const val MAX_BYTES = 256 * 1024
-        private const val BUILT_IN_PATH = "/product/etc/yasvara/pif_fallback.json"
+        private const val BUILT_IN_PATH = YasvaraIntegrityContract.PIF_FALLBACK_PATH
     }
 }
 
